@@ -310,6 +310,30 @@
 
     .option-item:hover {
       border-color: var(--accent);
+      background: var(--bg-hover);
+    }
+
+    .option-item.correct {
+      background: rgba(52, 211, 153, 0.2) !important;
+      border-color: var(--accent-green) !important;
+      color: var(--accent-green) !important;
+      font-weight: 700;
+    }
+
+    .option-item.wrong {
+      background: rgba(251, 113, 133, 0.2) !important;
+      border-color: var(--accent-rose) !important;
+      color: var(--accent-rose) !important;
+      font-weight: 700;
+    }
+
+    .result-badge {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
     }
 
     .reveal-btn {
@@ -499,10 +523,10 @@
       <div class="exercise-box">
         <div class="question-stem">1. The software update was ______ installed across all office workstations yesterday.</div>
         <div class="options-grid">
-          <div class="option-item">(A) successful</div>
-          <div class="option-item">(B) successfully</div>
-          <div class="option-item">(C) succeed</div>
-          <div class="option-item">(D) success</div>
+          <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'B')">(A) successful</div>
+          <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'B')">(B) successfully</div>
+          <div class="option-item" data-opt="C" onclick="selectOption(this, 'C', 'B')">(C) succeed</div>
+          <div class="option-item" data-opt="D" onclick="selectOption(this, 'D', 'B')">(D) success</div>
         </div>
         <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
         <div class="explanation-box">
@@ -516,10 +540,10 @@
       <div class="exercise-box">
         <div class="question-stem">2. The company offers a ______ benefits package to attract experienced backend developers.</div>
         <div class="options-grid">
-          <div class="option-item">(A) compete</div>
-          <div class="option-item">(B) competition</div>
-          <div class="option-item">(C) competitive</div>
-          <div class="option-item">(D) competitively</div>
+          <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'C')">(A) compete</div>
+          <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'C')">(B) competition</div>
+          <div class="option-item" data-opt="C" onclick="selectOption(this, 'C', 'C')">(C) competitive</div>
+          <div class="option-item" data-opt="D" onclick="selectOption(this, 'D', 'C')">(D) competitively</div>
         </div>
         <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
         <div class="explanation-box">
@@ -533,10 +557,10 @@
       <div class="exercise-box">
         <div class="question-stem">3. Please review the contract details carefully before signing the ______.</div>
         <div class="options-grid">
-          <div class="option-item">(A) agree</div>
-          <div class="option-item">(B) agreement</div>
-          <div class="option-item">(C) agreeable</div>
-          <div class="option-item">(D) agreeably</div>
+          <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'B')">(A) agree</div>
+          <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'B')">(B) agreement</div>
+          <div class="option-item" data-opt="C" onclick="selectOption(this, 'C', 'B')">(C) agreeable</div>
+          <div class="option-item" data-opt="D" onclick="selectOption(this, 'D', 'B')">(D) agreeably</div>
         </div>
         <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
         <div class="explanation-box">
@@ -550,10 +574,10 @@
       <div class="exercise-box">
         <div class="question-stem">4. The new monitoring system operates ______ even during peak traffic hours.</div>
         <div class="options-grid">
-          <div class="option-item">(A) reliable</div>
-          <div class="option-item">(B) reliability</div>
-          <div class="option-item">(C) reliably</div>
-          <div class="option-item">(D) reliableness</div>
+          <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'C')">(A) reliable</div>
+          <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'C')">(B) reliability</div>
+          <div class="option-item" data-opt="C" onclick="selectOption(this, 'C', 'C')">(C) reliably</div>
+          <div class="option-item" data-opt="D" onclick="selectOption(this, 'D', 'C')">(D) reliableness</div>
         </div>
         <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
         <div class="explanation-box">
@@ -567,10 +591,10 @@
       <div class="exercise-box">
         <div class="question-stem">5. Customer service representatives must remain ______ at all times when handling inquiries.</div>
         <div class="options-grid">
-          <div class="option-item">(A) polite</div>
-          <div class="option-item">(B) politely</div>
-          <div class="option-item">(C) politeness</div>
-          <div class="option-item">(D) impolitely</div>
+          <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'A')">(A) polite</div>
+          <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'A')">(B) politely</div>
+          <div class="option-item" data-opt="C" onclick="selectOption(this, 'C', 'A')">(C) politeness</div>
+          <div class="option-item" data-opt="D" onclick="selectOption(this, 'D', 'A')">(D) impolitely</div>
         </div>
         <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
         <div class="explanation-box">
@@ -597,6 +621,32 @@
       const box = btn.nextElementSibling;
       box.classList.toggle('active');
       btn.innerText = box.classList.contains('active') ? 'Ẩn Đáp Án & Phân Tích' : 'Xem Đáp Án & Phân Tích';
+    }
+
+    // Select and check option
+    function selectOption(el, chosen, correct) {
+      const parent = el.closest('.exercise-box');
+      const allOptions = parent.querySelectorAll('.option-item');
+      allOptions.forEach(opt => {
+        opt.classList.remove('correct', 'wrong');
+      });
+
+      if (chosen === correct) {
+        el.classList.add('correct');
+      } else {
+        el.classList.add('wrong');
+        allOptions.forEach(opt => {
+          if (opt.getAttribute('data-opt') === correct) {
+            opt.classList.add('correct');
+          }
+        });
+      }
+
+      // Automatically show explanation
+      const box = parent.querySelector('.explanation-box');
+      box.classList.add('active');
+      const revealBtn = parent.querySelector('.reveal-btn');
+      if (revealBtn) revealBtn.innerText = 'Ẩn Đáp Án & Phân Tích';
     }
   </script>
 </body>

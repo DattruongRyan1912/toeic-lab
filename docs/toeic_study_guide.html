@@ -824,20 +824,26 @@
       <div class="calculator-box">
         <div class="calc-grid">
           <div>
-            <!-- Listening Slider -->
+            <!-- Listening Slider & Direct Input -->
             <div class="range-group">
               <div class="range-header">
                 <span>Listening Raw (Số câu đúng Part 1-4)</span>
-                <span class="range-val" id="lRawVal">75 / 100 câu</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <input type="number" id="lRawNum" min="0" max="100" value="75" style="width: 68px; padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-family: var(--font-mono); font-weight: 700; font-size: 15px; text-align: center;">
+                  <span style="font-size: 12px; color: var(--text-muted);">/ 100 câu</span>
+                </div>
               </div>
               <input type="range" id="lRawInput" min="0" max="100" value="75">
             </div>
 
-            <!-- Reading Slider -->
+            <!-- Reading Slider & Direct Input -->
             <div class="range-group">
               <div class="range-header">
                 <span>Reading Raw (Số câu đúng Part 5-7)</span>
-                <span class="range-val" id="rRawVal">70 / 100 câu</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <input type="number" id="rRawNum" min="0" max="100" value="70" style="width: 68px; padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent-purple); color: var(--accent-purple); border-radius: 6px; font-family: var(--font-mono); font-weight: 700; font-size: 15px; text-align: center;">
+                  <span style="font-size: 12px; color: var(--text-muted);">/ 100 câu</span>
+                </div>
               </div>
               <input type="range" id="rRawInput" min="0" max="100" value="70">
             </div>
@@ -1415,10 +1421,76 @@
       </div>
 
       <div class="card" style="margin-bottom: 20px;">
-        <p style="margin-bottom: 16px;">Mọi câu sai đều phải được lưu trữ và phân loại theo 5 mã chuẩn. Dưới đây là bảng mẫu trích xuất từ <code>templates/error_log_template.csv</code>:</p>
+        <p style="margin-bottom: 16px;">Mọi câu làm sai đều được lưu trữ và phân loại theo 5 mã chuẩn RCA. Bạn có thể nhập trực tiếp các câu sai của bạn vào form dưới đây:</p>
         
+        <!-- Form Nhập Câu Sai Mới -->
+        <div style="background: var(--bg-primary); border: 1px solid var(--accent); border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--accent); display: flex; align-items: center; gap: 8px;">
+            <span>➕</span> Nhập Câu Sai Mới Vào Error Log (Tự Động Lưu Trình Duyệt)
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Mã Đề Thi</label>
+              <input type="text" id="errTestId" value="ETS 2024 Test 01" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Phần Thi</label>
+              <select id="errPart" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+                <option value="Part 1">Part 1 (Hình ảnh)</option>
+                <option value="Part 2">Part 2 (Hỏi - Đáp)</option>
+                <option value="Part 3">Part 3 (Hội thoại)</option>
+                <option value="Part 4">Part 4 (Bài nói)</option>
+                <option value="Part 5" selected>Part 5 (Điền câu)</option>
+                <option value="Part 6">Part 6 (Điền đoạn)</option>
+                <option value="Part 7">Part 7 (Đọc hiểu)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Số Câu</label>
+              <input type="number" id="errQNum" value="101" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Loại Bẫy / Mã Lỗi</label>
+              <select id="errType" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px; font-weight: 600;">
+                <option value="VOCAB">VOCAB (Từ mới/Nghĩa)</option>
+                <option value="GRAMMAR">GRAMMAR (Sai cấu trúc)</option>
+                <option value="PHONETICS">PHONETICS (Nối/Nuốt âm)</option>
+                <option value="TRAP">TRAP (Bẫy đề thi)</option>
+                <option value="TIME">TIME (Hết giờ/Đọc vội)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Bạn Chọn (Sai)</label>
+              <input type="text" id="errMyChoice" placeholder="VD: A" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px; text-transform: uppercase;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Đáp Án Đúng</label>
+              <input type="text" id="errCorrectChoice" placeholder="VD: C" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--accent-green); border-radius: 6px; font-size: 13px; text-transform: uppercase; font-weight: 700;">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Nguyên Nhân Sai Gốc Rễ (Root Cause)</label>
+              <input type="text" id="errCause" placeholder="Ví dụ: Nhầm vị trí trạng từ bổ nghĩa cho động từ" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Quy Tắc Nhớ / Cặp Paraphrase</label>
+              <input type="text" id="errRule" placeholder="Ví dụ: S + [Adv] + V + O" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button onclick="addErrorEntry()" style="padding: 9px 18px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
+              ➕ Thêm Vào Error Log
+            </button>
+            <button onclick="exportErrorLogCSV()" style="padding: 9px 16px; background: var(--bg-secondary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">
+              📥 Tải File CSV
+            </button>
+            <span id="addSuccessMsg" style="font-size: 12px; color: var(--accent-green); display: none;">✅ Đã thêm và lưu trữ thành công!</span>
+          </div>
+        </div>
+
         <div class="table-container">
-          <table>
+          <table id="errorLogTable">
             <thead>
               <tr>
                 <th>Test / Part</th>
@@ -1632,8 +1704,24 @@
       }
     }
 
-    document.getElementById('lRawInput').addEventListener('input', updateCalculator);
-    document.getElementById('rRawInput').addEventListener('input', updateCalculator);
+    function syncListening(val) {
+      val = Math.max(0, Math.min(100, parseInt(val) || 0));
+      document.getElementById('lRawInput').value = val;
+      document.getElementById('lRawNum').value = val;
+      updateCalculator();
+    }
+
+    function syncReading(val) {
+      val = Math.max(0, Math.min(100, parseInt(val) || 0));
+      document.getElementById('rRawInput').value = val;
+      document.getElementById('rRawNum').value = val;
+      updateCalculator();
+    }
+
+    document.getElementById('lRawInput').addEventListener('input', (e) => syncListening(e.target.value));
+    document.getElementById('lRawNum').addEventListener('input', (e) => syncListening(e.target.value));
+    document.getElementById('rRawInput').addEventListener('input', (e) => syncReading(e.target.value));
+    document.getElementById('rRawNum').addEventListener('input', (e) => syncReading(e.target.value));
     document.getElementById('targetSelect').addEventListener('change', updateCalculator);
 
     // Toggle task in roadmap
@@ -1659,6 +1747,79 @@
       const barEl = document.getElementById('roadmapProgressBar');
       if (percentEl) percentEl.innerText = `${percent}%`;
       if (barEl) barEl.style.width = `${Math.max(5, percent)}%`;
+    }
+
+    // Dynamic Error Log Management
+    let customErrors = JSON.parse(localStorage.getItem('toeic_custom_errors') || '[]');
+
+    function renderCustomErrors() {
+      const tbody = document.querySelector('#errorLogTable tbody');
+      if (!tbody) return;
+      // remove old custom rows
+      document.querySelectorAll('.custom-error-row').forEach(r => r.remove());
+
+      customErrors.forEach(err => {
+        const tr = document.createElement('tr');
+        tr.className = 'custom-error-row';
+        tr.style.backgroundColor = 'rgba(56, 189, 248, 0.05)';
+        tr.innerHTML = `
+          <td>${err.testId}</td>
+          <td>${err.part} - Q${err.qNum}</td>
+          <td><span class="badge-error badge-${err.type.toLowerCase()}">${err.type}</span></td>
+          <td style="color:var(--accent-rose); font-weight:700;">${err.myChoice}</td>
+          <td style="color:var(--accent-green); font-weight:700;">${err.correctChoice}</td>
+          <td>${err.cause}</td>
+          <td><em>${err.rule}</em></td>
+        `;
+        tbody.prepend(tr);
+      });
+    }
+
+    function addErrorEntry() {
+      const testId = document.getElementById('errTestId').value.trim() || 'ETS 2024';
+      const part = document.getElementById('errPart').value;
+      const qNum = document.getElementById('errQNum').value.trim() || '1';
+      const type = document.getElementById('errType').value;
+      const myChoice = document.getElementById('errMyChoice').value.trim().toUpperCase() || '-';
+      const correctChoice = document.getElementById('errCorrectChoice').value.trim().toUpperCase() || '-';
+      const cause = document.getElementById('errCause').value.trim() || 'Chưa ghi chú';
+      const rule = document.getElementById('errRule').value.trim() || 'Chưa ghi chú';
+
+      const entry = { testId, part, qNum, type, myChoice, correctChoice, cause, rule, createdAt: new Date().toISOString() };
+      customErrors.unshift(entry);
+      localStorage.setItem('toeic_custom_errors', JSON.stringify(customErrors));
+      renderCustomErrors();
+
+      // Show success msg
+      const msg = document.getElementById('addSuccessMsg');
+      msg.style.display = 'inline';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+
+      // Clear inputs
+      document.getElementById('errMyChoice').value = '';
+      document.getElementById('errCorrectChoice').value = '';
+      document.getElementById('errCause').value = '';
+      document.getElementById('errRule').value = '';
+    }
+
+    function exportErrorLogCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,Test_ID,Part,Question_No,Error_Type,My_Choice,Correct_Choice,Root_Cause,Rule_Or_Paraphrase\n";
+      // Defaults
+      csvContent += "ETS 2024 #01,Part 2,14,TRAP,A,C,\"Bẫy Similar Sound\",\"check schedule = don't know\"\n";
+      csvContent += "ETS 2024 #01,Part 5,108,GRAMMAR,B,D,\"Thiếu trạng từ\",\"unanimously approved\"\n";
+      csvContent += "ETS 2024 #01,Part 7,164,VOCAB,A,C,\"Không biết nghĩa từ\",\"comprehensive = full coverage\"\n";
+      
+      customErrors.forEach(err => {
+        csvContent += `"${err.testId}","${err.part}","${err.qNum}","${err.type}","${err.myChoice}","${err.correctChoice}","${err.cause.replace(/"/g, '""')}","${err.rule.replace(/"/g, '""')}"\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `TOEIC_Error_Log_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
 
     // Initial run
