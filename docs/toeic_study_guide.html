@@ -737,6 +737,156 @@
       flex-wrap: wrap;
       gap: 10px;
     }
+
+    /* Mode Switcher Tabs */
+    .mode-switcher-container {
+      display: flex;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 3px;
+      margin: 4px 0 10px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 8px 6px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      font-family: var(--font-sans);
+    }
+    .mode-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-hover);
+    }
+    .mode-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+
+    /* Study Zone Focus Header */
+    .study-focus-header {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(52, 211, 153, 0.1) 100%);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .study-stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .study-stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .study-stat-icon {
+      font-size: 22px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: var(--bg-primary);
+      flex-shrink: 0;
+    }
+
+    .study-stat-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .study-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .study-stat-value {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .study-zone-notice {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px dashed rgba(56, 189, 248, 0.35);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    /* Reference View Header */
+    .reference-banner-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(192, 132, 252, 0.12);
+      border: 1px solid rgba(192, 132, 252, 0.3);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* View Visibility Panels */
+    .view-panel {
+      display: none;
+    }
+    .view-panel.active-view {
+      display: block;
+      animation: fadeIn 0.25s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 8px 4px;
+    }
   </style>
 </head>
 <body>
@@ -747,20 +897,50 @@
       <div class="brand-logo">T</div>
       <div>
         <div class="brand-title">TOEIC Master AI</div>
-        <div class="brand-subtitle">Self-Study Engine</div>
+        <div class="brand-subtitle">Study & Lab Engine</div>
       </div>
     </div>
 
-    <ul class="nav-list">
-      <li class="nav-item"><a href="#overview" class="active">🎯 Tổng quan hệ thống</a></li>
-      <li class="nav-item"><a href="#flashcards">🗂️ Flashcard SRS Web</a></li>
+    <!-- Mode Switcher -->
+    <div class="mode-switcher-container">
+      <button class="mode-btn active" id="btnModeStudy" onclick="setViewMode('study')">
+        <span>🎓</span> Góc Học Tập
+      </button>
+      <button class="mode-btn" id="btnModeRef" onclick="setViewMode('reference')">
+        <span>📖</span> Tài Liệu
+      </button>
+    </div>
+
+    <!-- Nav List for Study Mode (Default) -->
+    <ul class="nav-list" id="navGroupStudy">
+      <li class="nav-item"><a href="#flashcards" class="active">🗂️ Flashcard SRS Web</a></li>
       <li class="nav-item"><a href="#lessons">📚 12 Chuyên đề Cú pháp</a></li>
+      <li class="nav-item"><a href="#error-log">📝 Sổ tay lỗi sai (RCA)</a></li>
       <li class="nav-item"><a href="#calculator">🧮 Bảng tính điểm ETS</a></li>
-      <li class="nav-item"><a href="#roadmaps">📅 Lộ trình Sprint 800+</a></li>
-      <li class="nav-item"><a href="#error-log">📝 Quản lý lỗi sai (RCA)</a></li>
+      <li class="nav-item"><a href="#roadmaps">📅 Lộ trình 24 tuần</a></li>
+      <li class="nav-divider"></li>
+      <li class="nav-item">
+        <a href="javascript:void(0)" onclick="setViewMode('reference')" style="font-size: 12px; color: var(--accent); opacity: 0.9;">
+          <span>📖 Mở tài liệu & bot</span>
+          <span>➔</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Nav List for Reference Mode -->
+    <ul class="nav-list" id="navGroupRef" style="display: none;">
+      <li class="nav-item"><a href="#overview">🎯 Giới thiệu hệ sinh thái</a></li>
       <li class="nav-item"><a href="#methodology">🔬 Nghiên cứu phương pháp</a></li>
+      <li class="nav-item"><a href="#agent-config">🤖 Kiến trúc Agent Coach</a></li>
       <li class="nav-item"><a href="#skills-catalog">⚡ 5 Skills chuyên sâu</a></li>
       <li class="nav-item"><a href="#prompts">💬 Mẫu Prompt tương tác</a></li>
+      <li class="nav-divider"></li>
+      <li class="nav-item">
+        <a href="javascript:void(0)" onclick="setViewMode('study')" style="font-size: 12px; color: var(--accent-green); font-weight: 700;">
+          <span>🎓 Quay lại Góc Học Tập</span>
+          <span>↵</span>
+        </a>
+      </li>
     </ul>
 
     <button class="theme-toggle-btn" id="themeToggleBtn">
@@ -770,97 +950,73 @@
 
   <!-- Main Content Area -->
   <main class="main-wrapper">
+    <!-- ============================================================== -->
+    <!-- VIEW 1: KHU VỰC CHUYÊN HỌC (STUDY ZONE - DEFAULT)             -->
+    <!-- ============================================================== -->
+    <div id="studyZoneView" class="view-panel active-view">
 
-    <!-- Hero Banner -->
-    <div class="hero-banner" id="overview">
-      <div class="badge-pill">🚀 Kỹ thuật tự học chuẩn hóa cho Kỹ sư phần mềm</div>
-      <h1 class="hero-title">Hệ Sinh Thái Tự Học TOEIC 800 - 900+</h1>
-      <p class="hero-desc">
-        Xây dựng trên nền tảng tư duy kỹ thuật (Data-Driven, Root Cause Analysis, Time Boxing) kết hợp cùng hệ thống AI Mentor Antigravity đa kỹ năng. Loại bỏ triệt để việc học mẹo ngắn hạn, tập trung làm chủ phản xạ ngôn ngữ thực chất và cấu trúc đề thi chuẩn ETS 2024.
-      </p>
-    </div>
-
-    <!-- Section 1: Methodology Research -->
-    <section id="methodology">
-      <div class="section-header">
-        <h2 class="section-title">🔬 Nghiên cứu các phương pháp tự học hiệu quả cao</h2>
-        <span class="section-tag">SCIENTIFIC METHODOLOGY</span>
-      </div>
-
-      <div class="grid-2">
-        <!-- Card 1: Listening Dictation & Shadowing -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-icon" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">🎧</div>
-            <div>
-              <div class="card-title">Dictation & Shadowing (Listening)</div>
-              <div class="card-subtitle">Làm chủ Part 1 - Part 4</div>
+      <!-- Study Focus Header -->
+      <div class="study-focus-header">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div class="badge-pill" style="background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border-color: rgba(52, 211, 153, 0.3); margin-bottom: 8px;">
+              🎯 FOCUS MODE: KHU VỰC HỌC TẬP CHUYÊN SÂU (TARGET 750+)
             </div>
+            <h1 style="font-size: 26px; font-weight: 800; letter-spacing: -0.02em;">Góc Tự Học TOEIC Thực Chiến</h1>
+            <p style="font-size: 14px; color: var(--text-muted); margin-top: 4px;">
+              Không gian học tập chuyên biệt: Học từ vựng Flashcard SRS, 12 chuyên đề cú pháp Part 5, sổ tay phân tích lỗi sai và tính điểm chuẩn ETS.
+            </p>
           </div>
-          <p>Phương pháp khắc phục triệt để hiện tượng <em>"nghe được từng từ nhưng không hiểu cả câu"</em> hoặc <em>"bị trượt nhịp"</em>:</p>
-          <ul>
-            <li><strong>Dictation (Chép chính tả)</strong>: Dành cho Part 1, 2 và đoạn ngắn Part 3. Giúp não bộ nhận diện các điểm mù âm vị: nuốt âm (Elision), nối âm (Linking: <em>check-in</em>, <em>fill out</em>), biến âm Flap-T (giọng Mỹ) và ngữ điệu câu hỏi đuôi.</li>
-            <li><strong>Shadowing (Nói nhại đồng thời)</strong>: Dành cho Part 3, 4. Nói nhại theo speaker với độ trễ 0.5s. Tăng tốc độ đọc hiểu âm thanh lên <strong>150 - 180 từ/phút</strong> mà không cần dịch ngầm sang tiếng Việt.</li>
-            <li><strong>Kỹ thuật "Đi trước băng 30s"</strong>: Đọc lướt 3 câu hỏi trước khi audio phát. Nhắm trước từ khóa để vừa nghe vừa tick đáp án.</li>
-          </ul>
+          <div>
+            <button onclick="setViewMode('reference')" style="padding: 9px 16px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <span>📖</span> Mở tài liệu & cấu hình bot
+            </button>
+          </div>
         </div>
 
-        <!-- Card 2: Reading Time-Boxing & 3-Pass -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-icon" style="background: rgba(192, 132, 252, 0.15); color: #c084fc;">⏱️</div>
-            <div>
-              <div class="card-title">Time-Boxing & 3-Pass Scanning (Reading)</div>
-              <div class="card-subtitle">Tối ưu 75 phút làm 100 câu Part 5-7</div>
+        <!-- Quick Stats Bar -->
+        <div class="study-stats-bar">
+          <div class="study-stat-card">
+            <div class="study-stat-icon" style="color: var(--accent);">🗂️</div>
+            <div class="study-stat-info">
+              <span class="study-stat-label">Từ vựng đã thuộc</span>
+              <span class="study-stat-value" id="statMasteredCount">0 / 20 từ</span>
             </div>
           </div>
-          <p>Khắc phục lỗi "cháy giờ" dẫn đến việc đánh lụi 15-20 câu cuối ở Part 7:</p>
-          <ul>
-            <li><strong>Part 5 (10 - 12 phút)</strong>: 20-25s/câu. Tách biệt câu Ngữ pháp (xét vị trí từ loại trước/sau chỗ trống) và câu Từ vựng (tìm Collocation).</li>
-            <li><strong>Part 6 (8 - 10 phút)</strong>: Chú ý liên từ chuyển hướng (<em>However, In addition, Consequently</em>) và tính logic của câu điền.</li>
-            <li><strong>Part 7 (50 - 55 phút)</strong>: Áp dụng quy tắc <strong>3-Pass</strong>: Pass 1 quét tiêu đề/người gửi/mục đích ➔ Pass 2 định vị câu hỏi và từ khóa ➔ Pass 3 đối chiếu Paraphrase.</li>
-            <li><strong>Cross-Referencing (Đoạn 2 & 3)</strong>: Câu hỏi suy luận luôn kết nối thông tin giữa 2 tài liệu (ví dụ: Coupon ở đoạn 1 + Hóa đơn mua hàng ở đoạn 2).</li>
-          </ul>
+
+          <div class="study-stat-card">
+            <div class="study-stat-icon" style="color: var(--accent-purple);">📚</div>
+            <div class="study-stat-info">
+              <span class="study-stat-label">Chuyên đề cú pháp</span>
+              <span class="study-stat-value" style="font-size: 13px; color: var(--accent-purple);">Bài 01 (Vị trí 4 từ)</span>
+            </div>
+          </div>
+
+          <div class="study-stat-card">
+            <div class="study-stat-icon" style="color: var(--accent-rose);">📝</div>
+            <div class="study-stat-info">
+              <span class="study-stat-label">Sổ lỗi sai ghi nhận</span>
+              <span class="study-stat-value" id="statErrorTotal" style="color: var(--accent-rose);">5 câu (RCA)</span>
+            </div>
+          </div>
+
+          <div class="study-stat-card">
+            <div class="study-stat-icon" style="color: var(--accent-green);">🧮</div>
+            <div class="study-stat-info">
+              <span class="study-stat-label">Điểm mô phỏng ETS</span>
+              <span class="study-stat-value" id="statCalcTotal" style="color: var(--accent-green);">720 / 750</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Card 3: Paraphrase Vault -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-icon" style="background: rgba(52, 211, 153, 0.15); color: #34d399;">🔄</div>
-            <div>
-              <div class="card-title">Tư duy Paraphrasing Vault</div>
-              <div class="card-subtitle">Chìa khóa chinh phục mốc 850 - 990</div>
-            </div>
-          </div>
-          <p>ETS không kiểm tra bạn có thuộc lòng một từ không, mà kiểm tra khả năng nhận diện thông tin được tái diễn đạt:</p>
-          <ul>
-            <li><strong>Từ đồng nghĩa trực tiếp</strong>: <em>call off ➔ cancel</em>, <em>postpone ➔ delay</em>, <em>free of charge ➔ complimentary</em>.</li>
-            <li><strong>Từ cụ thể ➔ Khái quát (Hypernym)</strong>: <em>laptops, tablets, printers ➔ office equipment</em>.</li>
-            <li><strong>Đổi thể / ngữ thái</strong>: <em>The manager approved ➔ The request has been accepted</em>.</li>
-            <li><strong>Bẫy từ trùng âm / giống chữ</strong>: Nếu trong bài nghe xuất hiện từ <em>copy</em>, phương án có <em>coffee</em> hầu như chắc chắn là bẫy.</li>
-          </ul>
-        </div>
-
-        <!-- Card 4: SRS & Cognitive Load -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">🧠</div>
-            <div>
-              <div class="card-title">Spaced Repetition (SRS/Anki)</div>
-              <div class="card-subtitle">Ghi nhớ bền vững 600 từ vựng kinh doanh</div>
-            </div>
-          </div>
-          <p>Ứng dụng đường cong lãng quên Ebbinghaus để ôn tập từ vựng đúng thời điểm vàng:</p>
-          <ul>
-            <li>Không học từ đơn lẻ, chỉ học từ trong <strong>Collocations</strong> (cụm từ hay gặp: <em>conduct an audit</em>, <em>comply with regulations</em>).</li>
-            <li>Chu kỳ lặp lại tối ưu: Sau 20 phút ➔ 1 ngày ➔ 3 ngày ➔ 7 ngày ➔ 16 ngày ➔ 35 ngày.</li>
-            <li>14 chủ đề TOEIC thông dụng: General Business, Manufacturing, Finance, HR, Procurement, Real Estate, Logistics, IT,...</li>
-          </ul>
+        <div class="study-zone-notice">
+          <span>💡 <strong>Chu trình học 45-60p mỗi ngày:</strong> 15p Luyện thẻ Flashcard ➔ 20p Học chuyên đề Part 5 & làm bài tập ➔ 15p Nhập câu sai vào Sổ lỗi.</span>
+          <span style="font-weight: 700; color: var(--accent);">Sprint 1: Tuần 1 / 24</span>
         </div>
       </div>
-    </section>
 
-    <!-- Section: Interactive Web Flashcard Player -->
+      <!-- 1. Flashcards (SRS Web Player) -->
+      <!-- Section: Interactive Web Flashcard Player -->
     <section id="flashcards">
       <div class="section-header">
         <h2 class="section-title">🗂️ Trình Luyện Flashcard Từ Vựng Web (SRS Interactive)</h2>
@@ -951,180 +1107,8 @@
       </div>
     </section>
 
-    <!-- Section 2: Interactive Calculator -->
-    <section id="calculator">
-      <div class="section-header">
-        <h2 class="section-title">🧮 Bảng tính điểm TOEIC & Phân tích khoảng cách (Gap Analysis)</h2>
-        <span class="section-tag">ETS EQUATING ALGORITHM</span>
-      </div>
-
-      <div class="calculator-box">
-        <div class="calc-grid">
-          <div>
-            <!-- Listening Slider & Direct Input -->
-            <div class="range-group">
-              <div class="range-header">
-                <span>Listening Raw (Số câu đúng Part 1-4)</span>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <input type="number" id="lRawNum" min="0" max="100" value="75" style="width: 68px; padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-family: var(--font-mono); font-weight: 700; font-size: 15px; text-align: center;">
-                  <span style="font-size: 12px; color: var(--text-muted);">/ 100 câu</span>
-                </div>
-              </div>
-              <input type="range" id="lRawInput" min="0" max="100" value="75">
-            </div>
-
-            <!-- Reading Slider & Direct Input -->
-            <div class="range-group">
-              <div class="range-header">
-                <span>Reading Raw (Số câu đúng Part 5-7)</span>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <input type="number" id="rRawNum" min="0" max="100" value="70" style="width: 68px; padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent-purple); color: var(--accent-purple); border-radius: 6px; font-family: var(--font-mono); font-weight: 700; font-size: 15px; text-align: center;">
-                  <span style="font-size: 12px; color: var(--text-muted);">/ 100 câu</span>
-                </div>
-              </div>
-              <input type="range" id="rRawInput" min="0" max="100" value="70">
-            </div>
-
-            <!-- Target Selection -->
-            <div class="range-group">
-              <div class="range-header">
-                <span>Mục tiêu điểm số (Target Score)</span>
-                <span class="range-val" id="targetScoreVal">800</span>
-              </div>
-              <select id="targetSelect" style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 600;">
-                <option value="550">550 Điểm (Tốt nghiệp Đại học / Cơ bản)</option>
-                <option value="650">650 Điểm (Doanh nghiệp trong nước)</option>
-                <option value="750">750 Điểm (Doanh nghiệp nước ngoài / Kỹ sư)</option>
-                <option value="800" selected>800 Điểm (Môi trường Global / Trình độ chuẩn)</option>
-                <option value="850">850 Điểm (Chuyên nghiệp cao cấp)</option>
-                <option value="900">900 Điểm (Master / Giao tiếp toàn diện)</option>
-                <option value="950">950+ Điểm (Cận tuyệt đối)</option>
-              </select>
-            </div>
-
-            <p style="font-size: 12px; color: var(--text-muted); margin-top: 14px;">
-              * Tính toán dựa trên bảng chuẩn hóa Curve của ETS (Educational Testing Service). Điểm số quy đổi từ các bộ đề thi thật gần nhất.
-            </p>
-          </div>
-
-          <!-- Result Display -->
-          <div class="result-display">
-            <div class="total-score-label">Ước lượng tổng điểm TOEIC</div>
-            <div class="total-score-val" id="calcTotal">720</div>
-            
-            <div class="sub-scores">
-              <div class="sub-score-item">🎧 Listening: <strong id="calcListening" style="color:var(--accent)">390</strong></div>
-              <div class="sub-score-item">📖 Reading: <strong id="calcReading" style="color:var(--accent-purple)">330</strong></div>
-            </div>
-
-            <div class="cefr-tag" id="calcCefr">B2 - Working Proficiency</div>
-
-            <div id="gapAlert" style="margin-top: 16px; font-size: 13px; text-align: left; width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color);">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 3: Agent Ecosystem -->
-    <section id="agent-config">
-      <div class="section-header">
-        <h2 class="section-title">🤖 Kiến trúc Agent TOEIC Coach trong Workspace</h2>
-        <span class="section-tag">ANTIGRAVITY CUSTOMIZATION</span>
-      </div>
-
-      <div class="card" style="margin-bottom: 24px;">
-        <p style="margin-bottom: 12px;">Hệ thống cấu hình cho phép AI đồng hành 1-1 cùng bạn trong mọi tác vụ học tập. Cấu hình được tải trực tiếp từ thư mục workspace:</p>
-        <div class="grid-3">
-          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <strong style="color: var(--accent);">GEMINI.md & AGENTS.md</strong>
-            <p style="font-size: 12px; margin-top: 6px;">Định vị AI Mentor, thiết lập nguyên tắc Root Cause Analysis (RCA), bẻ gãy 5 nhóm lỗi và chuẩn format giải đề 3 chiều.</p>
-          </div>
-          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <strong style="color: var(--accent-purple);">.agents/rules/</strong>
-            <p style="font-size: 12px; margin-top: 6px;">Quy chuẩn chi tiết phân loại bẫy đề thi, quy tắc học theo từng mức điểm (550, 750, 850+) và protocol chữa bài thi thử.</p>
-          </div>
-          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
-            <strong style="color: var(--accent-green);">.agents/skills/</strong>
-            <p style="font-size: 12px; margin-top: 6px;">5 skills kích hoạt theo nhu cầu: Chẩn đoán lộ trình, Luyện nghe phản xạ, Luyện đọc thần tốc, Từ vựng SRS, Phân tích Mock test.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 4: Skills Catalog -->
-    <section id="skills-catalog">
-      <div class="section-header">
-        <h2 class="section-title">⚡ Danh mục 5 Skills Tự Học Chuyên Sâu</h2>
-        <span class="section-tag">MODULAR CAPABILITIES</span>
-      </div>
-
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-header">
-            <span style="font-size: 24px;">🎯</span>
-            <div>
-              <div class="card-title">toeic-diagnostic-coach</div>
-              <div class="card-subtitle">Chẩn đoán & Lập Sprint</div>
-            </div>
-          </div>
-          <p>Khảo sát năng lực ban đầu qua Mini-Test, tính điểm chênh lệch với mục tiêu, lập kế hoạch chi tiết từ 4 - 8 tuần theo chuẩn giờ học của kỹ sư.</p>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span style="font-size: 24px;">🎧</span>
-            <div>
-              <div class="card-title">toeic-listening-mastery</div>
-              <div class="card-subtitle">Kỹ năng Nghe thực chất</div>
-            </div>
-          </div>
-          <p>Điều phối bài tập Dictation (chép chính tả), Shadowing 3 tầng tốc độ (1.0x - 1.2x), kỹ thuật đọc trước câu hỏi 30s và phân tích bẫy phát âm.</p>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span style="font-size: 24px;">📖</span>
-            <div>
-              <div class="card-title">toeic-reading-mastery</div>
-              <div class="card-subtitle">Chiến thuật Đọc 75 phút</div>
-            </div>
-          </div>
-          <p>Kỹ thuật 3-Pass Scanning cho Part 7, nhận diện nhanh cấu trúc câu Part 5 trong 20s, xử lý đoạn kép/đoạn ba không bị phân tán thông tin.</p>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span style="font-size: 24px;">🧠</span>
-            <div>
-              <div class="card-title">toeic-vocab-builder</div>
-              <div class="card-subtitle">Từ vựng SRS & Collocation</div>
-            </div>
-          </div>
-          <p>Sinh thẻ Anki chuẩn định dạng, phân loại từ vựng theo 14 chủ đề công sở, trích xuất bảng Paraphrase Vault từ các đề thi thật.</p>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span style="font-size: 24px;">📊</span>
-            <div>
-              <div class="card-title">toeic-mock-test-analyst</div>
-              <div class="card-subtitle">Giải đề & Chẩn đoán bẫy</div>
-            </div>
-          </div>
-          <p>Quy trình chữa đề 4 giai đoạn theo nguyên tắc 1-3 (Làm 1 giờ - Chữa 3 giờ), nhận diện 5 bẫy kinh điển và ghi log tự động vào file CSV.</p>
-        </div>
-
-        <div class="card" style="border-style: dashed; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-          <div style="font-size: 28px; margin-bottom: 8px;">💻</div>
-          <div class="card-title">scripts/score_calculator.py</div>
-          <p style="font-size: 12px; margin-top: 6px;">CLI tính điểm và phân tích gap tức thì: <code>python scripts/score_calculator.py --l-raw 80 --r-raw 75</code></p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section: 12 Chuyên Đề Cú Pháp Part 5 -->
+      <!-- 2. Lessons (12 Chuyên đề cú pháp Part 5) -->
+      <!-- Section: 12 Chuyên Đề Cú Pháp Part 5 -->
     <section id="lessons">
       <div class="section-header">
         <h2 class="section-title">📚 12 Chuyên Đề Cú Pháp Part 5 (Sprint 1)</h2>
@@ -1301,7 +1285,227 @@
       </div>
     </section>
 
-    <!-- Section 5: Roadmaps -->
+      <!-- 3. Error Log (Sổ ghi nhận lỗi sai & phân tích bẫy) -->
+      <!-- Section 6: Error Log & RCA -->
+    <section id="error-log">
+      <div class="section-header">
+        <h2 class="section-title">📝 Hệ Thống Phân Tích Lỗi Sai (Root Cause Analysis)</h2>
+        <span class="section-tag">DATA-DRIVEN ERROR LOG</span>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <p style="margin-bottom: 16px;">Mọi câu làm sai đều được lưu trữ và phân loại theo 5 mã chuẩn RCA. Bạn có thể nhập trực tiếp các câu sai của bạn vào form dưới đây:</p>
+        
+        <!-- Form Nhập Câu Sai Mới -->
+        <div style="background: var(--bg-primary); border: 1px solid var(--accent); border-radius: 10px; padding: 20px; margin-bottom: 24px;">
+          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--accent); display: flex; align-items: center; gap: 8px;">
+            <span>➕</span> Nhập Câu Sai Mới Vào Error Log (Tự Động Lưu Trình Duyệt)
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Mã Đề Thi</label>
+              <input type="text" id="errTestId" value="ETS 2024 Test 01" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Phần Thi</label>
+              <select id="errPart" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+                <option value="Part 1">Part 1 (Hình ảnh)</option>
+                <option value="Part 2">Part 2 (Hỏi - Đáp)</option>
+                <option value="Part 3">Part 3 (Hội thoại)</option>
+                <option value="Part 4">Part 4 (Bài nói)</option>
+                <option value="Part 5" selected>Part 5 (Điền câu)</option>
+                <option value="Part 6">Part 6 (Điền đoạn)</option>
+                <option value="Part 7">Part 7 (Đọc hiểu)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Số Câu</label>
+              <input type="number" id="errQNum" value="101" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Loại Bẫy / Mã Lỗi</label>
+              <select id="errType" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px; font-weight: 600;">
+                <option value="VOCAB">VOCAB (Từ mới/Nghĩa)</option>
+                <option value="GRAMMAR">GRAMMAR (Sai cấu trúc)</option>
+                <option value="PHONETICS">PHONETICS (Nối/Nuốt âm)</option>
+                <option value="TRAP">TRAP (Bẫy đề thi)</option>
+                <option value="TIME">TIME (Hết giờ/Đọc vội)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Bạn Chọn (Sai)</label>
+              <input type="text" id="errMyChoice" placeholder="VD: A" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px; text-transform: uppercase;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Đáp Án Đúng</label>
+              <input type="text" id="errCorrectChoice" placeholder="VD: C" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--accent-green); border-radius: 6px; font-size: 13px; text-transform: uppercase; font-weight: 700;">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Nguyên Nhân Sai Gốc Rễ (Root Cause)</label>
+              <input type="text" id="errCause" placeholder="Ví dụ: Nhầm vị trí trạng từ bổ nghĩa cho động từ" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+            <div>
+              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Quy Tắc Nhớ / Cặp Paraphrase</label>
+              <input type="text" id="errRule" placeholder="Ví dụ: S + [Adv] + V + O" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button onclick="addErrorEntry()" style="padding: 9px 18px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
+              ➕ Thêm Vào Error Log
+            </button>
+            <button onclick="exportErrorLogCSV()" style="padding: 9px 16px; background: var(--bg-secondary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">
+              📥 Tải File CSV
+            </button>
+            <span id="addSuccessMsg" style="font-size: 12px; color: var(--accent-green); display: none;">✅ Đã thêm và lưu trữ thành công!</span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table id="errorLogTable">
+            <thead>
+              <tr>
+                <th>Test / Part</th>
+                <th>Câu</th>
+                <th>Mã lỗi</th>
+                <th>Lựa chọn sai</th>
+                <th>Đáp án đúng</th>
+                <th>Nguyên nhân gốc (Root Cause)</th>
+                <th>Cặp Paraphrase / Quy tắc cốt lõi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ETS 2024 #01</td>
+                <td>P2 - Q14</td>
+                <td><span class="badge-error badge-trap">TRAP</span></td>
+                <td>A (went out)</td>
+                <td><strong>C (check calendar)</strong></td>
+                <td>Bẫy Similar Sound: nghe thấy "go" chọn "went", trong khi C là đáp án gián tiếp.</td>
+                <td><em>Check the schedule = I don't know directly</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #01</td>
+                <td>P5 - Q108</td>
+                <td><span class="badge-error badge-grammar">GRAMMAR</span></td>
+                <td>B (unanimous)</td>
+                <td><strong>D (unanimously)</strong></td>
+                <td>Cần trạng từ (Adv) đứng trước bổ nghĩa cho động từ "approved".</td>
+                <td><em>unanimously approved (đồng thuận thông qua)</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #01</td>
+                <td>P7 - Q164</td>
+                <td><span class="badge-error badge-vocab">VOCAB</span></td>
+                <td>A (limited)</td>
+                <td><strong>C (full coverage)</strong></td>
+                <td>Không biết nghĩa từ "comprehensive" trong đoạn văn bản hợp đồng bảo hành.</td>
+                <td><em>comprehensive = extensive = full coverage</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #02</td>
+                <td>P4 - Q82</td>
+                <td><span class="badge-error badge-phonetics">PHONETICS</span></td>
+                <td>B</td>
+                <td><strong>A</strong></td>
+                <td>Nuốt âm giọng Úc: không nghe ra cụm "schedule an appointment".</td>
+                <td><em>schedule /'ʃedju:l/ (UK/AU) vs /'skedʒu:l/ (US)</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #02</td>
+                <td>P7 - Q198</td>
+                <td><span class="badge-error badge-time">TIME</span></td>
+                <td>D</td>
+                <td><strong>B</strong></td>
+                <td>Hết giờ làm bài, đọc vội không kịp đối chiếu Triple Passage.</td>
+                <td>Cần rút ngắn Part 5 xuống đúng 11 phút.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+      <!-- 4. Calculator (Bảng quy đổi điểm ETS & Gap Analysis) -->
+      <!-- Section 2: Interactive Calculator -->
+    <section id="calculator">
+      <div class="section-header">
+        <h2 class="section-title">🧮 Bảng tính điểm TOEIC & Phân tích khoảng cách (Gap Analysis)</h2>
+        <span class="section-tag">ETS EQUATING ALGORITHM</span>
+      </div>
+
+      <div class="calculator-box">
+        <div class="calc-grid">
+          <div>
+            <!-- Listening Slider & Direct Input -->
+            <div class="range-group">
+              <div class="range-header">
+                <span>Listening Raw (Số câu đúng Part 1-4)</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <input type="number" id="lRawNum" min="0" max="100" value="75" style="width: 68px; padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-family: var(--font-mono); font-weight: 700; font-size: 15px; text-align: center;">
+                  <span style="font-size: 12px; color: var(--text-muted);">/ 100 câu</span>
+                </div>
+              </div>
+              <input type="range" id="lRawInput" min="0" max="100" value="75">
+            </div>
+
+            <!-- Reading Slider & Direct Input -->
+            <div class="range-group">
+              <div class="range-header">
+                <span>Reading Raw (Số câu đúng Part 5-7)</span>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <input type="number" id="rRawNum" min="0" max="100" value="70" style="width: 68px; padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent-purple); color: var(--accent-purple); border-radius: 6px; font-family: var(--font-mono); font-weight: 700; font-size: 15px; text-align: center;">
+                  <span style="font-size: 12px; color: var(--text-muted);">/ 100 câu</span>
+                </div>
+              </div>
+              <input type="range" id="rRawInput" min="0" max="100" value="70">
+            </div>
+
+            <!-- Target Selection -->
+            <div class="range-group">
+              <div class="range-header">
+                <span>Mục tiêu điểm số (Target Score)</span>
+                <span class="range-val" id="targetScoreVal">800</span>
+              </div>
+              <select id="targetSelect" style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 600;">
+                <option value="550">550 Điểm (Tốt nghiệp Đại học / Cơ bản)</option>
+                <option value="650">650 Điểm (Doanh nghiệp trong nước)</option>
+                <option value="750">750 Điểm (Doanh nghiệp nước ngoài / Kỹ sư)</option>
+                <option value="800" selected>800 Điểm (Môi trường Global / Trình độ chuẩn)</option>
+                <option value="850">850 Điểm (Chuyên nghiệp cao cấp)</option>
+                <option value="900">900 Điểm (Master / Giao tiếp toàn diện)</option>
+                <option value="950">950+ Điểm (Cận tuyệt đối)</option>
+              </select>
+            </div>
+
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 14px;">
+              * Tính toán dựa trên bảng chuẩn hóa Curve của ETS (Educational Testing Service). Điểm số quy đổi từ các bộ đề thi thật gần nhất.
+            </p>
+          </div>
+
+          <!-- Result Display -->
+          <div class="result-display">
+            <div class="total-score-label">Ước lượng tổng điểm TOEIC</div>
+            <div class="total-score-val" id="calcTotal">720</div>
+            
+            <div class="sub-scores">
+              <div class="sub-score-item">🎧 Listening: <strong id="calcListening" style="color:var(--accent)">390</strong></div>
+              <div class="sub-score-item">📖 Reading: <strong id="calcReading" style="color:var(--accent-purple)">330</strong></div>
+            </div>
+
+            <div class="cefr-tag" id="calcCefr">B2 - Working Proficiency</div>
+
+            <div id="gapAlert" style="margin-top: 16px; font-size: 13px; text-align: left; width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color);">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+      <!-- 5. Roadmaps (Checklist lộ trình 24 tuần) -->
+      <!-- Section 5: Roadmaps -->
     <section id="roadmaps">
       <div class="section-header">
         <h2 class="section-title">📅 Bản Đồ Lộ Trình (Interactive Visual Roadmap)</h2>
@@ -1550,148 +1754,216 @@
       </div>
     </section>
 
-    <!-- Section 6: Error Log & RCA -->
-    <section id="error-log">
-      <div class="section-header">
-        <h2 class="section-title">📝 Hệ Thống Phân Tích Lỗi Sai (Root Cause Analysis)</h2>
-        <span class="section-tag">DATA-DRIVEN ERROR LOG</span>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- VIEW 2: TÀI LIỆU & CẤU HÌNH AGENT (REFERENCE DOCS)              -->
+    <!-- ============================================================== -->
+    <div id="referenceView" class="view-panel">
+
+      <!-- Reference Banner Top -->
+      <div class="reference-banner-top">
+        <div>
+          <strong style="color: var(--accent-purple); font-size: 14px;">📖 Chế độ Tra Cứu Tài Liệu & Cấu Hình Agent</strong>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Tham khảo tài liệu nghiên cứu phương pháp, kiến trúc agent và catalog 5 kỹ năng chuyên sâu.</p>
+        </div>
+        <button onclick="setViewMode('study')" style="padding: 8px 16px; background: var(--accent-green); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">
+          🎓 Quay lại Góc Học Tập ↵
+        </button>
       </div>
 
-      <div class="card" style="margin-bottom: 20px;">
-        <p style="margin-bottom: 16px;">Mọi câu làm sai đều được lưu trữ và phân loại theo 5 mã chuẩn RCA. Bạn có thể nhập trực tiếp các câu sai của bạn vào form dưới đây:</p>
-        
-        <!-- Form Nhập Câu Sai Mới -->
-        <div style="background: var(--bg-primary); border: 1px solid var(--accent); border-radius: 10px; padding: 20px; margin-bottom: 24px;">
-          <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--accent); display: flex; align-items: center; gap: 8px;">
-            <span>➕</span> Nhập Câu Sai Mới Vào Error Log (Tự Động Lưu Trình Duyệt)
-          </h3>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 12px;">
+      <!-- Hero Banner -->
+      <!-- Hero Banner -->
+    <div class="hero-banner" id="overview">
+      <div class="badge-pill">🚀 Kỹ thuật tự học chuẩn hóa cho Kỹ sư phần mềm</div>
+      <h1 class="hero-title">Hệ Sinh Thái Tự Học TOEIC 800 - 900+</h1>
+      <p class="hero-desc">
+        Xây dựng trên nền tảng tư duy kỹ thuật (Data-Driven, Root Cause Analysis, Time Boxing) kết hợp cùng hệ thống AI Mentor Antigravity đa kỹ năng. Loại bỏ triệt để việc học mẹo ngắn hạn, tập trung làm chủ phản xạ ngôn ngữ thực chất và cấu trúc đề thi chuẩn ETS 2024.
+      </p>
+    </div>
+
+      <!-- Methodology (Nghiên cứu phương pháp) -->
+      <!-- Section 1: Methodology Research -->
+    <section id="methodology">
+      <div class="section-header">
+        <h2 class="section-title">🔬 Nghiên cứu các phương pháp tự học hiệu quả cao</h2>
+        <span class="section-tag">SCIENTIFIC METHODOLOGY</span>
+      </div>
+
+      <div class="grid-2">
+        <!-- Card 1: Listening Dictation & Shadowing -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">🎧</div>
             <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Mã Đề Thi</label>
-              <input type="text" id="errTestId" value="ETS 2024 Test 01" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
-            </div>
-            <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Phần Thi</label>
-              <select id="errPart" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
-                <option value="Part 1">Part 1 (Hình ảnh)</option>
-                <option value="Part 2">Part 2 (Hỏi - Đáp)</option>
-                <option value="Part 3">Part 3 (Hội thoại)</option>
-                <option value="Part 4">Part 4 (Bài nói)</option>
-                <option value="Part 5" selected>Part 5 (Điền câu)</option>
-                <option value="Part 6">Part 6 (Điền đoạn)</option>
-                <option value="Part 7">Part 7 (Đọc hiểu)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Số Câu</label>
-              <input type="number" id="errQNum" value="101" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
-            </div>
-            <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Loại Bẫy / Mã Lỗi</label>
-              <select id="errType" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px; font-weight: 600;">
-                <option value="VOCAB">VOCAB (Từ mới/Nghĩa)</option>
-                <option value="GRAMMAR">GRAMMAR (Sai cấu trúc)</option>
-                <option value="PHONETICS">PHONETICS (Nối/Nuốt âm)</option>
-                <option value="TRAP">TRAP (Bẫy đề thi)</option>
-                <option value="TIME">TIME (Hết giờ/Đọc vội)</option>
-              </select>
-            </div>
-            <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Bạn Chọn (Sai)</label>
-              <input type="text" id="errMyChoice" placeholder="VD: A" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px; text-transform: uppercase;">
-            </div>
-            <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Đáp Án Đúng</label>
-              <input type="text" id="errCorrectChoice" placeholder="VD: C" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--accent-green); border-radius: 6px; font-size: 13px; text-transform: uppercase; font-weight: 700;">
+              <div class="card-title">Dictation & Shadowing (Listening)</div>
+              <div class="card-subtitle">Làm chủ Part 1 - Part 4</div>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-            <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Nguyên Nhân Sai Gốc Rễ (Root Cause)</label>
-              <input type="text" id="errCause" placeholder="Ví dụ: Nhầm vị trí trạng từ bổ nghĩa cho động từ" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
-            </div>
-            <div>
-              <label style="font-size: 11px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Quy Tắc Nhớ / Cặp Paraphrase</label>
-              <input type="text" id="errRule" placeholder="Ví dụ: S + [Adv] + V + O" style="width: 100%; padding: 8px 10px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px;">
-            </div>
-          </div>
-          <div style="display: flex; gap: 10px; align-items: center;">
-            <button onclick="addErrorEntry()" style="padding: 9px 18px; background: var(--accent); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
-              ➕ Thêm Vào Error Log
-            </button>
-            <button onclick="exportErrorLogCSV()" style="padding: 9px 16px; background: var(--bg-secondary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">
-              📥 Tải File CSV
-            </button>
-            <span id="addSuccessMsg" style="font-size: 12px; color: var(--accent-green); display: none;">✅ Đã thêm và lưu trữ thành công!</span>
-          </div>
+          <p>Phương pháp khắc phục triệt để hiện tượng <em>"nghe được từng từ nhưng không hiểu cả câu"</em> hoặc <em>"bị trượt nhịp"</em>:</p>
+          <ul>
+            <li><strong>Dictation (Chép chính tả)</strong>: Dành cho Part 1, 2 và đoạn ngắn Part 3. Giúp não bộ nhận diện các điểm mù âm vị: nuốt âm (Elision), nối âm (Linking: <em>check-in</em>, <em>fill out</em>), biến âm Flap-T (giọng Mỹ) và ngữ điệu câu hỏi đuôi.</li>
+            <li><strong>Shadowing (Nói nhại đồng thời)</strong>: Dành cho Part 3, 4. Nói nhại theo speaker với độ trễ 0.5s. Tăng tốc độ đọc hiểu âm thanh lên <strong>150 - 180 từ/phút</strong> mà không cần dịch ngầm sang tiếng Việt.</li>
+            <li><strong>Kỹ thuật "Đi trước băng 30s"</strong>: Đọc lướt 3 câu hỏi trước khi audio phát. Nhắm trước từ khóa để vừa nghe vừa tick đáp án.</li>
+          </ul>
         </div>
 
-        <div class="table-container">
-          <table id="errorLogTable">
-            <thead>
-              <tr>
-                <th>Test / Part</th>
-                <th>Câu</th>
-                <th>Mã lỗi</th>
-                <th>Lựa chọn sai</th>
-                <th>Đáp án đúng</th>
-                <th>Nguyên nhân gốc (Root Cause)</th>
-                <th>Cặp Paraphrase / Quy tắc cốt lõi</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>ETS 2024 #01</td>
-                <td>P2 - Q14</td>
-                <td><span class="badge-error badge-trap">TRAP</span></td>
-                <td>A (went out)</td>
-                <td><strong>C (check calendar)</strong></td>
-                <td>Bẫy Similar Sound: nghe thấy "go" chọn "went", trong khi C là đáp án gián tiếp.</td>
-                <td><em>Check the schedule = I don't know directly</em></td>
-              </tr>
-              <tr>
-                <td>ETS 2024 #01</td>
-                <td>P5 - Q108</td>
-                <td><span class="badge-error badge-grammar">GRAMMAR</span></td>
-                <td>B (unanimous)</td>
-                <td><strong>D (unanimously)</strong></td>
-                <td>Cần trạng từ (Adv) đứng trước bổ nghĩa cho động từ "approved".</td>
-                <td><em>unanimously approved (đồng thuận thông qua)</em></td>
-              </tr>
-              <tr>
-                <td>ETS 2024 #01</td>
-                <td>P7 - Q164</td>
-                <td><span class="badge-error badge-vocab">VOCAB</span></td>
-                <td>A (limited)</td>
-                <td><strong>C (full coverage)</strong></td>
-                <td>Không biết nghĩa từ "comprehensive" trong đoạn văn bản hợp đồng bảo hành.</td>
-                <td><em>comprehensive = extensive = full coverage</em></td>
-              </tr>
-              <tr>
-                <td>ETS 2024 #02</td>
-                <td>P4 - Q82</td>
-                <td><span class="badge-error badge-phonetics">PHONETICS</span></td>
-                <td>B</td>
-                <td><strong>A</strong></td>
-                <td>Nuốt âm giọng Úc: không nghe ra cụm "schedule an appointment".</td>
-                <td><em>schedule /'ʃedju:l/ (UK/AU) vs /'skedʒu:l/ (US)</em></td>
-              </tr>
-              <tr>
-                <td>ETS 2024 #02</td>
-                <td>P7 - Q198</td>
-                <td><span class="badge-error badge-time">TIME</span></td>
-                <td>D</td>
-                <td><strong>B</strong></td>
-                <td>Hết giờ làm bài, đọc vội không kịp đối chiếu Triple Passage.</td>
-                <td>Cần rút ngắn Part 5 xuống đúng 11 phút.</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Card 2: Reading Time-Boxing & 3-Pass -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(192, 132, 252, 0.15); color: #c084fc;">⏱️</div>
+            <div>
+              <div class="card-title">Time-Boxing & 3-Pass Scanning (Reading)</div>
+              <div class="card-subtitle">Tối ưu 75 phút làm 100 câu Part 5-7</div>
+            </div>
+          </div>
+          <p>Khắc phục lỗi "cháy giờ" dẫn đến việc đánh lụi 15-20 câu cuối ở Part 7:</p>
+          <ul>
+            <li><strong>Part 5 (10 - 12 phút)</strong>: 20-25s/câu. Tách biệt câu Ngữ pháp (xét vị trí từ loại trước/sau chỗ trống) và câu Từ vựng (tìm Collocation).</li>
+            <li><strong>Part 6 (8 - 10 phút)</strong>: Chú ý liên từ chuyển hướng (<em>However, In addition, Consequently</em>) và tính logic của câu điền.</li>
+            <li><strong>Part 7 (50 - 55 phút)</strong>: Áp dụng quy tắc <strong>3-Pass</strong>: Pass 1 quét tiêu đề/người gửi/mục đích ➔ Pass 2 định vị câu hỏi và từ khóa ➔ Pass 3 đối chiếu Paraphrase.</li>
+            <li><strong>Cross-Referencing (Đoạn 2 & 3)</strong>: Câu hỏi suy luận luôn kết nối thông tin giữa 2 tài liệu (ví dụ: Coupon ở đoạn 1 + Hóa đơn mua hàng ở đoạn 2).</li>
+          </ul>
+        </div>
+
+        <!-- Card 3: Paraphrase Vault -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(52, 211, 153, 0.15); color: #34d399;">🔄</div>
+            <div>
+              <div class="card-title">Tư duy Paraphrasing Vault</div>
+              <div class="card-subtitle">Chìa khóa chinh phục mốc 850 - 990</div>
+            </div>
+          </div>
+          <p>ETS không kiểm tra bạn có thuộc lòng một từ không, mà kiểm tra khả năng nhận diện thông tin được tái diễn đạt:</p>
+          <ul>
+            <li><strong>Từ đồng nghĩa trực tiếp</strong>: <em>call off ➔ cancel</em>, <em>postpone ➔ delay</em>, <em>free of charge ➔ complimentary</em>.</li>
+            <li><strong>Từ cụ thể ➔ Khái quát (Hypernym)</strong>: <em>laptops, tablets, printers ➔ office equipment</em>.</li>
+            <li><strong>Đổi thể / ngữ thái</strong>: <em>The manager approved ➔ The request has been accepted</em>.</li>
+            <li><strong>Bẫy từ trùng âm / giống chữ</strong>: Nếu trong bài nghe xuất hiện từ <em>copy</em>, phương án có <em>coffee</em> hầu như chắc chắn là bẫy.</li>
+          </ul>
+        </div>
+
+        <!-- Card 4: SRS & Cognitive Load -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">🧠</div>
+            <div>
+              <div class="card-title">Spaced Repetition (SRS/Anki)</div>
+              <div class="card-subtitle">Ghi nhớ bền vững 600 từ vựng kinh doanh</div>
+            </div>
+          </div>
+          <p>Ứng dụng đường cong lãng quên Ebbinghaus để ôn tập từ vựng đúng thời điểm vàng:</p>
+          <ul>
+            <li>Không học từ đơn lẻ, chỉ học từ trong <strong>Collocations</strong> (cụm từ hay gặp: <em>conduct an audit</em>, <em>comply with regulations</em>).</li>
+            <li>Chu kỳ lặp lại tối ưu: Sau 20 phút ➔ 1 ngày ➔ 3 ngày ➔ 7 ngày ➔ 16 ngày ➔ 35 ngày.</li>
+            <li>14 chủ đề TOEIC thông dụng: General Business, Manufacturing, Finance, HR, Procurement, Real Estate, Logistics, IT,...</li>
+          </ul>
         </div>
       </div>
     </section>
 
-    <!-- Section 7: Prompts to Chat with AI Mentor -->
+      <!-- Agent Config (Kiến trúc agent) -->
+      <!-- Section 3: Agent Ecosystem -->
+    <section id="agent-config">
+      <div class="section-header">
+        <h2 class="section-title">🤖 Kiến trúc Agent TOEIC Coach trong Workspace</h2>
+        <span class="section-tag">ANTIGRAVITY CUSTOMIZATION</span>
+      </div>
+
+      <div class="card" style="margin-bottom: 24px;">
+        <p style="margin-bottom: 12px;">Hệ thống cấu hình cho phép AI đồng hành 1-1 cùng bạn trong mọi tác vụ học tập. Cấu hình được tải trực tiếp từ thư mục workspace:</p>
+        <div class="grid-3">
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">GEMINI.md & AGENTS.md</strong>
+            <p style="font-size: 12px; margin-top: 6px;">Định vị AI Mentor, thiết lập nguyên tắc Root Cause Analysis (RCA), bẻ gãy 5 nhóm lỗi và chuẩn format giải đề 3 chiều.</p>
+          </div>
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent-purple);">.agents/rules/</strong>
+            <p style="font-size: 12px; margin-top: 6px;">Quy chuẩn chi tiết phân loại bẫy đề thi, quy tắc học theo từng mức điểm (550, 750, 850+) và protocol chữa bài thi thử.</p>
+          </div>
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent-green);">.agents/skills/</strong>
+            <p style="font-size: 12px; margin-top: 6px;">5 skills kích hoạt theo nhu cầu: Chẩn đoán lộ trình, Luyện nghe phản xạ, Luyện đọc thần tốc, Từ vựng SRS, Phân tích Mock test.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+      <!-- Skills Catalog (5 skills chuyên sâu) -->
+      <!-- Section 4: Skills Catalog -->
+    <section id="skills-catalog">
+      <div class="section-header">
+        <h2 class="section-title">⚡ Danh mục 5 Skills Tự Học Chuyên Sâu</h2>
+        <span class="section-tag">MODULAR CAPABILITIES</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">🎯</span>
+            <div>
+              <div class="card-title">toeic-diagnostic-coach</div>
+              <div class="card-subtitle">Chẩn đoán & Lập Sprint</div>
+            </div>
+          </div>
+          <p>Khảo sát năng lực ban đầu qua Mini-Test, tính điểm chênh lệch với mục tiêu, lập kế hoạch chi tiết từ 4 - 8 tuần theo chuẩn giờ học của kỹ sư.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">🎧</span>
+            <div>
+              <div class="card-title">toeic-listening-mastery</div>
+              <div class="card-subtitle">Kỹ năng Nghe thực chất</div>
+            </div>
+          </div>
+          <p>Điều phối bài tập Dictation (chép chính tả), Shadowing 3 tầng tốc độ (1.0x - 1.2x), kỹ thuật đọc trước câu hỏi 30s và phân tích bẫy phát âm.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">📖</span>
+            <div>
+              <div class="card-title">toeic-reading-mastery</div>
+              <div class="card-subtitle">Chiến thuật Đọc 75 phút</div>
+            </div>
+          </div>
+          <p>Kỹ thuật 3-Pass Scanning cho Part 7, nhận diện nhanh cấu trúc câu Part 5 trong 20s, xử lý đoạn kép/đoạn ba không bị phân tán thông tin.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">🧠</span>
+            <div>
+              <div class="card-title">toeic-vocab-builder</div>
+              <div class="card-subtitle">Từ vựng SRS & Collocation</div>
+            </div>
+          </div>
+          <p>Sinh thẻ Anki chuẩn định dạng, phân loại từ vựng theo 14 chủ đề công sở, trích xuất bảng Paraphrase Vault từ các đề thi thật.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">📊</span>
+            <div>
+              <div class="card-title">toeic-mock-test-analyst</div>
+              <div class="card-subtitle">Giải đề & Chẩn đoán bẫy</div>
+            </div>
+          </div>
+          <p>Quy trình chữa đề 4 giai đoạn theo nguyên tắc 1-3 (Làm 1 giờ - Chữa 3 giờ), nhận diện 5 bẫy kinh điển và ghi log tự động vào file CSV.</p>
+        </div>
+
+        <div class="card" style="border-style: dashed; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+          <div style="font-size: 28px; margin-bottom: 8px;">💻</div>
+          <div class="card-title">scripts/score_calculator.py</div>
+          <p style="font-size: 12px; margin-top: 6px;">CLI tính điểm và phân tích gap tức thì: <code>python scripts/score_calculator.py --l-raw 80 --r-raw 75</code></p>
+        </div>
+      </div>
+    </section>
+
+      <!-- Prompts (Mẫu lệnh hỏi AI) -->
+      <!-- Section 7: Prompts to Chat with AI Mentor -->
     <section id="prompts">
       <div class="section-header">
         <h2 class="section-title">💬 Mẫu Lệnh & Prompt Tương Tác Với AI Mentor</h2>
@@ -1737,6 +2009,7 @@
       </div>
     </section>
 
+    </div>
   </main>
 
   <script>
@@ -1795,6 +2068,59 @@
       return Math.max(5, raw * 3.25);
     }
 
+    
+    // View Mode Management (Study Zone vs Reference)
+    function setViewMode(mode) {
+      localStorage.setItem('toeic_view_mode', mode);
+      const studyView = document.getElementById('studyZoneView');
+      const refView = document.getElementById('referenceView');
+      const btnStudy = document.getElementById('btnModeStudy');
+      const btnRef = document.getElementById('btnModeRef');
+      const navStudy = document.getElementById('navGroupStudy');
+      const navRef = document.getElementById('navGroupRef');
+
+      if (!studyView || !refView) return;
+
+      if (mode === 'reference') {
+        studyView.classList.remove('active-view');
+        refView.classList.add('active-view');
+        if (btnStudy) btnStudy.classList.remove('active');
+        if (btnRef) btnRef.classList.add('active');
+        if (navStudy) navStudy.style.display = 'none';
+        if (navRef) navRef.style.display = 'flex';
+      } else {
+        refView.classList.remove('active-view');
+        studyView.classList.add('active-view');
+        if (btnRef) btnRef.classList.remove('active');
+        if (btnStudy) btnStudy.classList.add('active');
+        if (navRef) navRef.style.display = 'none';
+        if (navStudy) navStudy.style.display = 'flex';
+      }
+      updateFocusHeaderStats();
+    }
+
+    function updateFocusHeaderStats() {
+      // Flashcard count
+      const masteredEl = document.getElementById('statMasteredCount');
+      if (masteredEl) {
+        masteredEl.innerText = `${masteredCards.length} / ${FLASHCARDS.length} từ`;
+      }
+
+      // Error count
+      const errEl = document.getElementById('statErrorTotal');
+      if (errEl) {
+        errEl.innerText = `${5 + customErrors.length} câu (RCA)`;
+      }
+
+      // Calculator total
+      const calcTotalEl = document.getElementById('statCalcTotal');
+      const curScore = document.getElementById('calcTotal');
+      const targetScore = document.getElementById('targetSelect');
+      if (calcTotalEl && curScore && targetScore) {
+        calcTotalEl.innerText = `${curScore.innerText} / ${targetScore.value}`;
+      }
+    }
+
     function updateCalculator() {
       const lRaw = parseInt(document.getElementById('lRawInput').value);
       const rRaw = parseInt(document.getElementById('rRawInput').value);
@@ -1811,6 +2137,7 @@
       document.getElementById('calcListening').innerText = lScaled;
       document.getElementById('calcReading').innerText = rScaled;
       document.getElementById('calcTotal').innerText = total;
+      updateFocusHeaderStats();
 
       // CEFR Tag
       let cefr = 'A1';
@@ -1910,6 +2237,7 @@
         `;
         tbody.prepend(tr);
       });
+      updateFocusHeaderStats();
     }
 
     function addErrorEntry() {
@@ -2033,6 +2361,7 @@
 
       const countEl = document.getElementById('fcMasteredCount');
       if (countEl) countEl.innerText = masteredCards.length;
+      updateFocusHeaderStats();
     }
 
     function flipCurrentCard() {
@@ -2090,6 +2419,11 @@
     updateRoadmapProgress();
     renderCustomErrors();
     renderCurrentCard();
+
+    // Initialize View Mode (Default is 'study')
+    const savedMode = localStorage.getItem('toeic_view_mode') || 'study';
+    setViewMode(savedMode);
+    updateFocusHeaderStats();
   </script>
 </body>
 </html>
