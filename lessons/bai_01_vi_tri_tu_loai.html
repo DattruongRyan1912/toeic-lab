@@ -48,42 +48,139 @@
       background-color: var(--bg-primary);
       color: var(--text-main);
       line-height: 1.6;
-      padding: 30px 20px;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .header-bar {
       display: flex;
-      justify-content: space-between;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 290px;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
       align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
+      gap: 12px;
+      padding: 0 8px 12px;
       border-bottom: 1px solid var(--border-color);
     }
 
-    .back-link {
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 600;
-      display: inline-flex;
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: 8px;
+      display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 18px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 8px 10px 4px;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item a:hover {
+      color: var(--text-main);
+      background-color: var(--bg-hover);
+    }
+
+    .nav-item a.active {
+      color: var(--accent);
+      background-color: var(--accent-glow);
+      font-weight: 600;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .nav-status {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--bg-primary);
     }
 
     .theme-toggle-btn {
-      padding: 6px 12px;
-      background: var(--bg-secondary);
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      background-color: var(--bg-primary);
       border: 1px solid var(--border-color);
       color: var(--text-main);
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 12px;
       font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      background-color: var(--bg-hover);
+    }
+
+    /* Main Content Area */
+    .main-wrapper {
+      margin-left: 290px;
+      flex: 1;
+      padding: 40px;
+      max-width: 960px;
     }
 
     .lesson-badge {
@@ -256,18 +353,58 @@
     }
 
     .alert-box strong { color: var(--accent-amber); }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-wrapper { margin-left: 0; padding: 20px; }
+      .options-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    <div class="header-bar">
-      <a href="../docs/toeic_study_guide.html" class="back-link">
-        ← Quay lại Dashboard TOEIC
-      </a>
-      <button class="theme-toggle-btn" id="themeToggleBtn">🌓 Chuyển Theme</button>
+  <!-- Navigation Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">T</div>
+      <div>
+        <div class="brand-title">TOEIC Master AI</div>
+        <div class="brand-subtitle">12 Chuyên Đề Cú Pháp</div>
+      </div>
     </div>
 
+    <ul class="nav-list">
+      <li class="nav-item">
+        <a href="../docs/toeic_study_guide.html">
+          <span>🏠 Quay lại Dashboard</span>
+          <span>↵</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-header">Danh sách chuyên đề Part 5</div>
+    <ul class="nav-list">
+      <li class="nav-item"><a href="bai_01_vi_tri_tu_loai.html" class="active"><span>🏷️ Bài 01: Vị Trí 4 Loại Từ</span><span class="nav-status" style="color:var(--accent);">Đang học</span></a></li>
+      <li class="nav-item"><a href="#bai-02"><span>🔗 Bài 02: Liên Từ vs Giới Từ</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-03"><span>🎯 Bài 03: Dạng Động Từ</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-04"><span>🛡️ Bài 04: Thể Bị Động 10s</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-05"><span>⚖️ Bài 05: Hòa Hợp Chủ - Vị</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-06"><span>⏰ Bài 06: 6 Thì Trọng Tâm</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-07"><span>👤 Bài 07: Đại Từ & Sở Hữu</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-08"><span>✂️ Bài 08: Rút Gọn Mệnh Đề</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-09"><span>📜 Bài 09: Thể Giả Định</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-10"><span>🔀 Bài 10: Điều Kiện & Đảo Ngữ</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-11"><span>📊 Bài 11: So Sánh</span><span class="nav-status">Kế hoạch</span></a></li>
+      <li class="nav-item"><a href="#bai-12"><span>💼 Bài 12: 50 Collocations</span><span class="nav-status">Kế hoạch</span></a></li>
+    </ul>
+
+    <button class="theme-toggle-btn" id="themeToggleBtn">
+      <span>🌓</span> Chuyển Theme (Dark/Light)
+    </button>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
     <div class="lesson-badge">CHUYÊN ĐỀ 01 / 12 PART 5</div>
     <h1 class="title">Vị Trí 4 Loại Từ Cốt Lõi (Word Forms)</h1>
     <p class="subtitle">
@@ -444,7 +581,7 @@
       </div>
 
     </div>
-  </div>
+  </main>
 
   <script>
     // Theme toggle
