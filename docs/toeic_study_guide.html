@@ -686,11 +686,7 @@
       opacity: 0.6;
     }
 
-    @media (max-width: 900px) {
-      .sidebar { display: none; }
-      .main-wrapper { margin-left: 0; padding: 20px; }
-      .grid-2, .grid-3, .calc-grid { grid-template-columns: 1fr; }
-    }
+    /* Responsive styles defined at end of stylesheet */
     /* Interactive Flashcard Player */
     .flashcard-container {
       perspective: 1000px;
@@ -887,12 +883,425 @@
       background: var(--border-color);
       margin: 8px 4px;
     }
+
+    /* Mobile Header & Bottom Nav (Hidden on Desktop) */
+    .mobile-top-bar {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 950;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .mobile-top-left, .mobile-top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mobile-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .mobile-brand-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .mobile-brand-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .mobile-mode-pill {
+      display: flex;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .m-mode-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: var(--font-sans);
+    }
+
+    .m-mode-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(2px);
+      z-index: 998;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .sidebar-backdrop.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .mobile-drawer-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 8px;
+    }
+
+    .close-drawer-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 58px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      z-index: 900;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 4px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+    }
+
+    .bottom-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      text-decoration: none;
+      color: var(--text-muted);
+      padding: 6px 0;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .bottom-nav-item.active, .bottom-nav-item:hover {
+      color: var(--accent);
+    }
+
+    .bottom-nav-icon {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .bottom-nav-label {
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    /* Mobile Responsive Scale Adjustments (<= 900px) */
+    @media (max-width: 900px) {
+      body {
+        padding-bottom: 70px;
+      }
+
+      .mobile-top-bar {
+        display: flex;
+      }
+
+      .mobile-bottom-nav {
+        display: flex;
+      }
+
+      .mobile-drawer-header {
+        display: flex;
+      }
+
+      /* Sidebar as Off-canvas Drawer */
+      .sidebar {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 290px;
+        max-width: 82vw;
+        height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      /* Main Wrapper */
+      .main-wrapper {
+        margin-left: 0 !important;
+        margin-top: 56px;
+        padding: 16px 12px 24px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box;
+      }
+
+      /* Grid elements */
+      .grid-2, .grid-3, .calc-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+      }
+
+      /* Focus Header Scale */
+      .study-focus-header {
+        padding: 16px 14px !important;
+        border-radius: 12px !important;
+        margin-bottom: 20px !important;
+        gap: 12px !important;
+      }
+
+      .study-focus-header h1 {
+        font-size: 19px !important;
+        line-height: 1.3;
+      }
+
+      .study-focus-header p {
+        font-size: 12px !important;
+      }
+
+      .study-stats-bar {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+
+      .study-stat-card {
+        padding: 8px 10px !important;
+        gap: 8px !important;
+      }
+
+      .study-stat-icon {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 16px !important;
+      }
+
+      .study-stat-label {
+        font-size: 9px !important;
+      }
+
+      .study-stat-value {
+        font-size: 13px !important;
+      }
+
+      .study-zone-notice {
+        font-size: 11px !important;
+        padding: 8px 10px !important;
+      }
+
+      /* Flashcard Scale */
+      .flashcard-inner {
+        min-height: 250px !important;
+      }
+
+      .flashcard-front, .flashcard-back {
+        min-height: 250px !important;
+        padding: 16px 14px !important;
+        border-radius: 12px !important;
+      }
+
+      #fcSentenceFront {
+        font-size: 16px !important;
+        margin-top: 14px !important;
+        line-height: 1.5 !important;
+      }
+
+      #fcWord {
+        font-size: 22px !important;
+      }
+
+      #fcMeaning {
+        font-size: 15px !important;
+      }
+
+      .card-footer-controls {
+        flex-direction: column !important;
+        gap: 8px !important;
+      }
+
+      .card-footer-controls > div {
+        width: 100% !important;
+        display: flex !important;
+        gap: 6px !important;
+      }
+
+      .card-footer-controls button {
+        flex: 1 !important;
+        padding: 9px 6px !important;
+        font-size: 12px !important;
+      }
+
+      /* Calculator Scale */
+      .calculator-box {
+        padding: 16px 12px !important;
+      }
+
+      .total-score-val {
+        font-size: 44px !important;
+      }
+
+      .sub-scores {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 8px !important;
+      }
+
+      .range-header {
+        font-size: 13px !important;
+      }
+
+      /* Form Scale */
+      #error-log .card {
+        padding: 14px !important;
+      }
+
+      #error-log input, #error-log select {
+        font-size: 14px !important;
+      }
+
+      /* Section titles */
+      .section-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        margin-bottom: 14px !important;
+      }
+
+      .section-title {
+        font-size: 17px !important;
+      }
+
+      .section-tag {
+        font-size: 10px !important;
+      }
+
+      /* Tab bar horizontal scroll */
+      .tab-bar {
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        padding-bottom: 6px !important;
+        -webkit-overflow-scrolling: touch !important;
+        display: flex !important;
+        gap: 6px !important;
+      }
+
+      .tab-btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        flex-shrink: 0 !important;
+      }
+
+      /* Card padding on mobile */
+      .card {
+        padding: 16px !important;
+        border-radius: 10px !important;
+      }
+
+      /* Table touch scroll hint */
+      .table-container {
+        border-radius: 8px !important;
+        -webkit-overflow-scrolling: touch !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Navigation Sidebar -->
-  <aside class="sidebar">
+  <!-- Mobile Top Header Bar -->
+  <header class="mobile-top-bar">
+    <div class="mobile-top-left">
+      <button class="mobile-icon-btn" id="mobileMenuBtn" onclick="toggleMobileSidebar()" aria-label="Mở menu">
+        <span>☰</span>
+      </button>
+      <div class="mobile-brand-title">
+        <span class="mobile-brand-badge">T</span>
+        <span>TOEIC Master</span>
+      </div>
+    </div>
+
+    <div class="mobile-top-right">
+      <div class="mobile-mode-pill">
+        <button class="m-mode-btn active" id="mBtnStudy" onclick="setViewMode('study')">🎓 Học</button>
+        <button class="m-mode-btn" id="mBtnRef" onclick="setViewMode('reference')">📖 Docs</button>
+      </div>
+      <button class="mobile-icon-btn" onclick="toggleTheme()" aria-label="Đổi theme">🌓</button>
+    </div>
+  </header>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+
+  <!-- Navigation Sidebar (Desktop fixed, Mobile drawer) -->
+  <aside class="sidebar" id="appSidebar">
+    <div class="mobile-drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="mobile-brand-badge">T</span>
+        <span style="font-size: 14px; font-weight: 700;">Menu Điều Hướng</span>
+      </div>
+      <button onclick="closeMobileSidebar()" class="close-drawer-btn" aria-label="Đóng menu">✕ Đóng</button>
+    </div>
+
     <div class="brand">
       <div class="brand-logo">T</div>
       <div>
@@ -913,14 +1322,14 @@
 
     <!-- Nav List for Study Mode (Default) -->
     <ul class="nav-list" id="navGroupStudy">
-      <li class="nav-item"><a href="#flashcards" class="active">🗂️ Flashcard SRS Web</a></li>
-      <li class="nav-item"><a href="#lessons">📚 12 Chuyên đề Cú pháp</a></li>
-      <li class="nav-item"><a href="#error-log">📝 Sổ tay lỗi sai (RCA)</a></li>
-      <li class="nav-item"><a href="#calculator">🧮 Bảng tính điểm ETS</a></li>
-      <li class="nav-item"><a href="#roadmaps">📅 Lộ trình 24 tuần</a></li>
+      <li class="nav-item"><a href="#flashcards" class="active" onclick="closeMobileSidebar()">🗂️ Flashcard SRS Web</a></li>
+      <li class="nav-item"><a href="#lessons" onclick="closeMobileSidebar()">📚 12 Chuyên đề Cú pháp</a></li>
+      <li class="nav-item"><a href="#error-log" onclick="closeMobileSidebar()">📝 Sổ tay lỗi sai (RCA)</a></li>
+      <li class="nav-item"><a href="#calculator" onclick="closeMobileSidebar()">🧮 Bảng tính điểm ETS</a></li>
+      <li class="nav-item"><a href="#roadmaps" onclick="closeMobileSidebar()">📅 Lộ trình 24 tuần</a></li>
       <li class="nav-divider"></li>
       <li class="nav-item">
-        <a href="javascript:void(0)" onclick="setViewMode('reference')" style="font-size: 12px; color: var(--accent); opacity: 0.9;">
+        <a href="javascript:void(0)" onclick="setViewMode('reference'); closeMobileSidebar();" style="font-size: 12px; color: var(--accent); opacity: 0.9;">
           <span>📖 Mở tài liệu & bot</span>
           <span>➔</span>
         </a>
@@ -929,21 +1338,21 @@
 
     <!-- Nav List for Reference Mode -->
     <ul class="nav-list" id="navGroupRef" style="display: none;">
-      <li class="nav-item"><a href="#overview">🎯 Giới thiệu hệ sinh thái</a></li>
-      <li class="nav-item"><a href="#methodology">🔬 Nghiên cứu phương pháp</a></li>
-      <li class="nav-item"><a href="#agent-config">🤖 Kiến trúc Agent Coach</a></li>
-      <li class="nav-item"><a href="#skills-catalog">⚡ 5 Skills chuyên sâu</a></li>
-      <li class="nav-item"><a href="#prompts">💬 Mẫu Prompt tương tác</a></li>
+      <li class="nav-item"><a href="#overview" onclick="closeMobileSidebar()">🎯 Giới thiệu hệ sinh thái</a></li>
+      <li class="nav-item"><a href="#methodology" onclick="closeMobileSidebar()">🔬 Nghiên cứu phương pháp</a></li>
+      <li class="nav-item"><a href="#agent-config" onclick="closeMobileSidebar()">🤖 Kiến trúc Agent Coach</a></li>
+      <li class="nav-item"><a href="#skills-catalog" onclick="closeMobileSidebar()">⚡ 5 Skills chuyên sâu</a></li>
+      <li class="nav-item"><a href="#prompts" onclick="closeMobileSidebar()">💬 Mẫu Prompt tương tác</a></li>
       <li class="nav-divider"></li>
       <li class="nav-item">
-        <a href="javascript:void(0)" onclick="setViewMode('study')" style="font-size: 12px; color: var(--accent-green); font-weight: 700;">
+        <a href="javascript:void(0)" onclick="setViewMode('study'); closeMobileSidebar();" style="font-size: 12px; color: var(--accent-green); font-weight: 700;">
           <span>🎓 Quay lại Góc Học Tập</span>
           <span>↵</span>
         </a>
       </li>
     </ul>
 
-    <button class="theme-toggle-btn" id="themeToggleBtn">
+    <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()">
       <span>🌓</span> Chuyển Theme (Dark/Light)
     </button>
   </aside>
@@ -2076,6 +2485,8 @@
       const refView = document.getElementById('referenceView');
       const btnStudy = document.getElementById('btnModeStudy');
       const btnRef = document.getElementById('btnModeRef');
+      const mBtnStudy = document.getElementById('mBtnStudy');
+      const mBtnRef = document.getElementById('mBtnRef');
       const navStudy = document.getElementById('navGroupStudy');
       const navRef = document.getElementById('navGroupRef');
 
@@ -2086,6 +2497,8 @@
         refView.classList.add('active-view');
         if (btnStudy) btnStudy.classList.remove('active');
         if (btnRef) btnRef.classList.add('active');
+        if (mBtnStudy) mBtnStudy.classList.remove('active');
+        if (mBtnRef) mBtnRef.classList.add('active');
         if (navStudy) navStudy.style.display = 'none';
         if (navRef) navRef.style.display = 'flex';
       } else {
@@ -2093,10 +2506,52 @@
         studyView.classList.add('active-view');
         if (btnRef) btnRef.classList.remove('active');
         if (btnStudy) btnStudy.classList.add('active');
+        if (mBtnRef) mBtnRef.classList.remove('active');
+        if (mBtnStudy) mBtnStudy.classList.add('active');
         if (navRef) navRef.style.display = 'none';
         if (navStudy) navStudy.style.display = 'flex';
       }
       updateFocusHeaderStats();
+    }
+
+    // Mobile Drawer Controls
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (!sidebar) return;
+      const isOpen = sidebar.classList.contains('open');
+      if (isOpen) {
+        closeMobileSidebar();
+      } else {
+        sidebar.classList.add('open');
+        if (backdrop) backdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeMobileSidebar() {
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (sidebar) sidebar.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function handleBottomNav(targetId) {
+      const studySections = ['#flashcards', '#lessons', '#error-log', '#calculator', '#roadmaps'];
+      if (studySections.includes(targetId)) {
+        setViewMode('study');
+      }
+      closeMobileSidebar();
+      document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+      const activeLink = document.querySelector(`.bottom-nav-item[href="${targetId}"]`);
+      if (activeLink) activeLink.classList.add('active');
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
     }
 
     function updateFocusHeaderStats() {
@@ -2423,7 +2878,30 @@
     // Initialize View Mode (Default is 'study')
     const savedMode = localStorage.getItem('toeic_view_mode') || 'study';
     setViewMode(savedMode);
-    updateFocusHeaderStats();
   </script>
+
+  <!-- Mobile Bottom Quick Navigation Bar -->
+  <nav class="mobile-bottom-nav">
+    <a href="#flashcards" class="bottom-nav-item active" id="bNavFlashcards" onclick="handleBottomNav('#flashcards')">
+      <span class="bottom-nav-icon">🗂️</span>
+      <span class="bottom-nav-label">Thẻ SRS</span>
+    </a>
+    <a href="#lessons" class="bottom-nav-item" id="bNavLessons" onclick="handleBottomNav('#lessons')">
+      <span class="bottom-nav-icon">📚</span>
+      <span class="bottom-nav-label">Cú Pháp</span>
+    </a>
+    <a href="#error-log" class="bottom-nav-item" id="bNavErrorLog" onclick="handleBottomNav('#error-log')">
+      <span class="bottom-nav-icon">📝</span>
+      <span class="bottom-nav-label">Sổ Lỗi</span>
+    </a>
+    <a href="#calculator" class="bottom-nav-item" id="bNavCalculator" onclick="handleBottomNav('#calculator')">
+      <span class="bottom-nav-icon">🧮</span>
+      <span class="bottom-nav-label">Tính Điểm</span>
+    </a>
+    <button class="bottom-nav-item" onclick="toggleMobileSidebar()" style="background:transparent; border:none; color:inherit; font-family:inherit;">
+      <span class="bottom-nav-icon">☰</span>
+      <span class="bottom-nav-label">Menu</span>
+    </button>
+  </nav>
 </body>
 </html>

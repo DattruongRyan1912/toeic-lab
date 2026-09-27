@@ -378,17 +378,167 @@
 
     .alert-box strong { color: var(--accent-amber); }
 
+    /* Mobile Header & Backdrop */
+    .mobile-top-bar {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      z-index: 950;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .mobile-top-left, .mobile-top-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mobile-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      text-decoration: none;
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(2px);
+      z-index: 998;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .sidebar-backdrop.active {
+      display: block;
+      opacity: 1;
+    }
+    .mobile-drawer-header {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 8px;
+    }
+    .close-drawer-btn {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
     @media (max-width: 900px) {
-      .sidebar { display: none; }
-      .main-wrapper { margin-left: 0; padding: 20px; }
-      .options-grid { grid-template-columns: 1fr; }
+      .mobile-top-bar { display: flex; }
+      .mobile-drawer-header { display: flex; }
+
+      .sidebar {
+        display: flex !important;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 290px;
+        max-width: 82vw;
+        height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-wrapper {
+        margin-left: 0 !important;
+        margin-top: 56px;
+        padding: 16px 12px 32px !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+      }
+
+      h1.title {
+        font-size: 20px !important;
+      }
+      p.subtitle {
+        font-size: 13px !important;
+        margin-bottom: 18px !important;
+      }
+      .card {
+        padding: 16px 14px !important;
+        margin-bottom: 16px !important;
+      }
+      .chip-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+      }
+      .options-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+      }
+      .formula-box {
+        font-size: 12px !important;
+        padding: 12px !important;
+      }
+      .exercise-box {
+        padding: 14px 12px !important;
+      }
     }
   </style>
 </head>
 <body>
 
+  <!-- Mobile Top Header Bar -->
+  <header class="mobile-top-bar">
+    <div class="mobile-top-left">
+      <button class="mobile-icon-btn" onclick="toggleMobileSidebar()" aria-label="Mở menu">
+        <span>☰</span>
+      </button>
+      <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;">
+        <span style="width: 24px; height: 24px; border-radius: 6px; background: linear-gradient(135deg, #0284c7, #38bdf8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;">T</span>
+        <span>Bài 01: Vị Trí Từ</span>
+      </div>
+    </div>
+    <div class="mobile-top-right">
+      <a href="../docs/toeic_study_guide.html" class="mobile-icon-btn" title="Quay lại Dashboard">
+        <span>🏠</span>
+      </a>
+      <button class="mobile-icon-btn" onclick="toggleTheme()" aria-label="Đổi theme">🌓</button>
+    </div>
+  </header>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeMobileSidebar()"></div>
+
   <!-- Navigation Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="appSidebar">
+    <div class="mobile-drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 13px; font-weight: 700; color: var(--text-muted);">12 CHUYÊN ĐỀ CÚ PHÁP</span>
+      </div>
+      <button onclick="closeMobileSidebar()" class="close-drawer-btn" aria-label="Đóng menu">✕ Đóng</button>
+    </div>
+
     <div class="brand">
       <div class="brand-logo">T</div>
       <div>
@@ -647,6 +797,35 @@
       box.classList.add('active');
       const revealBtn = parent.querySelector('.reveal-btn');
       if (revealBtn) revealBtn.innerText = 'Ẩn Đáp Án & Phân Tích';
+    }
+
+    // Mobile Drawer Controls
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (!sidebar) return;
+      const isOpen = sidebar.classList.contains('open');
+      if (isOpen) {
+        closeMobileSidebar();
+      } else {
+        sidebar.classList.add('open');
+        if (backdrop) backdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    }
+
+    function closeMobileSidebar() {
+      const sidebar = document.getElementById('appSidebar');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      if (sidebar) sidebar.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
     }
   </script>
 </body>
