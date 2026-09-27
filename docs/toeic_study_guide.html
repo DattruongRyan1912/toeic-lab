@@ -691,6 +691,52 @@
       .main-wrapper { margin-left: 0; padding: 20px; }
       .grid-2, .grid-3, .calc-grid { grid-template-columns: 1fr; }
     }
+    /* Interactive Flashcard Player */
+    .flashcard-container {
+      perspective: 1000px;
+      margin: 20px 0;
+    }
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      min-height: 280px;
+      text-align: left;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+    .flashcard-inner.flipped {
+      transform: rotateY(180deg);
+    }
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      width: 100%;
+      min-height: 280px;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: 14px;
+      padding: 28px;
+      box-sizing: border-box;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .flashcard-back {
+      transform: rotateY(180deg);
+      background: var(--bg-card);
+      border-color: var(--accent);
+    }
+    .card-footer-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
   </style>
 </head>
 <body>
@@ -707,13 +753,13 @@
 
     <ul class="nav-list">
       <li class="nav-item"><a href="#overview" class="active">🎯 Tổng quan hệ thống</a></li>
+      <li class="nav-item"><a href="#flashcards">🗂️ Flashcard SRS Web</a></li>
       <li class="nav-item"><a href="#lessons">📚 12 Chuyên đề Cú pháp</a></li>
-      <li class="nav-item"><a href="#methodology">🔬 Nghiên cứu phương pháp</a></li>
       <li class="nav-item"><a href="#calculator">🧮 Bảng tính điểm ETS</a></li>
-      <li class="nav-item"><a href="#agent-config">🤖 Cấu hình AI Mentor</a></li>
-      <li class="nav-item"><a href="#skills-catalog">⚡ 5 Skills chuyên sâu</a></li>
       <li class="nav-item"><a href="#roadmaps">📅 Lộ trình Sprint 800+</a></li>
       <li class="nav-item"><a href="#error-log">📝 Quản lý lỗi sai (RCA)</a></li>
+      <li class="nav-item"><a href="#methodology">🔬 Nghiên cứu phương pháp</a></li>
+      <li class="nav-item"><a href="#skills-catalog">⚡ 5 Skills chuyên sâu</a></li>
       <li class="nav-item"><a href="#prompts">💬 Mẫu Prompt tương tác</a></li>
     </ul>
 
@@ -810,6 +856,97 @@
             <li>Chu kỳ lặp lại tối ưu: Sau 20 phút ➔ 1 ngày ➔ 3 ngày ➔ 7 ngày ➔ 16 ngày ➔ 35 ngày.</li>
             <li>14 chủ đề TOEIC thông dụng: General Business, Manufacturing, Finance, HR, Procurement, Real Estate, Logistics, IT,...</li>
           </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: Interactive Web Flashcard Player -->
+    <section id="flashcards">
+      <div class="section-header">
+        <h2 class="section-title">🗂️ Trình Luyện Flashcard Từ Vựng Web (SRS Interactive)</h2>
+        <span class="section-tag">BUILT-IN WEB FLASHCARDS</span>
+      </div>
+
+      <div class="card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <span class="badge-pill" style="margin-bottom:0;" id="fcProgressBadge">Thẻ 1 / 20</span>
+            <span style="font-size: 13px; color: var(--text-muted); margin-left: 10px;">Bấm trực tiếp vào thẻ để lật (hoặc phím Space)</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button onclick="filterFlashcards('all')" class="tab-btn active" id="btnFcAll" style="padding: 4px 10px; font-size: 12px;">Tất cả (20)</button>
+            <button onclick="filterFlashcards('mastered')" class="tab-btn" id="btnFcMastered" style="padding: 4px 10px; font-size: 12px;">Đã thuộc (<span id="fcMasteredCount">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Flip Card Component -->
+        <div class="flashcard-container">
+          <div class="flashcard-inner" id="fcCard" onclick="flipCurrentCard()">
+            <!-- Front -->
+            <div class="flashcard-front">
+              <div>
+                <span class="badge-error badge-vocab" id="fcCategory">General Business</span>
+                <div style="font-size: 19px; font-weight: 600; margin-top: 24px; line-height: 1.6;" id="fcSentenceFront">
+                  The board of directors decided to <span style="color:var(--accent); font-weight:800; border-bottom:2px solid var(--accent); padding:0 4px;">______</span> the annual shareholder meeting until next Friday.
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <span>💡 Click để xem đáp án, IPA & Collocation</span>
+                <span>[Mặt trước: Câu hỏi]</span>
+              </div>
+            </div>
+
+            <!-- Back -->
+            <div class="flashcard-back">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="badge-error badge-vocab" id="fcCategoryBack">General Business</span>
+                  <span style="font-size: 12px; color: var(--accent-green); font-weight: 700;">[Mặt sau: Giải nghĩa]</span>
+                </div>
+                <div style="margin-top: 14px; display: flex; align-items: baseline; gap: 8px;">
+                  <span style="font-size: 26px; font-weight: 800; color: var(--accent);" id="fcWord">postpone</span>
+                  <span style="font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);" id="fcIpa">/pəʊstˈpəʊn/</span>
+                  <span style="font-style: italic; color: var(--accent-purple); font-weight: 600;" id="fcType">(verb)</span>
+                </div>
+                <div style="font-size: 17px; font-weight: 700; color: var(--accent-green); margin: 6px 0;" id="fcMeaning">
+                  ➔ hoãn lại, dời lịch
+                </div>
+                <div style="background: var(--bg-primary); border-radius: 8px; padding: 10px 14px; margin-top: 8px; font-size: 13px;">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">⚡ Collocation cốt lõi:</div>
+                  <div style="color: var(--accent-amber); font-weight: 600; margin-top: 2px;" id="fcCollocations">postpone a meeting, postpone indefinitely</div>
+                </div>
+                <div style="background: var(--bg-primary); border-radius: 8px; padding: 10px 14px; margin-top: 6px; font-size: 13px;">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">🔄 Paraphrase trong đề ETS:</div>
+                  <div style="color: var(--accent); font-weight: 600; margin-top: 2px;" id="fcParaphrase">postpone = delay = put off = defer</div>
+                </div>
+              </div>
+
+              <div style="font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 10px;">
+                <span id="fcFullSentence">The board of directors decided to <strong>postpone</strong> the annual shareholder meeting until next Friday.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="card-footer-controls">
+          <div style="display: flex; gap: 8px;">
+            <button onclick="prevCard()" style="padding: 8px 16px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+              ← Câu trước
+            </button>
+            <button onclick="flipCurrentCard()" style="padding: 8px 16px; background: var(--accent-glow); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700;">
+              🔄 Lật Thẻ (Space)
+            </button>
+            <button onclick="nextCard()" style="padding: 8px 16px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+              Câu tiếp →
+            </button>
+          </div>
+
+          <div>
+            <button id="btnToggleMaster" onclick="toggleCurrentMastered()" style="padding: 8px 16px; background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: var(--accent-green); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 700;">
+              ⭐ Đánh dấu: Đã Thuộc
+            </button>
+          </div>
         </div>
       </div>
     </section>
@@ -1822,9 +1959,137 @@
       document.body.removeChild(link);
     }
 
+    // Flashcard Dataset & Player
+    const FLASHCARDS = [
+      { id: 1, cat: "General Business", front: "The board of directors decided to <span class='blank'>______</span> the annual shareholder meeting until next Friday.", word: "postpone", ipa: "pəʊstˈpəʊn", type: "verb", meaning: "hoãn lại, dời lịch", collocations: "postpone a meeting, postpone indefinitely", paraphrase: "postpone = delay = put off = defer", fullSentence: "The board of directors decided to <strong style='color:var(--accent);'>postpone</strong> the annual shareholder meeting until next Friday." },
+      { id: 2, cat: "Corporate & Finance", front: "The internal auditing committee will <span class='blank'>______</span> a comprehensive inspection of financial records.", word: "conduct", ipa: "kənˈdʌkt", type: "verb", meaning: "tiến hành, thực hiện", collocations: "conduct an audit, conduct a survey, conduct an inspection", paraphrase: "conduct = carry out = perform = execute", fullSentence: "The internal auditing committee will <strong style='color:var(--accent);'>conduct</strong> a comprehensive inspection of financial records." },
+      { id: 3, cat: "Manufacturing & Compliance", front: "All manufacturing plants must strictly <span class='blank'>______</span> with environmental and workplace safety regulations.", word: "comply", ipa: "kəmˈplaɪ", type: "verb", meaning: "tuân thủ, tuân theo", collocations: "comply with safety regulations, comply with standards", paraphrase: "comply with = adhere to = conform to = abide by", fullSentence: "All manufacturing plants must strictly <strong style='color:var(--accent);'>comply</strong> with environmental and workplace safety regulations." },
+      { id: 4, cat: "Human Resources", front: "Full-time software engineers are <span class='blank'>______</span> for tuition reimbursement after six months of service.", word: "eligible", ipa: "ˈelɪdʒəbl", type: "adjective", meaning: "đủ điều kiện, đủ tư cách", collocations: "eligible for a promotion, eligible for reimbursement", paraphrase: "eligible for = qualified for = entitled to", fullSentence: "Full-time software engineers are <strong style='color:var(--accent);'>eligible</strong> for tuition reimbursement after six months of service." },
+      { id: 5, cat: "Finance & Expenses", front: "Please submit your travel receipts so that the finance department can <span class='blank'>______</span> your business expenses.", word: "reimburse", ipa: "ˌriːɪmˈbɜːs", type: "verb", meaning: "hoàn tiền, bồi hoàn chi phí", collocations: "reimburse travel expenses, reimburse employees", paraphrase: "reimburse = compensate = pay back = refund", fullSentence: "Please submit your travel receipts so that the finance department can <strong style='color:var(--accent);'>reimburse</strong> your business expenses." },
+      { id: 6, cat: "General Business", front: "The shareholders <span class='blank'>______</span> approved the proposed merger with the technology firm.", word: "unanimously", ipa: "juːˈnænɪməsli", type: "adverb", meaning: "nhất trí, đồng thuận 100%", collocations: "unanimously approved, unanimously agreed", paraphrase: "unanimously = with complete agreement = by consensus", fullSentence: "The shareholders <strong style='color:var(--accent);'>unanimously</strong> approved the proposed merger with the technology firm." },
+      { id: 7, cat: "Purchasing & Warranty", front: "The warranty provided with this server rack provides <span class='blank'>______</span> coverage for hardware defects.", word: "comprehensive", ipa: "ˌkɒmprɪˈhensɪv", type: "adjective", meaning: "toàn diện, bao quát", collocations: "comprehensive coverage, comprehensive training", paraphrase: "comprehensive = complete = thorough = all-inclusive", fullSentence: "The warranty provided with this server rack provides <strong style='color:var(--accent);'>comprehensive</strong> coverage for hardware defects." },
+      { id: 8, cat: "Project Management", front: "The project timeline shared yesterday is only <span class='blank'>______</span> and subject to change based on client feedback.", word: "tentative", ipa: "ˈtentətɪv", type: "adjective", meaning: "dự kiến, thăm dò (chưa chốt)", collocations: "tentative agreement, tentative schedule", paraphrase: "tentative = provisional = subject to change", fullSentence: "The project timeline shared yesterday is only <strong style='color:var(--accent);'>tentative</strong> and subject to change based on client feedback." },
+      { id: 9, cat: "Office Operations", front: "The engineering department introduced a new ticketing system to <span class='blank'>______</span> cross-team collaboration.", word: "facilitate", ipa: "fəˈsɪlɪteɪt", type: "verb", meaning: "tạo điều kiện thuận lợi, thúc đẩy", collocations: "facilitate communication, facilitate growth", paraphrase: "facilitate = ease = promote = make easier", fullSentence: "The engineering department introduced a new ticketing system to <strong style='color:var(--accent);'>facilitate</strong> cross-team collaboration." },
+      { id: 10, cat: "Finance & IT", front: "The management agreed to <span class='blank'>______</span> additional budget funds to upgrade cloud infrastructure.", word: "allocate", ipa: "ˈæləkeɪt", type: "verb", meaning: "phân bổ, chỉ định ngân sách/tài nguyên", collocations: "allocate funds, allocate resources", paraphrase: "allocate = assign = distribute = set aside", fullSentence: "The management agreed to <strong style='color:var(--accent);'>allocate</strong> additional budget funds to upgrade cloud infrastructure." },
+      { id: 11, cat: "Purchasing & Contracts", front: "Your subscription to the enterprise cloud platform will <span class='blank'>______</span> at the end of this billing cycle.", word: "expire", ipa: "ɪkˈspaɪər", type: "verb", meaning: "hết hạn, hết hiệu lực", collocations: "expire at the end of, warranty expires", paraphrase: "expire = terminate = end = lapse", fullSentence: "Your subscription to the enterprise cloud platform will <strong style='color:var(--accent);'>expire</strong> at the end of this billing cycle." },
+      { id: 12, cat: "Human Resources", front: "The hiring manager noted that Mr. Tran is an <span class='blank'>______</span> candidate with strong distributed systems expertise.", word: "exceptional", ipa: "ɪkˈsepʃənl", type: "adjective", meaning: "xuất chúng, đặc biệt xuất sắc", collocations: "exceptional candidate, exceptional performance", paraphrase: "exceptional = outstanding = extraordinary", fullSentence: "The hiring manager noted that Mr. Tran is an <strong style='color:var(--accent);'>exceptional</strong> candidate with strong distributed systems expertise." },
+      { id: 13, cat: "Shipping & Logistics", front: "The logistics provider does not <span class='blank'>______</span> any delivery delays despite the adverse weather conditions.", word: "anticipate", ipa: "ænˈtɪsɪpeɪt", type: "verb", meaning: "lường trước, dự đoán", collocations: "anticipate delays, anticipate growth", paraphrase: "anticipate = expect = foresee = predict", fullSentence: "The logistics provider does not <strong style='color:var(--accent);'>anticipate</strong> any delivery delays despite the adverse weather conditions." },
+      { id: 14, cat: "Technical & IT", front: "The security division will <span class='blank'>______</span> stricter authentication protocols across all production databases.", word: "implement", ipa: "ˈɪmplɪment", type: "verb", meaning: "triển khai, thi hành", collocations: "implement a policy, implement security measures", paraphrase: "implement = execute = apply = put into practice", fullSentence: "The security division will <strong style='color:var(--accent);'>implement</strong> stricter authentication protocols across all production databases." },
+      { id: 15, cat: "Travel & Hospitality", front: "Please review the detailed flight <span class='blank'>______</span> sent by the travel agency before departing for Tokyo.", word: "itinerary", ipa: "aɪˈtɪnərəri", type: "noun", meaning: "lịch trình chuyến đi", collocations: "travel itinerary, detailed itinerary", paraphrase: "itinerary = travel plan = schedule", fullSentence: "Please review the detailed flight <strong style='color:var(--accent);'>itinerary</strong> sent by the travel agency before departing for Tokyo." },
+      { id: 16, cat: "Human Resources", front: "Attendance at tomorrow morning's orientation session is <span class='blank'>______</span> for all newly hired software engineers.", word: "mandatory", ipa: "ˈmændətəri", type: "adjective", meaning: "bắt buộc", collocations: "mandatory attendance, mandatory training", paraphrase: "mandatory = compulsory = required = obligatory", fullSentence: "Attendance at tomorrow morning's orientation session is <strong style='color:var(--accent);'>mandatory</strong> for all newly hired software engineers." },
+      { id: 17, cat: "Customer Service", front: "Thank you for your <span class='blank'>______</span> response to our customer inquiry regarding service availability.", word: "prompt", ipa: "prɒmpt", type: "adjective", meaning: "nhanh chóng, kịp thời", collocations: "prompt response, prompt delivery", paraphrase: "prompt = immediate = timely = quick", fullSentence: "Thank you for your <strong style='color:var(--accent);'>prompt</strong> response to our customer inquiry regarding service availability." },
+      { id: 18, cat: "Finance & Sales", front: "Quarterly net revenues increased <span class='blank'>______</span> following the launch of the new subscription model.", word: "substantially", ipa: "səbˈstænʃəli", type: "adverb", meaning: "đáng kể, rất nhiều", collocations: "substantially increase, substantially higher", paraphrase: "substantially = significantly = considerably", fullSentence: "Quarterly net revenues increased <strong style='color:var(--accent);'>substantially</strong> following the launch of the new subscription model." },
+      { id: 19, cat: "Dining & Hospitality", front: "The conference venue is fully equipped to <span class='blank'>______</span> up to 500 attendees with specialized accessibility needs.", word: "accommodate", ipa: "əˈkɒmədeɪt", type: "verb", meaning: "đáp ứng, chứa được, cung cấp chỗ", collocations: "accommodate guests, accommodate requests", paraphrase: "accommodate = serve = cater to = provide room for", fullSentence: "The conference venue is fully equipped to <strong style='color:var(--accent);'>accommodate</strong> up to 500 attendees with specialized accessibility needs." },
+      { id: 20, cat: "Human Resources & Legal", front: "All employee compensation records and personnel files must remain strictly <span class='blank'>______</span>.", word: "confidential", ipa: "ˌkɒnfɪˈdenʃl", type: "adjective", meaning: "bảo mật, tuyệt mật", collocations: "strictly confidential, confidential information", paraphrase: "confidential = secret = private = non-public", fullSentence: "All employee compensation records and personnel files must remain strictly <strong style='color:var(--accent);'>confidential</strong>." }
+    ];
+
+    let currentCardIndex = 0;
+    let cardFilter = 'all';
+    let masteredCards = JSON.parse(localStorage.getItem('toeic_mastered_cards') || '[]');
+
+    function getActiveCards() {
+      if (cardFilter === 'mastered') {
+        return FLASHCARDS.filter(c => masteredCards.includes(c.id));
+      }
+      return FLASHCARDS;
+    }
+
+    function renderCurrentCard() {
+      const activeList = getActiveCards();
+      const cardEl = document.getElementById('fcCard');
+      if (cardEl) cardEl.classList.remove('flipped');
+
+      if (!activeList.length) {
+        document.getElementById('fcCategory').innerText = "Trống";
+        document.getElementById('fcSentenceFront').innerText = "Chưa có thẻ nào trong mục này.";
+        document.getElementById('fcProgressBadge').innerText = "0 / 0";
+        return;
+      }
+
+      if (currentCardIndex >= activeList.length) currentCardIndex = 0;
+      if (currentCardIndex < 0) currentCardIndex = activeList.length - 1;
+
+      const card = activeList[currentCardIndex];
+      document.getElementById('fcProgressBadge').innerText = `Thẻ ${currentCardIndex + 1} / ${activeList.length}`;
+      document.getElementById('fcCategory').innerText = card.cat;
+      document.getElementById('fcSentenceFront').innerHTML = card.front;
+
+      document.getElementById('fcCategoryBack').innerText = card.cat;
+      document.getElementById('fcWord').innerText = card.word;
+      document.getElementById('fcIpa').innerText = `/${card.ipa}/`;
+      document.getElementById('fcType').innerText = `(${card.type})`;
+      document.getElementById('fcMeaning').innerText = `➔ ${card.meaning}`;
+      document.getElementById('fcCollocations').innerText = card.collocations;
+      document.getElementById('fcParaphrase').innerText = card.paraphrase;
+      document.getElementById('fcFullSentence').innerHTML = card.fullSentence;
+
+      // Update mastered button
+      const isMastered = masteredCards.includes(card.id);
+      const masterBtn = document.getElementById('btnToggleMaster');
+      if (masterBtn) {
+        masterBtn.innerText = isMastered ? '✅ Đã Thuộc (Click để hủy)' : '⭐ Đánh dấu: Đã Thuộc';
+        masterBtn.style.background = isMastered ? 'rgba(52, 211, 153, 0.3)' : 'rgba(52, 211, 153, 0.15)';
+      }
+
+      const countEl = document.getElementById('fcMasteredCount');
+      if (countEl) countEl.innerText = masteredCards.length;
+    }
+
+    function flipCurrentCard() {
+      const cardEl = document.getElementById('fcCard');
+      if (cardEl) cardEl.classList.toggle('flipped');
+    }
+
+    function nextCard() {
+      currentCardIndex++;
+      renderCurrentCard();
+    }
+
+    function prevCard() {
+      currentCardIndex--;
+      renderCurrentCard();
+    }
+
+    function toggleCurrentMastered() {
+      const activeList = getActiveCards();
+      if (!activeList.length) return;
+      const card = activeList[currentCardIndex];
+      const idx = masteredCards.indexOf(card.id);
+      if (idx > -1) {
+        masteredCards.splice(idx, 1);
+      } else {
+        masteredCards.push(card.id);
+      }
+      localStorage.setItem('toeic_mastered_cards', JSON.stringify(masteredCards));
+      renderCurrentCard();
+    }
+
+    function filterFlashcards(mode) {
+      cardFilter = mode;
+      currentCardIndex = 0;
+      document.getElementById('btnFcAll').classList.toggle('active', mode === 'all');
+      document.getElementById('btnFcMastered').classList.toggle('active', mode === 'mastered');
+      renderCurrentCard();
+    }
+
+    // Keyboard support for space and arrows
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        flipCurrentCard();
+      } else if (e.code === 'ArrowRight') {
+        nextCard();
+      } else if (e.code === 'ArrowLeft') {
+        prevCard();
+      }
+    });
+
     // Initial run
     updateCalculator();
     updateRoadmapProgress();
+    renderCustomErrors();
+    renderCurrentCard();
   </script>
 </body>
 </html>
