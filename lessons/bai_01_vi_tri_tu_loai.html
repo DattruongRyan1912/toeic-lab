@@ -414,6 +414,28 @@
       font-size: 16px;
       text-decoration: none;
     }
+    .audio-speak-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      vertical-align: middle;
+      font-family: var(--font-sans);
+    }
+    .audio-speak-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(1.05);
+    }
+
     .sidebar-backdrop {
       display: none;
       position: fixed;
@@ -671,7 +693,10 @@
 
       <!-- Q1 -->
       <div class="exercise-box">
-        <div class="question-stem">1. The software update was ______ installed across all office workstations yesterday.</div>
+        <div class="question-stem">
+          1. The software update was ______ installed across all office workstations yesterday.
+          <button type="button" onclick="speakExerciseQuestion(this)" class="audio-speak-btn" title="Nghe đọc câu tiếng Anh">🔊 Nghe câu</button>
+        </div>
         <div class="options-grid">
           <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'B')">(A) successful</div>
           <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'B')">(B) successfully</div>
@@ -688,7 +713,10 @@
 
       <!-- Q2 -->
       <div class="exercise-box">
-        <div class="question-stem">2. The company offers a ______ benefits package to attract experienced backend developers.</div>
+        <div class="question-stem">
+          2. The company offers a ______ benefits package to attract experienced backend developers.
+          <button type="button" onclick="speakExerciseQuestion(this)" class="audio-speak-btn" title="Nghe đọc câu tiếng Anh">🔊 Nghe câu</button>
+        </div>
         <div class="options-grid">
           <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'C')">(A) compete</div>
           <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'C')">(B) competition</div>
@@ -705,7 +733,10 @@
 
       <!-- Q3 -->
       <div class="exercise-box">
-        <div class="question-stem">3. Please review the contract details carefully before signing the ______.</div>
+        <div class="question-stem">
+          3. Please review the contract details carefully before signing the ______.
+          <button type="button" onclick="speakExerciseQuestion(this)" class="audio-speak-btn" title="Nghe đọc câu tiếng Anh">🔊 Nghe câu</button>
+        </div>
         <div class="options-grid">
           <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'B')">(A) agree</div>
           <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'B')">(B) agreement</div>
@@ -722,7 +753,10 @@
 
       <!-- Q4 -->
       <div class="exercise-box">
-        <div class="question-stem">4. The new monitoring system operates ______ even during peak traffic hours.</div>
+        <div class="question-stem">
+          4. The new monitoring system operates ______ even during peak traffic hours.
+          <button type="button" onclick="speakExerciseQuestion(this)" class="audio-speak-btn" title="Nghe đọc câu tiếng Anh">🔊 Nghe câu</button>
+        </div>
         <div class="options-grid">
           <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'C')">(A) reliable</div>
           <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'C')">(B) reliability</div>
@@ -739,7 +773,10 @@
 
       <!-- Q5 -->
       <div class="exercise-box">
-        <div class="question-stem">5. Customer service representatives must remain ______ at all times when handling inquiries.</div>
+        <div class="question-stem">
+          5. Customer service representatives must remain ______ at all times when handling inquiries.
+          <button type="button" onclick="speakExerciseQuestion(this)" class="audio-speak-btn" title="Nghe đọc câu tiếng Anh">🔊 Nghe câu</button>
+        </div>
         <div class="options-grid">
           <div class="option-item" data-opt="A" onclick="selectOption(this, 'A', 'A')">(A) polite</div>
           <div class="option-item" data-opt="B" onclick="selectOption(this, 'B', 'A')">(B) politely</div>
@@ -826,6 +863,21 @@
       const currentTheme = document.documentElement.getAttribute('data-theme');
       const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', nextTheme);
+    }
+
+    // Audio Speech Synthesis for Exercise Questions
+    function speakExerciseQuestion(btn) {
+      if (!('speechSynthesis' in window)) {
+        alert('Trình duyệt không hỗ trợ phát âm Web Speech API.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const parentStem = btn.closest('.question-stem');
+      const textToRead = parentStem.innerText.replace('🔊 Nghe câu', '').replace(/^\d+\.\s*/, '').replace(/_+/g, 'blank');
+      const utter = new SpeechSynthesisUtterance(textToRead);
+      utter.lang = 'en-US';
+      utter.rate = 1.0;
+      window.speechSynthesis.speak(utter);
     }
   </script>
 </body>

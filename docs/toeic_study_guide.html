@@ -884,6 +884,60 @@
       margin: 8px 4px;
     }
 
+    /* Audio Speech TTS Styling */
+    .audio-speak-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+    .audio-speak-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(1.02);
+    }
+    .audio-speak-btn-word {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      vertical-align: middle;
+      border: none;
+    }
+    .audio-speak-btn-word:hover {
+      background: var(--accent);
+      color: #fff;
+      transform: scale(1.1);
+    }
+    .tts-controls-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-color);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
     /* Mobile Header & Bottom Nav (Hidden on Desktop) */
     .mobile-top-bar {
       display: none;
@@ -1444,13 +1498,41 @@
           </div>
         </div>
 
+        <!-- Audio TTS Settings Toolbar -->
+        <div class="tts-controls-bar">
+          <span style="font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 4px;">
+            <span>🔊</span> Phát âm Audio:
+          </span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: 11px;">Giọng ETS:</label>
+            <select id="ttsLangSelect" onchange="updateTtsSettings()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px;">
+              <option value="en-US">🇺🇸 Giọng Mỹ (en-US)</option>
+              <option value="en-GB">🇬🇧 Giọng Anh (en-GB)</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label style="font-size: 11px;">Tốc độ:</label>
+            <select id="ttsRateSelect" onchange="updateTtsSettings()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px;">
+              <option value="0.85">🐢 0.85x (Chậm / Shadowing)</option>
+              <option value="1.0" selected>⚡ 1.0x (Chuẩn ETS)</option>
+              <option value="1.15">🚀 1.15x (Phản xạ nhanh)</option>
+            </select>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted); margin-left: auto;">(Phím tắt: <strong>P</strong> phát âm)</span>
+        </div>
+
         <!-- Flip Card Component -->
         <div class="flashcard-container">
           <div class="flashcard-inner" id="fcCard" onclick="flipCurrentCard()">
             <!-- Front -->
             <div class="flashcard-front">
               <div>
-                <span class="badge-error badge-vocab" id="fcCategory">General Business</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="badge-error badge-vocab" id="fcCategory">General Business</span>
+                  <button type="button" onclick="event.stopPropagation(); speakCurrentFrontSentence()" class="audio-speak-btn" title="Nghe câu hỏi">
+                    <span>🔊</span> Nghe câu
+                  </button>
+                </div>
                 <div style="font-size: 19px; font-weight: 600; margin-top: 24px; line-height: 1.6;" id="fcSentenceFront">
                   The board of directors decided to <span style="color:var(--accent); font-weight:800; border-bottom:2px solid var(--accent); padding:0 4px;">______</span> the annual shareholder meeting until next Friday.
                 </div>
@@ -1468,8 +1550,11 @@
                   <span class="badge-error badge-vocab" id="fcCategoryBack">General Business</span>
                   <span style="font-size: 12px; color: var(--accent-green); font-weight: 700;">[Mặt sau: Giải nghĩa]</span>
                 </div>
-                <div style="margin-top: 14px; display: flex; align-items: baseline; gap: 8px;">
+                <div style="margin-top: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                   <span style="font-size: 26px; font-weight: 800; color: var(--accent);" id="fcWord">postpone</span>
+                  <button type="button" onclick="event.stopPropagation(); speakCurrentWord()" class="audio-speak-btn-word" title="Phát âm từ vựng này">
+                    🔊
+                  </button>
                   <span style="font-family: var(--font-mono); font-size: 14px; color: var(--text-muted);" id="fcIpa">/pəʊstˈpəʊn/</span>
                   <span style="font-style: italic; color: var(--accent-purple); font-weight: 600;" id="fcType">(verb)</span>
                 </div>
@@ -1486,8 +1571,11 @@
                 </div>
               </div>
 
-              <div style="font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 10px;">
+              <div style="font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
                 <span id="fcFullSentence">The board of directors decided to <strong>postpone</strong> the annual shareholder meeting until next Friday.</span>
+                <button type="button" onclick="event.stopPropagation(); speakCurrentFullSentence()" class="audio-speak-btn" style="flex-shrink: 0;" title="Nghe cả câu ví dụ">
+                  <span>🔊</span> Nghe câu
+                </button>
               </div>
             </div>
           </div>
@@ -2856,6 +2944,77 @@
       renderCurrentCard();
     }
 
+    // Audio Speech Synthesis (TTS)
+    let ttsLang = localStorage.getItem('toeic_tts_lang') || 'en-US';
+    let ttsRate = parseFloat(localStorage.getItem('toeic_tts_rate') || '1.0');
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+    }
+
+    function speakText(text, customRate = null) {
+      if (!('speechSynthesis' in window)) {
+        alert('Trình duyệt của bạn chưa hỗ trợ Web Speech API phát âm.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+
+      const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/_+/g, 'blank');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.lang = ttsLang;
+      utterance.rate = customRate || ttsRate;
+
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length) {
+        const preferred = voices.find(v => v.lang.replace('_', '-').startsWith(ttsLang) && 
+          (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Siri') || v.name.includes('Samantha') || v.name.includes('Daniel') || v.name.includes('Arthur')));
+        if (preferred) {
+          utterance.voice = preferred;
+        } else {
+          const fallback = voices.find(v => v.lang.replace('_', '-').startsWith(ttsLang));
+          if (fallback) utterance.voice = fallback;
+        }
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakCurrentWord() {
+      const activeList = getActiveCards();
+      if (!activeList.length) return;
+      const card = activeList[currentCardIndex];
+      speakText(card.word);
+    }
+
+    function speakCurrentFullSentence() {
+      const activeList = getActiveCards();
+      if (!activeList.length) return;
+      const card = activeList[currentCardIndex];
+      speakText(card.fullSentence);
+    }
+
+    function speakCurrentFrontSentence() {
+      const activeList = getActiveCards();
+      if (!activeList.length) return;
+      const card = activeList[currentCardIndex];
+      speakText(card.front);
+    }
+
+    function updateTtsSettings() {
+      const langEl = document.getElementById('ttsLangSelect');
+      const rateEl = document.getElementById('ttsRateSelect');
+      if (langEl) {
+        ttsLang = langEl.value;
+        localStorage.setItem('toeic_tts_lang', ttsLang);
+      }
+      if (rateEl) {
+        ttsRate = parseFloat(rateEl.value);
+        localStorage.setItem('toeic_tts_rate', ttsRate);
+      }
+    }
+
     // Keyboard support for space and arrows
     document.addEventListener('keydown', (e) => {
       if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
@@ -2866,6 +3025,13 @@
         nextCard();
       } else if (e.code === 'ArrowLeft') {
         prevCard();
+      } else if (e.code === 'KeyP' || e.code === 'KeyA') {
+        const cardEl = document.getElementById('fcCard');
+        if (cardEl && cardEl.classList.contains('flipped')) {
+          speakCurrentWord();
+        } else {
+          speakCurrentFrontSentence();
+        }
       }
     });
 
@@ -2878,6 +3044,12 @@
     // Initialize View Mode (Default is 'study')
     const savedMode = localStorage.getItem('toeic_view_mode') || 'study';
     setViewMode(savedMode);
+
+    // Sync TTS settings controls
+    const langSelectEl = document.getElementById('ttsLangSelect');
+    if (langSelectEl) langSelectEl.value = ttsLang;
+    const rateSelectEl = document.getElementById('ttsRateSelect');
+    if (rateSelectEl) rateSelectEl.value = ttsRate.toString();
   </script>
 
   <!-- Mobile Bottom Quick Navigation Bar -->
