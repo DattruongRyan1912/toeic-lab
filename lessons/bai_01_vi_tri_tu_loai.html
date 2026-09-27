@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bài 01: Vị Trí 4 Loại Từ Cốt Lõi (Word Forms) - TOEIC Part 5</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-hover: #334155;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --accent-green: #34d399;
+      --accent-purple: #c084fc;
+      --accent-amber: #fbbf24;
+      --accent-rose: #fb7185;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.1);
+      --accent-green: #059669;
+      --accent-purple: #7c3aed;
+      --accent-amber: #d97706;
+      --accent-rose: #e11d48;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .back-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .theme-toggle-btn {
+      padding: 6px 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .lesson-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    h1.title {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    p.subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    h2.card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Suffix Chips */
+    .chip-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .chip-box {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .chip-header {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .chip-list {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--accent);
+      line-height: 1.8;
+    }
+
+    .chip-examples {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Formulas */
+    .formula-box {
+      background: var(--bg-primary);
+      border-left: 4px solid var(--accent);
+      padding: 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .formula-box strong {
+      color: var(--accent);
+    }
+
+    /* Exercise Card */
+    .exercise-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    .question-stem {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .option-item {
+      padding: 8px 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .option-item:hover {
+      border-color: var(--accent);
+    }
+
+    .reveal-btn {
+      padding: 6px 14px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+
+    .reveal-btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .explanation-box {
+      display: none;
+      margin-top: 14px;
+      padding: 14px;
+      background: var(--bg-primary);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+    }
+
+    .explanation-box.active {
+      display: block;
+    }
+
+    .alert-box {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    .alert-box strong { color: var(--accent-amber); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-bar">
+      <a href="../docs/toeic_study_guide.html" class="back-link">
+        ← Quay lại Dashboard TOEIC
+      </a>
+      <button class="theme-toggle-btn" id="themeToggleBtn">🌓 Chuyển Theme</button>
+    </div>
+
+    <div class="lesson-badge">CHUYÊN ĐỀ 01 / 12 PART 5</div>
+    <h1 class="title">Vị Trí 4 Loại Từ Cốt Lõi (Word Forms)</h1>
+    <p class="subtitle">
+      Chiếm 8–12 câu trong Part 5. Nguyên tắc: <strong>KHÔNG DỊCH NGHĨA</strong> — xác định loại từ cần điền qua từ đứng trước và sau chỗ trống trong 10-15 giây.
+    </p>
+
+    <!-- Section 1: Suffix Cheat Sheet -->
+    <div class="card">
+      <h2 class="card-title">🏷️ 1. Bảng Nhận Diện Hậu Tố (Suffixes Cheat Sheet)</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+        Nhìn 4 đáp án để biết gốc từ, sau đó đối chiếu các đuôi nhận dạng để xác định N, V, Adj, hay Adv:
+      </p>
+
+      <div class="chip-grid">
+        <div class="chip-box">
+          <div class="chip-header">
+            <span>Danh từ (Noun)</span>
+            <span style="color:var(--accent);">N</span>
+          </div>
+          <div class="chip-list">-tion, -sion, -ment, -ance, -ence, -ity, -ness, -er, -or, -ee</div>
+          <div class="chip-examples">Ví dụ: <em>production, development, security, employee</em></div>
+        </div>
+
+        <div class="chip-box">
+          <div class="chip-header">
+            <span>Tính từ (Adjective)</span>
+            <span style="color:var(--accent-purple);">Adj</span>
+          </div>
+          <div class="chip-list">-ive, -able, -ible, -al, -ful, -ic, -ous, -ent, -ant, -less</div>
+          <div class="chip-examples">Ví dụ: <em>productive, reliable, flexible, seasonal, efficient</em></div>
+        </div>
+
+        <div class="chip-box">
+          <div class="chip-header">
+            <span>Trạng từ (Adverb)</span>
+            <span style="color:var(--accent-green);">Adv</span>
+          </div>
+          <div class="chip-list">Tính từ + -ly</div>
+          <div class="chip-examples">Ví dụ: <em>effectively, quickly, recently</em><br>*(Bỏ đuôi -ly sẽ ra Tính từ)*</div>
+        </div>
+
+        <div class="chip-box">
+          <div class="chip-header">
+            <span>Động từ (Verb)</span>
+            <span style="color:var(--accent-rose);">V</span>
+          </div>
+          <div class="chip-list">-ize, -ise, -ate, -en, -ify</div>
+          <div class="chip-examples">Ví dụ: <em>customize, participate, shorten, notify</em></div>
+        </div>
+      </div>
+
+      <div class="alert-box">
+        <strong>⚠️ 2 Bẫy Ngoại Lệ ETS Hay Gài Nhất:</strong><br>
+        1. <strong>Đuôi <code>-ly</code> nhưng là TÍNH TỪ</strong>: <em>costly</em> (đắt đỏ), <em>timely</em> (kịp thời), <em>friendly</em> (thân thiện), <em>daily/weekly/monthly/annual</em>.<br>
+        2. <strong>Đuôi <code>-al</code> nhưng là DANH TỪ</strong>: <em>proposal</em> (bản đề xuất), <em>approval</em> (sự phê duyệt), <em>renewal</em> (gia hạn), <em>removal</em> (tháo dỡ).
+      </div>
+    </div>
+
+    <!-- Section 2: Formulas -->
+    <div class="card">
+      <h2 class="card-title">📐 2. 4 Công Thức Cú Pháp Vàng (Syntax Tree Rules)</h2>
+
+      <h3 style="font-size: 15px; margin: 12px 0 6px; color: var(--accent-purple);">A. Vị trí của TÍNH TỪ (Adjective)</h3>
+      <div class="formula-box">
+        1. [a / an / the / my / your] + <strong>[ TÍNH TỪ ]</strong> + Danh từ ➔ <em>an exceptional candidate</em><br>
+        2. [be / remain / seem / become] + <strong>[ TÍNH TỪ ]</strong> ➔ <em>The room must remain secure</em>
+      </div>
+
+      <h3 style="font-size: 15px; margin: 16px 0 6px; color: var(--accent-green);">B. Vị trí của TRẠNG TỪ (Adverb - đuôi -ly)</h3>
+      <div class="formula-box">
+        1. have/has + <strong>[ TRẠNG TỪ ]</strong> + V3/ed ➔ <em>has successfully completed</em><br>
+        2. be + <strong>[ TRẠNG TỪ ]</strong> + V-ed (bị động) ➔ <em>was carefully reviewed</em><br>
+        3. Chủ ngữ + <strong>[ TRẠNG TỪ ]</strong> + Động từ thường ➔ <em>She promptly replied</em><br>
+        4. <strong>[ TRẠNG TỪ ]</strong> + Tính từ + Danh từ ➔ <em>an extremely competitive market</em>
+      </div>
+
+      <h3 style="font-size: 15px; margin: 16px 0 6px; color: var(--accent);">C. Vị trí của DANH TỪ (Noun)</h3>
+      <div class="formula-box">
+        1. Giới từ (in / at / on / for / with / about) + <strong>[ DANH TỪ ]</strong> ➔ <em>for your cooperation</em><br>
+        2. [a / an / the] + (Tính từ) + <strong>[ DANH TỪ ]</strong> ➔ <em>signed the formal agreement</em>
+      </div>
+    </div>
+
+    <!-- Section 3: Interactive Practice -->
+    <div class="card">
+      <h2 class="card-title">✍️ 3. Bài Tập Rèn Luyện Thực Tế (5 Câu Chuẩn ETS)</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+        Thử sức tự làm và bấm nút <strong>"Xem Đáp Án & Phân Tích"</strong> khi đã sẵn sàng đối chiếu:
+      </p>
+
+      <!-- Q1 -->
+      <div class="exercise-box">
+        <div class="question-stem">1. The software update was ______ installed across all office workstations yesterday.</div>
+        <div class="options-grid">
+          <div class="option-item">(A) successful</div>
+          <div class="option-item">(B) successfully</div>
+          <div class="option-item">(C) succeed</div>
+          <div class="option-item">(D) success</div>
+        </div>
+        <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
+        <div class="explanation-box">
+          <strong style="color:var(--accent-green);">Đáp án: (B) successfully</strong><br>
+          <strong>Căn cứ cú pháp</strong>: Câu bị động: <code>was</code> (to-be) + ______ + <code>installed</code> (V-ed).<br>
+          Kẹp giữa trợ động từ to-be và V-ed bắt buộc là <strong>Trạng từ (-ly)</strong> để bổ nghĩa cho hành động được cài đặt.
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="exercise-box">
+        <div class="question-stem">2. The company offers a ______ benefits package to attract experienced backend developers.</div>
+        <div class="options-grid">
+          <div class="option-item">(A) compete</div>
+          <div class="option-item">(B) competition</div>
+          <div class="option-item">(C) competitive</div>
+          <div class="option-item">(D) competitively</div>
+        </div>
+        <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
+        <div class="explanation-box">
+          <strong style="color:var(--accent-green);">Đáp án: (C) competitive</strong><br>
+          <strong>Căn cứ cú pháp</strong>: <code>a</code> (mạo từ) + ______ + <code>benefits package</code> (cụm danh từ).<br>
+          Đứng trước danh từ để bổ nghĩa cần một <strong>Tính từ</strong>. Đuôi <code>-ive</code> là dấu hiệu của tính từ.
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="exercise-box">
+        <div class="question-stem">3. Please review the contract details carefully before signing the ______.</div>
+        <div class="options-grid">
+          <div class="option-item">(A) agree</div>
+          <div class="option-item">(B) agreement</div>
+          <div class="option-item">(C) agreeable</div>
+          <div class="option-item">(D) agreeably</div>
+        </div>
+        <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
+        <div class="explanation-box">
+          <strong style="color:var(--accent-green);">Đáp án: (B) agreement</strong><br>
+          <strong>Căn cứ cú pháp</strong>: <code>signing</code> (động từ) + <code>the</code> (mạo từ) + ______.<br>
+          Sau mạo từ <code>the</code> cần một <strong>Danh từ</strong> làm tân ngữ cho hành động ký kết. Đuôi <code>-ment</code> là danh từ.
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="exercise-box">
+        <div class="question-stem">4. The new monitoring system operates ______ even during peak traffic hours.</div>
+        <div class="options-grid">
+          <div class="option-item">(A) reliable</div>
+          <div class="option-item">(B) reliability</div>
+          <div class="option-item">(C) reliably</div>
+          <div class="option-item">(D) reliableness</div>
+        </div>
+        <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
+        <div class="explanation-box">
+          <strong style="color:var(--accent-green);">Đáp án: (C) reliably</strong><br>
+          <strong>Căn cứ cú pháp</strong>: <code>operates</code> (động từ thường) + ______.<br>
+          Đứng sau bổ nghĩa cho động từ thường là một <strong>Trạng từ (-ly)</strong>: <em>vận hành một cách đáng tin cậy</em>.
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="exercise-box">
+        <div class="question-stem">5. Customer service representatives must remain ______ at all times when handling inquiries.</div>
+        <div class="options-grid">
+          <div class="option-item">(A) polite</div>
+          <div class="option-item">(B) politely</div>
+          <div class="option-item">(C) politeness</div>
+          <div class="option-item">(D) impolitely</div>
+        </div>
+        <button class="reveal-btn" onclick="toggleExplanation(this)">Xem Đáp Án & Phân Tích</button>
+        <div class="explanation-box">
+          <strong style="color:var(--accent-green);">Đáp án: (A) polite</strong><br>
+          <strong>Căn cứ cú pháp</strong>: Sau động từ nối chỉ trạng thái <code>remain</code> (duy trì) + <strong>Tính từ</strong>.<br>
+          <em>remain polite</em>: duy trì sự lịch sự.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Theme toggle
+    const themeBtn = document.getElementById('themeToggleBtn');
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+    });
+
+    // Reveal explanation
+    function toggleExplanation(btn) {
+      const box = btn.nextElementSibling;
+      box.classList.toggle('active');
+      btn.innerText = box.classList.contains('active') ? 'Ẩn Đáp Án & Phân Tích' : 'Xem Đáp Án & Phân Tích';
+    }
+  </script>
+</body>
+</html>
