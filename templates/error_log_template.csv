@@ -1,0 +1,4 @@
+Test_ID,Part,Question_No,Error_Type,My_Choice,Correct_Choice,Question_Summary,Root_Cause,Paraphrase_Or_KeyRule,Status
+ETS2024_Test01,Part2,14,TRAP,A,C,"Where did Mr. Davis go?","Bẫy similar sound: nghe thấy go tưởng chọn A có went out, nhưng C trả lời gián tiếp: Check the schedule","gián tiếp: check the calendar/schedule = don't know directly",Reviewed
+ETS2024_Test01,Part5,108,GRAMMAR,B,D,"The committee ___ approved the budget proposal.","Điền trạng từ bổ nghĩa cho động từ approved ở thì quá khứ","unanimously approved (collocation)",Mastered
+ETS2024_Test01,Part7,164,VOCAB,A,C,"What is indicated about the warranty?","Không biết từ 'comprehensive' = toàn diện, chọn nhầm limited","comprehensive = full/complete coverage",Review_Again

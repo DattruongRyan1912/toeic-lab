@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOEIC Engineering Master Guide & Agent Ecosystem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-hover: #334155;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --accent-green: #34d399;
+      --accent-purple: #c084fc;
+      --accent-amber: #fbbf24;
+      --accent-rose: #fb7185;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-hover: #f1f5f9;
+      --border-color: #e2e8f0;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.1);
+      --accent-green: #059669;
+      --accent-purple: #7c3aed;
+      --accent-amber: #d97706;
+      --accent-rose: #e11d48;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 280px;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      z-index: 100;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #0284c7, #38bdf8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+      font-size: 18px;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .nav-item a:hover, .nav-item a.active {
+      color: var(--text-main);
+      background-color: var(--bg-hover);
+    }
+
+    .nav-item a.active {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .theme-toggle-btn {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px;
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      background-color: var(--bg-hover);
+    }
+
+    /* Main Content */
+    .main-wrapper {
+      margin-left: 280px;
+      flex: 1;
+      padding: 40px;
+      max-width: 1200px;
+    }
+
+    .hero-banner {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, rgba(192, 132, 252, 0.1) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background-color: var(--accent-glow);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    h1.hero-title {
+      font-size: 30px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 760px;
+    }
+
+    /* Section Styles */
+    section {
+      margin-bottom: 50px;
+      scroll-margin-top: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-tag {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Cards Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .card p, .card li {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .card ul {
+      padding-left: 20px;
+      margin-top: 10px;
+    }
+
+    .card strong {
+      color: var(--text-main);
+    }
+
+    /* Interactive Calculator */
+    .calculator-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 28px;
+    }
+
+    .range-group {
+      margin-bottom: 20px;
+    }
+
+    .range-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .range-val {
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    input[type=range] {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-hover);
+      border-radius: 4px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    .result-display {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .total-score-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .total-score-val {
+      font-size: 54px;
+      font-weight: 800;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      line-height: 1.1;
+      margin: 8px 0;
+    }
+
+    .sub-scores {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .sub-score-item {
+      font-size: 13px;
+      background: var(--bg-secondary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .cefr-tag {
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-card);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--bg-primary);
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: var(--bg-hover);
+    }
+
+    .badge-error {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+    .badge-vocab { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+    .badge-grammar { background: rgba(192, 132, 252, 0.2); color: #c084fc; }
+    .badge-phonetics { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .badge-trap { background: rgba(251, 113, 133, 0.2); color: #fb7185; }
+    .badge-time { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
+
+    /* Code block & Prompt snippet */
+    .code-box {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      position: relative;
+      margin: 12px 0;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      overflow-x: auto;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 8px;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-main);
+      background-color: var(--bg-hover);
+    }
+
+    /* Tabs */
+    .tab-bar {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-wrapper { margin-left: 0; padding: 20px; }
+      .grid-2, .grid-3, .calc-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">T</div>
+      <div>
+        <div class="brand-title">TOEIC Master AI</div>
+        <div class="brand-subtitle">Self-Study Engine</div>
+      </div>
+    </div>
+
+    <ul class="nav-list">
+      <li class="nav-item"><a href="#overview" class="active">🎯 Tổng quan hệ thống</a></li>
+      <li class="nav-item"><a href="#methodology">🔬 Nghiên cứu phương pháp</a></li>
+      <li class="nav-item"><a href="#calculator">🧮 Bảng tính điểm ETS</a></li>
+      <li class="nav-item"><a href="#agent-config">🤖 Cấu hình AI Mentor</a></li>
+      <li class="nav-item"><a href="#skills-catalog">⚡ 5 Skills chuyên sâu</a></li>
+      <li class="nav-item"><a href="#roadmaps">📅 Lộ trình Sprint 800+</a></li>
+      <li class="nav-item"><a href="#error-log">📝 Quản lý lỗi sai (RCA)</a></li>
+      <li class="nav-item"><a href="#prompts">💬 Mẫu Prompt tương tác</a></li>
+    </ul>
+
+    <button class="theme-toggle-btn" id="themeToggleBtn">
+      <span>🌓</span> Chuyển Theme (Dark/Light)
+    </button>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="main-wrapper">
+
+    <!-- Hero Banner -->
+    <div class="hero-banner" id="overview">
+      <div class="badge-pill">🚀 Kỹ thuật tự học chuẩn hóa cho Kỹ sư phần mềm</div>
+      <h1 class="hero-title">Hệ Sinh Thái Tự Học TOEIC 800 - 900+</h1>
+      <p class="hero-desc">
+        Xây dựng trên nền tảng tư duy kỹ thuật (Data-Driven, Root Cause Analysis, Time Boxing) kết hợp cùng hệ thống AI Mentor Antigravity đa kỹ năng. Loại bỏ triệt để việc học mẹo ngắn hạn, tập trung làm chủ phản xạ ngôn ngữ thực chất và cấu trúc đề thi chuẩn ETS 2024.
+      </p>
+    </div>
+
+    <!-- Section 1: Methodology Research -->
+    <section id="methodology">
+      <div class="section-header">
+        <h2 class="section-title">🔬 Nghiên cứu các phương pháp tự học hiệu quả cao</h2>
+        <span class="section-tag">SCIENTIFIC METHODOLOGY</span>
+      </div>
+
+      <div class="grid-2">
+        <!-- Card 1: Listening Dictation & Shadowing -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">🎧</div>
+            <div>
+              <div class="card-title">Dictation & Shadowing (Listening)</div>
+              <div class="card-subtitle">Làm chủ Part 1 - Part 4</div>
+            </div>
+          </div>
+          <p>Phương pháp khắc phục triệt để hiện tượng <em>"nghe được từng từ nhưng không hiểu cả câu"</em> hoặc <em>"bị trượt nhịp"</em>:</p>
+          <ul>
+            <li><strong>Dictation (Chép chính tả)</strong>: Dành cho Part 1, 2 và đoạn ngắn Part 3. Giúp não bộ nhận diện các điểm mù âm vị: nuốt âm (Elision), nối âm (Linking: <em>check-in</em>, <em>fill out</em>), biến âm Flap-T (giọng Mỹ) và ngữ điệu câu hỏi đuôi.</li>
+            <li><strong>Shadowing (Nói nhại đồng thời)</strong>: Dành cho Part 3, 4. Nói nhại theo speaker với độ trễ 0.5s. Tăng tốc độ đọc hiểu âm thanh lên <strong>150 - 180 từ/phút</strong> mà không cần dịch ngầm sang tiếng Việt.</li>
+            <li><strong>Kỹ thuật "Đi trước băng 30s"</strong>: Đọc lướt 3 câu hỏi trước khi audio phát. Nhắm trước từ khóa để vừa nghe vừa tick đáp án.</li>
+          </ul>
+        </div>
+
+        <!-- Card 2: Reading Time-Boxing & 3-Pass -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(192, 132, 252, 0.15); color: #c084fc;">⏱️</div>
+            <div>
+              <div class="card-title">Time-Boxing & 3-Pass Scanning (Reading)</div>
+              <div class="card-subtitle">Tối ưu 75 phút làm 100 câu Part 5-7</div>
+            </div>
+          </div>
+          <p>Khắc phục lỗi "cháy giờ" dẫn đến việc đánh lụi 15-20 câu cuối ở Part 7:</p>
+          <ul>
+            <li><strong>Part 5 (10 - 12 phút)</strong>: 20-25s/câu. Tách biệt câu Ngữ pháp (xét vị trí từ loại trước/sau chỗ trống) và câu Từ vựng (tìm Collocation).</li>
+            <li><strong>Part 6 (8 - 10 phút)</strong>: Chú ý liên từ chuyển hướng (<em>However, In addition, Consequently</em>) và tính logic của câu điền.</li>
+            <li><strong>Part 7 (50 - 55 phút)</strong>: Áp dụng quy tắc <strong>3-Pass</strong>: Pass 1 quét tiêu đề/người gửi/mục đích ➔ Pass 2 định vị câu hỏi và từ khóa ➔ Pass 3 đối chiếu Paraphrase.</li>
+            <li><strong>Cross-Referencing (Đoạn 2 & 3)</strong>: Câu hỏi suy luận luôn kết nối thông tin giữa 2 tài liệu (ví dụ: Coupon ở đoạn 1 + Hóa đơn mua hàng ở đoạn 2).</li>
+          </ul>
+        </div>
+
+        <!-- Card 3: Paraphrase Vault -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(52, 211, 153, 0.15); color: #34d399;">🔄</div>
+            <div>
+              <div class="card-title">Tư duy Paraphrasing Vault</div>
+              <div class="card-subtitle">Chìa khóa chinh phục mốc 850 - 990</div>
+            </div>
+          </div>
+          <p>ETS không kiểm tra bạn có thuộc lòng một từ không, mà kiểm tra khả năng nhận diện thông tin được tái diễn đạt:</p>
+          <ul>
+            <li><strong>Từ đồng nghĩa trực tiếp</strong>: <em>call off ➔ cancel</em>, <em>postpone ➔ delay</em>, <em>free of charge ➔ complimentary</em>.</li>
+            <li><strong>Từ cụ thể ➔ Khái quát (Hypernym)</strong>: <em>laptops, tablets, printers ➔ office equipment</em>.</li>
+            <li><strong>Đổi thể / ngữ thái</strong>: <em>The manager approved ➔ The request has been accepted</em>.</li>
+            <li><strong>Bẫy từ trùng âm / giống chữ</strong>: Nếu trong bài nghe xuất hiện từ <em>copy</em>, phương án có <em>coffee</em> hầu như chắc chắn là bẫy.</li>
+          </ul>
+        </div>
+
+        <!-- Card 4: SRS & Cognitive Load -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24;">🧠</div>
+            <div>
+              <div class="card-title">Spaced Repetition (SRS/Anki)</div>
+              <div class="card-subtitle">Ghi nhớ bền vững 600 từ vựng kinh doanh</div>
+            </div>
+          </div>
+          <p>Ứng dụng đường cong lãng quên Ebbinghaus để ôn tập từ vựng đúng thời điểm vàng:</p>
+          <ul>
+            <li>Không học từ đơn lẻ, chỉ học từ trong <strong>Collocations</strong> (cụm từ hay gặp: <em>conduct an audit</em>, <em>comply with regulations</em>).</li>
+            <li>Chu kỳ lặp lại tối ưu: Sau 20 phút ➔ 1 ngày ➔ 3 ngày ➔ 7 ngày ➔ 16 ngày ➔ 35 ngày.</li>
+            <li>14 chủ đề TOEIC thông dụng: General Business, Manufacturing, Finance, HR, Procurement, Real Estate, Logistics, IT,...</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Interactive Calculator -->
+    <section id="calculator">
+      <div class="section-header">
+        <h2 class="section-title">🧮 Bảng tính điểm TOEIC & Phân tích khoảng cách (Gap Analysis)</h2>
+        <span class="section-tag">ETS EQUATING ALGORITHM</span>
+      </div>
+
+      <div class="calculator-box">
+        <div class="calc-grid">
+          <div>
+            <!-- Listening Slider -->
+            <div class="range-group">
+              <div class="range-header">
+                <span>Listening Raw (Số câu đúng Part 1-4)</span>
+                <span class="range-val" id="lRawVal">75 / 100 câu</span>
+              </div>
+              <input type="range" id="lRawInput" min="0" max="100" value="75">
+            </div>
+
+            <!-- Reading Slider -->
+            <div class="range-group">
+              <div class="range-header">
+                <span>Reading Raw (Số câu đúng Part 5-7)</span>
+                <span class="range-val" id="rRawVal">70 / 100 câu</span>
+              </div>
+              <input type="range" id="rRawInput" min="0" max="100" value="70">
+            </div>
+
+            <!-- Target Selection -->
+            <div class="range-group">
+              <div class="range-header">
+                <span>Mục tiêu điểm số (Target Score)</span>
+                <span class="range-val" id="targetScoreVal">800</span>
+              </div>
+              <select id="targetSelect" style="width: 100%; padding: 10px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 600;">
+                <option value="550">550 Điểm (Tốt nghiệp Đại học / Cơ bản)</option>
+                <option value="650">650 Điểm (Doanh nghiệp trong nước)</option>
+                <option value="750">750 Điểm (Doanh nghiệp nước ngoài / Kỹ sư)</option>
+                <option value="800" selected>800 Điểm (Môi trường Global / Trình độ chuẩn)</option>
+                <option value="850">850 Điểm (Chuyên nghiệp cao cấp)</option>
+                <option value="900">900 Điểm (Master / Giao tiếp toàn diện)</option>
+                <option value="950">950+ Điểm (Cận tuyệt đối)</option>
+              </select>
+            </div>
+
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 14px;">
+              * Tính toán dựa trên bảng chuẩn hóa Curve của ETS (Educational Testing Service). Điểm số quy đổi từ các bộ đề thi thật gần nhất.
+            </p>
+          </div>
+
+          <!-- Result Display -->
+          <div class="result-display">
+            <div class="total-score-label">Ước lượng tổng điểm TOEIC</div>
+            <div class="total-score-val" id="calcTotal">720</div>
+            
+            <div class="sub-scores">
+              <div class="sub-score-item">🎧 Listening: <strong id="calcListening" style="color:var(--accent)">390</strong></div>
+              <div class="sub-score-item">📖 Reading: <strong id="calcReading" style="color:var(--accent-purple)">330</strong></div>
+            </div>
+
+            <div class="cefr-tag" id="calcCefr">B2 - Working Proficiency</div>
+
+            <div id="gapAlert" style="margin-top: 16px; font-size: 13px; text-align: left; width: 100%; padding: 12px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--border-color);">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Agent Ecosystem -->
+    <section id="agent-config">
+      <div class="section-header">
+        <h2 class="section-title">🤖 Kiến trúc Agent TOEIC Coach trong Workspace</h2>
+        <span class="section-tag">ANTIGRAVITY CUSTOMIZATION</span>
+      </div>
+
+      <div class="card" style="margin-bottom: 24px;">
+        <p style="margin-bottom: 12px;">Hệ thống cấu hình cho phép AI đồng hành 1-1 cùng bạn trong mọi tác vụ học tập. Cấu hình được tải trực tiếp từ thư mục workspace:</p>
+        <div class="grid-3">
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent);">GEMINI.md & AGENTS.md</strong>
+            <p style="font-size: 12px; margin-top: 6px;">Định vị AI Mentor, thiết lập nguyên tắc Root Cause Analysis (RCA), bẻ gãy 5 nhóm lỗi và chuẩn format giải đề 3 chiều.</p>
+          </div>
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent-purple);">.agents/rules/</strong>
+            <p style="font-size: 12px; margin-top: 6px;">Quy chuẩn chi tiết phân loại bẫy đề thi, quy tắc học theo từng mức điểm (550, 750, 850+) và protocol chữa bài thi thử.</p>
+          </div>
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+            <strong style="color: var(--accent-green);">.agents/skills/</strong>
+            <p style="font-size: 12px; margin-top: 6px;">5 skills kích hoạt theo nhu cầu: Chẩn đoán lộ trình, Luyện nghe phản xạ, Luyện đọc thần tốc, Từ vựng SRS, Phân tích Mock test.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Skills Catalog -->
+    <section id="skills-catalog">
+      <div class="section-header">
+        <h2 class="section-title">⚡ Danh mục 5 Skills Tự Học Chuyên Sâu</h2>
+        <span class="section-tag">MODULAR CAPABILITIES</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">🎯</span>
+            <div>
+              <div class="card-title">toeic-diagnostic-coach</div>
+              <div class="card-subtitle">Chẩn đoán & Lập Sprint</div>
+            </div>
+          </div>
+          <p>Khảo sát năng lực ban đầu qua Mini-Test, tính điểm chênh lệch với mục tiêu, lập kế hoạch chi tiết từ 4 - 8 tuần theo chuẩn giờ học của kỹ sư.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">🎧</span>
+            <div>
+              <div class="card-title">toeic-listening-mastery</div>
+              <div class="card-subtitle">Kỹ năng Nghe thực chất</div>
+            </div>
+          </div>
+          <p>Điều phối bài tập Dictation (chép chính tả), Shadowing 3 tầng tốc độ (1.0x - 1.2x), kỹ thuật đọc trước câu hỏi 30s và phân tích bẫy phát âm.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">📖</span>
+            <div>
+              <div class="card-title">toeic-reading-mastery</div>
+              <div class="card-subtitle">Chiến thuật Đọc 75 phút</div>
+            </div>
+          </div>
+          <p>Kỹ thuật 3-Pass Scanning cho Part 7, nhận diện nhanh cấu trúc câu Part 5 trong 20s, xử lý đoạn kép/đoạn ba không bị phân tán thông tin.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">🧠</span>
+            <div>
+              <div class="card-title">toeic-vocab-builder</div>
+              <div class="card-subtitle">Từ vựng SRS & Collocation</div>
+            </div>
+          </div>
+          <p>Sinh thẻ Anki chuẩn định dạng, phân loại từ vựng theo 14 chủ đề công sở, trích xuất bảng Paraphrase Vault từ các đề thi thật.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span style="font-size: 24px;">📊</span>
+            <div>
+              <div class="card-title">toeic-mock-test-analyst</div>
+              <div class="card-subtitle">Giải đề & Chẩn đoán bẫy</div>
+            </div>
+          </div>
+          <p>Quy trình chữa đề 4 giai đoạn theo nguyên tắc 1-3 (Làm 1 giờ - Chữa 3 giờ), nhận diện 5 bẫy kinh điển và ghi log tự động vào file CSV.</p>
+        </div>
+
+        <div class="card" style="border-style: dashed; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+          <div style="font-size: 28px; margin-bottom: 8px;">💻</div>
+          <div class="card-title">scripts/score_calculator.py</div>
+          <p style="font-size: 12px; margin-top: 6px;">CLI tính điểm và phân tích gap tức thì: <code>python scripts/score_calculator.py --l-raw 80 --r-raw 75</code></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Roadmaps -->
+    <section id="roadmaps">
+      <div class="section-header">
+        <h2 class="section-title">📅 Lộ trình Sprint Ôn Luyện Thực Chiến</h2>
+        <span class="section-tag">ENGINEERING ROADMAPS</span>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('sprint-800')">Sprint 750 - 850+ (Trọng tâm Kỹ sư)</button>
+        <button class="tab-btn" onclick="switchTab('sprint-550')">Sprint 550+ (Củng cố nền tảng)</button>
+        <button class="tab-btn" onclick="switchTab('sprint-900')">Sprint 900 - 990 (Đỉnh cao Master)</button>
+      </div>
+
+      <!-- Tab 1: 800+ -->
+      <div id="sprint-800" class="tab-content active">
+        <div class="card">
+          <h3 style="margin-bottom: 12px; color: var(--accent);">Lộ trình 8 Tuần Chinh Phục 750 - 850+ (Cam kết 10-12h/tuần)</h3>
+          <p style="margin-bottom: 16px;">Phù hợp cho backend developer đã có nền tiếng Anh đọc tài liệu kỹ thuật, cần tối ưu phản xạ nghe và tốc độ đọc hiểu văn bản hợp đồng/email.</p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tuần</th>
+                  <th>Mục tiêu trọng tâm</th>
+                  <th>Listening Focus</th>
+                  <th>Reading Focus</th>
+                  <th>Mock Test & KPI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Tuần 1 - 2</strong></td>
+                  <td>Đồng bộ phản xạ âm thanh & Cú pháp câu</td>
+                  <td>Dictation Part 1 & Part 2. Xóa sổ lỗi bẫy tương tự âm thanh.</td>
+                  <td>Part 5: 30 câu trong 12 phút. Làm chủ Collocations công sở.</td>
+                  <td>Mini Test 1: Đạt LC 380, RC 320</td>
+                </tr>
+                <tr>
+                  <td><strong>Tuần 3 - 4</strong></td>
+                  <td>Chiến thuật đi trước băng & Đọc 3-Pass</td>
+                  <td>Part 3 & Part 4: Kỹ thuật đọc đề trong 30s. Shadowing 1.0x.</td>
+                  <td>Part 6 + Part 7 Single: Đọc lướt bắt Paraphrase.</td>
+                  <td>Full Test ETS 2024 Test 01: > 730đ</td>
+                </tr>
+                <tr>
+                  <td><strong>Tuần 5 - 6</strong></td>
+                  <td>Khắc chế đoạn kép/ba & Giọng Anh/Úc</td>
+                  <td>Luyện nghe audio tốc độ 1.1x. Nhận diện giọng khó.</td>
+                  <td>Part 7 Double/Triple: Bài tập tìm mối liên kết chéo.</td>
+                  <td>Full Test ETS 2024 Test 02-03: > 780đ</td>
+                </tr>
+                <tr>
+                  <td><strong>Tuần 7 - 8</strong></td>
+                  <td>Về đích, luyện áp lực 120 phút & Review RCA</td>
+                  <td>Tô chì trực tiếp trên Answer Sheet, không phân vân.</td>
+                  <td>Kiểm soát thời gian Part 7 còn dư 3-5 phút kiểm tra lại.</td>
+                  <td>2 Đề Hacker/ETS: Ổn định 820 - 870đ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: 550+ -->
+      <div id="sprint-550" class="tab-content">
+        <div class="card">
+          <h3 style="margin-bottom: 12px; color: var(--accent-green);">Lộ trình 6 Tuần Xây Nền 550+</h3>
+          <p style="margin-bottom: 14px;">Tập trung vào 12 chuyên đề ngữ pháp then chốt và 600 từ vựng căn bản, giải quyết Part 1, 2 và Part 5.</p>
+          <ul>
+            <li><strong>Ngữ pháp cốt lõi</strong>: Các thì thời gian, Câu bị động, Hòa hợp Chủ-Vị, Mệnh đề quan hệ, Đại từ và Giới từ.</li>
+            <li><strong>Listening</strong>: Luyện nghe 100 câu hỏi Who/Where/When/How để không bị mất điểm cơ bản ở Part 2.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Tab 3: 900+ -->
+      <div id="sprint-900" class="tab-content">
+        <div class="card">
+          <h3 style="margin-bottom: 12px; color: var(--accent-purple);">Lộ trình 6 Tuần Đạt Đỉnh 900 - 990</h3>
+          <p style="margin-bottom: 14px;">Loại bỏ hoàn toàn các lỗi sai vô thức, giải quyết các câu hỏi ngụ ý phức tạp và làm đề Hacker/YBM với độ khó cao.</p>
+          <ul>
+            <li><strong>Phân tích bẫy tinh vi</strong>: Bẫy suy diễn cực đoan (extreme words), bẫy mốc thời gian chuyển giao hợp đồng, thành ngữ kinh doanh.</li>
+            <li><strong>Đọc hiểu tốc độ cao</strong>: Duy trì WPM > 220 từ/phút cho các văn bản tài chính, pháp lý phức tạp.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Error Log & RCA -->
+    <section id="error-log">
+      <div class="section-header">
+        <h2 class="section-title">📝 Hệ Thống Phân Tích Lỗi Sai (Root Cause Analysis)</h2>
+        <span class="section-tag">DATA-DRIVEN ERROR LOG</span>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <p style="margin-bottom: 16px;">Mọi câu sai đều phải được lưu trữ và phân loại theo 5 mã chuẩn. Dưới đây là bảng mẫu trích xuất từ <code>templates/error_log_template.csv</code>:</p>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Test / Part</th>
+                <th>Câu</th>
+                <th>Mã lỗi</th>
+                <th>Lựa chọn sai</th>
+                <th>Đáp án đúng</th>
+                <th>Nguyên nhân gốc (Root Cause)</th>
+                <th>Cặp Paraphrase / Quy tắc cốt lõi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ETS 2024 #01</td>
+                <td>P2 - Q14</td>
+                <td><span class="badge-error badge-trap">TRAP</span></td>
+                <td>A (went out)</td>
+                <td><strong>C (check calendar)</strong></td>
+                <td>Bẫy Similar Sound: nghe thấy "go" chọn "went", trong khi C là đáp án gián tiếp.</td>
+                <td><em>Check the schedule = I don't know directly</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #01</td>
+                <td>P5 - Q108</td>
+                <td><span class="badge-error badge-grammar">GRAMMAR</span></td>
+                <td>B (unanimous)</td>
+                <td><strong>D (unanimously)</strong></td>
+                <td>Cần trạng từ (Adv) đứng trước bổ nghĩa cho động từ "approved".</td>
+                <td><em>unanimously approved (đồng thuận thông qua)</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #01</td>
+                <td>P7 - Q164</td>
+                <td><span class="badge-error badge-vocab">VOCAB</span></td>
+                <td>A (limited)</td>
+                <td><strong>C (full coverage)</strong></td>
+                <td>Không biết nghĩa từ "comprehensive" trong đoạn văn bản hợp đồng bảo hành.</td>
+                <td><em>comprehensive = extensive = full coverage</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #02</td>
+                <td>P4 - Q82</td>
+                <td><span class="badge-error badge-phonetics">PHONETICS</span></td>
+                <td>B</td>
+                <td><strong>A</strong></td>
+                <td>Nuốt âm giọng Úc: không nghe ra cụm "schedule an appointment".</td>
+                <td><em>schedule /'ʃedju:l/ (UK/AU) vs /'skedʒu:l/ (US)</em></td>
+              </tr>
+              <tr>
+                <td>ETS 2024 #02</td>
+                <td>P7 - Q198</td>
+                <td><span class="badge-error badge-time">TIME</span></td>
+                <td>D</td>
+                <td><strong>B</strong></td>
+                <td>Hết giờ làm bài, đọc vội không kịp đối chiếu Triple Passage.</td>
+                <td>Cần rút ngắn Part 5 xuống đúng 11 phút.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7: Prompts to Chat with AI Mentor -->
+    <section id="prompts">
+      <div class="section-header">
+        <h2 class="section-title">💬 Mẫu Lệnh & Prompt Tương Tác Với AI Mentor</h2>
+        <span class="section-tag">QUICK COPY SHORTCUTS</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <strong>1. Phân tích câu sai & Bóc bẫy đề thi</strong>
+          <p style="font-size: 13px; margin: 6px 0;">Yêu cầu AI giải thích cặn kẽ 4 phương án và lập bảng Paraphrase:</p>
+          <div class="code-box">
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            <code>Tôi vừa làm sai câu này: [Dán câu hỏi và 4 đáp án A B C D vào đây]. Hãy phân tích nguyên nhân sai, chỉ ra bẫy của 3 đáp án sai và trích xuất bảng Paraphrase giúp tôi.</code>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>2. Bắt đầu phiên luyện Dictation (Chép chính tả)</strong>
+          <p style="font-size: 13px; margin: 6px 0;">Nhờ AI tạo bài tập điền từ theo chuẩn biến âm ETS:</p>
+          <div class="code-box">
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            <code>Hãy đóng vai Huấn luyện viên Listening, cho tôi một bài tập Dictation Part 2/Part 3 với 5 câu có hiện tượng nối âm (linking) và nuốt âm (elision) mức độ 800 điểm.</code>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>3. Tạo thẻ Anki Flashcard từ đề thi vừa làm</strong>
+          <p style="font-size: 13px; margin: 6px 0;">Trích xuất tự động danh sách từ vựng thành format thẻ Anki:</p>
+          <div class="code-box">
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            <code>Hãy trích xuất 10 từ vựng và Collocations quan trọng nhất trong đoạn văn sau thành format Anki (Mặt trước: Câu ví dụ có chỗ trống / Mặt sau: Từ vựng, IPA, nghĩa, Paraphrase).</code>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>4. Cập nhật và chẩn đoán tiến độ học tuần</strong>
+          <p style="font-size: 13px; margin: 6px 0;">Tổng kết sprint và đề xuất điều chỉnh giờ học:</p>
+          <div class="code-box">
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+            <code>Tuần này tôi làm đề ETS Test 01 được Listening: [Số câu], Reading: [Số câu]. Đây là danh sách câu sai của tôi. Hãy chạy phân tích gap và cập nhật kế hoạch tuần tới.</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // Theme toggle
+    const themeBtn = document.getElementById('themeToggleBtn');
+    themeBtn.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', nextTheme);
+    });
+
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    // Copy snippet
+    function copySnippet(btn) {
+      const code = btn.nextElementSibling.innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.innerText = 'Copied!';
+        setTimeout(() => { btn.innerText = 'Copy'; }, 2000);
+      });
+    }
+
+    // ETS Equating Curve Simulation
+    function getListeningScore(raw) {
+      if (raw <= 0) return 5;
+      if (raw >= 96) return 495;
+      if (raw >= 93) return 490;
+      if (raw >= 90) return 480;
+      if (raw >= 85) return 450 + (raw - 85) * 6;
+      if (raw >= 75) return 390 + (raw - 75) * 6;
+      if (raw >= 65) return 330 + (raw - 65) * 6;
+      if (raw >= 50) return 240 + (raw - 50) * 6;
+      if (raw >= 35) return 150 + (raw - 35) * 6;
+      if (raw >= 20) return 75 + (raw - 20) * 5;
+      return Math.max(5, raw * 4);
+    }
+
+    function getReadingScore(raw) {
+      if (raw <= 0) return 5;
+      if (raw >= 97) return 495;
+      if (raw >= 94) return 485;
+      if (raw >= 90) return 460;
+      if (raw >= 85) return 425 + (raw - 85) * 7;
+      if (raw >= 75) return 360 + (raw - 75) * 6.5;
+      if (raw >= 65) return 295 + (raw - 65) * 6.5;
+      if (raw >= 50) return 205 + (raw - 50) * 6;
+      if (raw >= 35) return 125 + (raw - 35) * 5.3;
+      if (raw >= 20) return 65 + (raw - 20) * 4;
+      return Math.max(5, raw * 3.25);
+    }
+
+    function updateCalculator() {
+      const lRaw = parseInt(document.getElementById('lRawInput').value);
+      const rRaw = parseInt(document.getElementById('rRawInput').value);
+      const target = parseInt(document.getElementById('targetSelect').value);
+
+      document.getElementById('lRawVal').innerText = `${lRaw} / 100 câu`;
+      document.getElementById('rRawVal').innerText = `${rRaw} / 100 câu`;
+      document.getElementById('targetScoreVal').innerText = `${target}`;
+
+      const lScaled = Math.round(getListeningScore(lRaw) / 5) * 5;
+      const rScaled = Math.round(getReadingScore(rRaw) / 5) * 5;
+      const total = lScaled + rScaled;
+
+      document.getElementById('calcListening').innerText = lScaled;
+      document.getElementById('calcReading').innerText = rScaled;
+      document.getElementById('calcTotal').innerText = total;
+
+      // CEFR Tag
+      let cefr = 'A1';
+      let cefrColor = 'var(--text-muted)';
+      if (total >= 945) { cefr = 'C1 - Advanced Professional'; cefrColor = '#34d399'; }
+      else if (total >= 785) { cefr = 'B2 - Working Proficiency'; cefrColor = '#38bdf8'; }
+      else if (total >= 550) { cefr = 'B1 - Independent User'; cefrColor = '#fbbf24'; }
+      else if (total >= 255) { cefr = 'A2 - Elementary'; cefrColor = '#fb7185'; }
+      
+      const cefrBadge = document.getElementById('calcCefr');
+      cefrBadge.innerText = cefr;
+
+      // Gap Alert
+      const gap = target - total;
+      const gapAlert = document.getElementById('gapAlert');
+      if (gap <= 0) {
+        gapAlert.innerHTML = `
+          <div style="color: var(--accent-green); font-weight:700; margin-bottom:4px;">🎉 Bạn đã đạt/vượt mục tiêu (+${Math.abs(gap)} điểm)!</div>
+          <div>Hãy thử thách bản thân ở mức điểm tiếp theo hoặc tập trung vào độ ổn định khi làm đề áp lực cao.</div>
+        `;
+      } else {
+        const neededL = Math.max(0, Math.ceil(gap / 10));
+        const neededR = Math.max(0, Math.ceil(gap / 9));
+        gapAlert.innerHTML = `
+          <div style="color: var(--accent-amber); font-weight:700; margin-bottom:4px;">⚠️ Khoảng cách cần bù đắp: ${gap} điểm</div>
+          <div>Để đạt ${target} điểm, đề xuất tăng: <strong>+${neededL} câu Listening</strong> và <strong>+${neededR} câu Reading</strong>.</div>
+        `;
+      }
+    }
+
+    document.getElementById('lRawInput').addEventListener('input', updateCalculator);
+    document.getElementById('rRawInput').addEventListener('input', updateCalculator);
+    document.getElementById('targetSelect').addEventListener('change', updateCalculator);
+
+    // Initial run
+    updateCalculator();
+  </script>
+</body>
+</html>
