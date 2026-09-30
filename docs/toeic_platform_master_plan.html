@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOEIC Lab Platform - Master Technical Architecture & Roadmap Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0a0f1d;
+      --bg-secondary: #111827;
+      --bg-tertiary: #1f2937;
+      --bg-card: #131d31;
+      --border-color: #27354f;
+      --border-focus: #3b82f6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.15);
+      --accent-green: #34d399;
+      --accent-purple: #c084fc;
+      --accent-amber: #fbbf24;
+      --accent-rose: #fb7185;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --border-focus: #2563eb;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0284c7;
+      --accent-glow: rgba(2, 132, 199, 0.1);
+      --accent-green: #059669;
+      --accent-purple: #7c3aed;
+      --accent-amber: #d97706;
+      --accent-rose: #e11d48;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      padding: 24px 16px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 20px;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .brand-title {
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: -0.5px;
+    }
+    .brand-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .nav-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 18px 0 8px 12px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .nav-item:hover, .nav-item.active {
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    /* Main Content */
+    .main-wrapper {
+      margin-left: 280px;
+      flex: 1;
+      padding: 40px;
+      max-width: 1300px;
+    }
+
+    /* Header Bar */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .page-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .page-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+    .theme-toggle-btn {
+      padding: 8px 14px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* Section Styles */
+    section {
+      margin-bottom: 56px;
+      scroll-margin-top: 24px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .section-tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Cards & Grids */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Diagram / Architecture Container */
+    .arch-container {
+      background: #0d1424;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      overflow-x: auto;
+    }
+    .flow-step {
+      display: flex;
+      align-items: stretch;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .flow-marker {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .flow-content {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px 16px;
+      flex: 1;
+    }
+
+    /* Code Blocks with Copy */
+    .code-wrapper {
+      position: relative;
+      margin: 16px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: #050811;
+    }
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: #0d1322;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .code-content {
+      padding: 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #e2e8f0;
+      line-height: 1.5;
+    }
+    .copy-btn {
+      padding: 4px 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin: 16px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--bg-tertiary);
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: rgba(255, 255, 255, 0.02); }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-green { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border: 1px solid rgba(52, 211, 153, 0.3); }
+    .badge-purple { background: rgba(192, 132, 252, 0.15); color: var(--accent-purple); border: 1px solid rgba(192, 132, 252, 0.3); }
+    .badge-amber { background: rgba(251, 191, 36, 0.15); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+    .badge-rose { background: rgba(251, 113, 133, 0.15); color: var(--accent-rose); border: 1px solid rgba(251, 113, 133, 0.3); }
+
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .main-wrapper { margin-left: 0; padding: 20px; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">TOEIC LAB PLATFORM</div>
+        <div class="brand-subtitle">Architecture & Roadmap</div>
+      </div>
+    </div>
+
+    <div class="nav-group-title">Nội Dung Chính</div>
+    <a href="#audit" class="nav-item active">📊 1. Audit Hiện Trạng</a>
+    <a href="#architecture" class="nav-item">🏗️ 2. Kiến Trúc Mục Tiêu</a>
+    <a href="#database" class="nav-item">🗄️ 3. Database Schema (SQL)</a>
+    <a href="#knowledge-vault" class="nav-item">📚 4. Kho Tri Thức Số Hóa</a>
+    <a href="#ai-assistant" class="nav-item">🧠 5. AI Mentor & Vision Engine</a>
+    <a href="#reminders" class="nav-item">⏰ 6. Hệ Thống Nhắc Nhở & Theo Dõi</a>
+    <a href="#execution-plan" class="nav-item">🚀 7. Kế Hoạch 5 Sprint Triển Khai</a>
+
+    <div class="nav-group-title">Mục Tiêu Cá Nhân</div>
+    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 8px; font-size: 12px;">
+      <div>🎯 Mục tiêu: <strong>750 - 850+</strong></div>
+      <div>⏱️ Thời hạn: <strong>5 - 6 tháng</strong></div>
+      <div>💻 Học viên: <strong>Backend Dev (~2 YoE)</strong></div>
+      <div>🎧 Lợi thế: <strong>Shadowing, phát âm tốt</strong></div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-wrapper">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div>
+        <h1 class="page-title">Kế Hoạch Tái Thiết Kế Toàn Diện Nền Tảng Học TOEIC</h1>
+        <div class="page-badge">ARCHITECTURAL BLUEPRINT & MASTER PLAN</div>
+      </div>
+      <div>
+        <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Đổi Giao Diện</button>
+      </div>
+    </div>
+
+    <!-- Section 1: Current State Audit -->
+    <section id="audit">
+      <div class="section-header">
+        <h2 class="section-title">1. Báo Cáo Audit Hiện Trạng Dự Án</h2>
+        <span class="section-tag">GAP ANALYSIS</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">✅ Thế Mạnh Đã Xây Dựng Được</div>
+              <div class="card-subtitle">Nền móng nội dung và audio</div>
+            </div>
+            <span class="badge badge-green">Tốt</span>
+          </div>
+          <ul style="font-size: 13px; color: var(--text-muted); margin-left: 18px; line-height: 1.8;">
+            <li><strong>Audio Engine 3 Tầng</strong>: Đã có 40 file MP3 chất lượng Studio chuẩn ETS (Azure Neural Jenny) + FastAPI microservice có MD5 disk caching.</li>
+            <li><strong>Tư duy Root Cause Analysis (RCA)</strong>: Đã phân loại 5 bẫy gốc <code>[VOCAB]</code>, <code>[GRAMMAR]</code>, <code>[PHONETICS]</code>, <code>[TRAP]</code>, <code>[TIME]</code>.</li>
+            <li><strong>Nội dung sư phạm chuẩn</strong>: Đã phác thảo 12 chuyên đề cú pháp toán học Part 5 và phương pháp giải đề 1-3.</li>
+            <li><strong>Dockerized</strong>: Đã có <code>Dockerfile</code> và <code>docker-compose.yml</code> cho audio backend.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">⚠️ Điểm Nghẽn & Giới Hạn Hiện Tại</div>
+              <div class="card-subtitle">Cần tái cấu trúc thành Web Platform</div>
+            </div>
+            <span class="badge badge-rose">Cần nâng cấp</span>
+          </div>
+          <ul style="font-size: 13px; color: var(--text-muted); margin-left: 18px; line-height: 1.8;">
+            <li><strong>Chưa có Database thực sự</strong>: Mọi tiến độ, câu sai và thẻ đã thuộc đều lưu ở <code>localStorage</code> trình duyệt, đổi máy hoặc xóa cookie là mất sạch.</li>
+            <li><strong>Kho dữ liệu còn phân mảnh</strong>: Mới có 20 Flashcards hardcoded và 1 bài học HTML; chưa có ngân hàng câu hỏi đề thi và bẫy Part 1-7.</li>
+            <li><strong>Chưa có AI Agent chủ động</strong>: Chưa có chatbot tích hợp; học viên phải tự chép tay câu sai thay vì có AI tự phát hiện lỗi và bồi đắp kiến thức.</li>
+            <li><strong>Thiếu Vision OCR</strong>: Không chụp/gửi ảnh câu hỏi đề thi để AI bóc tách trực tiếp được.</li>
+            <li><strong>Chưa có hệ thống nhắc nhở</strong>: Không có notification/cron nhắc học hàng ngày.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Target Architecture -->
+    <section id="architecture">
+      <div class="section-header">
+        <h2 class="section-title">2. Kiến Trúc Nền Tảng Mục Tiêu (Target Platform)</h2>
+        <span class="section-tag">FULL-STACK MODULAR MONOLITH</span>
+      </div>
+
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+        Hệ thống được thiết kế theo kiến trúc <strong>FastAPI Monolith + Relational Database (PostgreSQL / SQLite) + AI Multimodal Agent Service</strong>, tối ưu để host trên VPS cá nhân của bạn với chi phí tài nguyên thấp nhất nhưng hiệu năng cao nhất:
+      </p>
+
+      <div class="arch-container">
+        <div style="font-size: 13px; font-weight: 800; color: var(--accent); margin-bottom: 16px; text-transform: uppercase;">
+          📐 Sơ đồ phân tầng hệ thống (High-Level Architecture)
+        </div>
+
+        <div class="grid-3">
+          <!-- Layer 1: Client UI -->
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+            <div style="font-weight: 700; color: var(--accent); font-size: 14px; margin-bottom: 10px;">
+              💻 TẦNG 1: FRONTEND WEB APP
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+              • <strong>Dashboard & Roadmap</strong>: Theo dõi tiến độ 24 tuần, KPI số câu hàng tuần.<br>
+              • <strong>Flashcard Studio SRS</strong>: Ôn tập ngắt quãng (Spaced Repetition), phát audio MP3 0ms.<br>
+              • <strong>Knowledge Vault</strong>: 12 chuyên đề cú pháp, Paraphrase Vault, sổ tay bẫy đề thi.<br>
+              • <strong>Smart Error Log</strong>: Quản lý câu sai, phân loại RCA tự động.<br>
+              • <strong>AI Mentor Floating Panel</strong>: Chat tương tác, upload ảnh câu hỏi (Vision), nhận phân tích 3 chiều.
+            </div>
+          </div>
+
+          <!-- Layer 2: API & Agent Backend -->
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+            <div style="font-weight: 700; color: var(--accent-purple); font-size: 14px; margin-bottom: 10px;">
+              ⚡ TẦNG 2: FASTAPI & AI AGENT
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+              • <strong>REST API Core</strong>: Users, Roadmaps, Sprints, Flashcards, Error Logs.<br>
+              • <strong>Proactive AI Agent</strong>: Tích hợp DeepSeek / Multimodal Vision LLM.<br>
+              • <strong>Tool-Calling Engine</strong>: Cho phép AI tự đọc lịch sử học, tự log câu sai, tự sinh thẻ flashcard.<br>
+              • <strong>TTS Microservice</strong>: Azure Neural TTS + MD5 Disk Caching.<br>
+              • <strong>Study Reminder Scheduler</strong>: Background worker định kỳ gửi thông báo.
+            </div>
+          </div>
+
+          <!-- Layer 3: Database & Storage -->
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;">
+            <div style="font-weight: 700; color: var(--accent-green); font-size: 14px; margin-bottom: 10px;">
+              🗄️ TẦNG 3: DATABASE & STORAGE
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+              • <strong>Relational Database</strong>: SQLite (Local) / PostgreSQL (VPS Docker).<br>
+              • <strong>SQLAlchemy ORM + Alembic</strong>: Quản lý migration và quan hệ dữ liệu.<br>
+              • <strong>Disk Cache Storage</strong>: <code>/app/cache/*.mp3</code> lưu trữ audio vĩnh viễn.<br>
+              • <strong>Image Uploads</strong>: <code>/app/uploads/questions/</code> lưu ảnh bài thi học viên gửi lên.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Database Schema (SQL) -->
+    <section id="database">
+      <div class="section-header">
+        <h2 class="section-title">3. Thiết Kế Cơ Sở Dữ Liệu (Relational Database Schema)</h2>
+        <span class="section-tag">POSTGRESQL / SQLITE DDL</span>
+      </div>
+
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">
+        Database được chuẩn hóa để lưu trữ đầy đủ toàn bộ hành trình học, từ vựng SRS theo thuật toán Spaced Repetition, lỗi sai RCA và bộ nhớ ngữ cảnh của AI:
+      </p>
+
+      <div class="code-wrapper">
+        <div class="code-header">
+          <span>SQL DDL SCHEMA (PostgreSQL / SQLite Compatible)</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy SQL</button>
+        </div>
+        <pre class="code-content"><code>-- 1. Quản lý Người dùng & Mục tiêu
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    target_score INT DEFAULT 800,
+    daily_goal_minutes INT DEFAULT 60,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Lộ trình học (Roadmap & Sprints)
+CREATE TABLE roadmaps (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(150) NOT NULL,
+    total_weeks INT DEFAULT 24,
+    current_week INT DEFAULT 1,
+    status VARCHAR(20) DEFAULT 'in_progress'
+);
+
+CREATE TABLE sprint_tasks (
+    id SERIAL PRIMARY KEY,
+    roadmap_id INT REFERENCES roadmaps(id) ON DELETE CASCADE,
+    week_number INT NOT NULL,
+    category VARCHAR(50) NOT NULL, -- Listening, Reading, Syntax, Vocab
+    title TEXT NOT NULL,
+    is_completed BOOLEAN DEFAULT FALSE,
+    completed_at TIMESTAMP
+);
+
+-- 3. Kho tri thức & Flashcards SRS
+CREATE TABLE flashcards (
+    id SERIAL PRIMARY KEY,
+    category VARCHAR(100) NOT NULL,
+    word VARCHAR(100) NOT NULL,
+    ipa VARCHAR(100),
+    word_type VARCHAR(50),
+    meaning TEXT NOT NULL,
+    collocations TEXT,
+    paraphrase_pair TEXT,
+    example_sentence TEXT NOT NULL,
+    audio_word_url VARCHAR(255),
+    audio_sentence_url VARCHAR(255)
+);
+
+CREATE TABLE user_flashcard_srs (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    card_id INT REFERENCES flashcards(id) ON DELETE CASCADE,
+    repetition_count INT DEFAULT 0,
+    ease_factor NUMERIC(4,2) DEFAULT 2.5,
+    interval_days INT DEFAULT 1,
+    state VARCHAR(20) DEFAULT 'new', -- new, learning, review, mastered
+    next_review_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_reviewed_at TIMESTAMP,
+    UNIQUE(user_id, card_id)
+);
+
+-- 4. Sổ tay Lỗi Sai (Error Log & RCA)
+CREATE TABLE error_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    test_id VARCHAR(50), -- e.g. ETS2024_Test01
+    part VARCHAR(20) NOT NULL, -- Part 1 -> Part 7
+    question_no INT,
+    error_type VARCHAR(20) NOT NULL, -- VOCAB, GRAMMAR, PHONETICS, TRAP, TIME
+    user_choice VARCHAR(10),
+    correct_choice VARCHAR(10),
+    question_content TEXT,
+    image_url VARCHAR(255), -- Ảnh chụp bài thi nếu gửi qua Vision
+    root_cause TEXT NOT NULL,
+    key_rule_or_paraphrase TEXT,
+    status VARCHAR(20) DEFAULT 'unresolved', -- unresolved, reviewed, mastered
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5. Lỗ hổng kiến thức mà AI phát hiện (AI Learning Gaps)
+CREATE TABLE ai_learning_gaps (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    topic VARCHAR(100) NOT NULL, -- e.g. "Bẫy Similar Sound Part 2", "Rút gọn mệnh đề Part 5"
+    error_count INT DEFAULT 1,
+    severity VARCHAR(20) DEFAULT 'high', -- low, medium, high, critical
+    ai_recommendation TEXT,
+    is_resolved BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Hội thoại AI Assistant & Agent Memory
+CREATE TABLE ai_messages (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(20) NOT NULL, -- user, assistant, system, tool
+    content TEXT,
+    image_url VARCHAR(255),
+    tool_calls JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. Lịch nhắc nhở (Reminders)
+CREATE TABLE study_reminders (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    reminder_type VARCHAR(50) NOT NULL, -- daily_study, review_error_log, srs_due
+    scheduled_time TIME NOT NULL, -- e.g. 21:00:00
+    message TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE
+);</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 4: Rich Knowledge Vault -->
+    <section id="knowledge-vault">
+      <div class="section-header">
+        <h2 class="section-title">4. Kho Dữ Liệu Ôn Tập Phong Phú (Knowledge Vault)</h2>
+        <span class="section-tag">CURATED TOEIC ASSETS</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📚 12 Chuyên Đề Cú Pháp Part 5</div>
+              <div class="card-subtitle">Công thức toán học giải 10-15s/câu</div>
+            </div>
+            <span class="badge badge-blue">Sprint 1</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+            Số hóa toàn bộ 12 chuyên đề: Vị trí 4 loại từ, Liên từ vs Giới từ, Dạng To-V/V-ing, Câu bị động 10s, Hòa hợp Chủ-Vị, 6 Thì kinh điển, Rút gọn mệnh đề quan hệ, v.v. Kèm câu bài tập có giải thích bẫy chi tiết.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🧠 600 Từ Vựng & 14 Chủ Đề</div>
+              <div class="card-subtitle">Kèm Audio Studio MP3 & Anki SRS</div>
+            </div>
+            <span class="badge badge-purple">Sprint 1-2</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+            Hệ thống hóa từ vựng doanh nghiệp: Contracts, Marketing, Warranties, Banking, Human Resources, Shipping, IT Infrastructure. Mỗi từ đều có IPA, Collocations và ví dụ thực tế trong đề ETS.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">🔄 Sổ Tay Paraphrase Vault</div>
+              <div class="card-subtitle">Chìa khóa chinh phục Part 7</div>
+            </div>
+            <span class="badge badge-green">Sprint 2</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+            Kho 150+ cặp từ/cụm từ đồng nghĩa kinh điển thường xuất hiện trong câu hỏi ngụ ý (Inference) và bài đọc đôi/ba: <code>postpone = delay = defer</code>, <code>conduct = carry out</code>, <code>comply with = adhere to</code>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: AI Mentor & Vision Engine -->
+    <section id="ai-assistant">
+      <div class="section-header">
+        <h2 class="section-title">5. AI Mentor Đa Phương Thức & Khả Năng Can Thiệp Tri Thức</h2>
+        <span class="section-tag">DEEPSEEK / MULTIMODAL VISION AGENT</span>
+      </div>
+
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+        AI không dừng lại ở việc trả lời câu hỏi thông thường. Đây là một <strong>Huấn luyện viên cá nhân chủ động (Proactive AI Mentor)</strong> được trang bị bộ công cụ (Agent Tools) để tương tác trực tiếp với Database của bạn:
+      </p>
+
+      <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--accent);">
+        <div style="font-size: 16px; font-weight: 800; color: var(--accent); margin-bottom: 12px;">
+          👁️ 1. Khả Năng Vision (Bóc Bẫy Đề Thi Từ Ảnh Chụp)
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+          Học viên chỉ cần chụp ảnh màn hình đề thi hoặc trang sách bài tập và gửi vào khung chat:
+        </p>
+        <div class="flow-step" style="margin-top: 14px;">
+          <div class="flow-marker">1</div>
+          <div class="flow-content">
+            <strong>OCR & Nhận Diện Đề Thi</strong>: AI trích xuất câu hỏi, 4 phương án A B C D và ngữ cảnh.
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-marker">2</div>
+          <div class="flow-content">
+            <strong>Phân Tích Bẫy 3 Chiều</strong>: Chỉ rõ vì sao đáp án đúng là đúng, 3 đáp án còn lại là bẫy gì (Similar sound, sai thì, bẫy từ loại), và trích xuất bảng Paraphrase.
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-marker">3</div>
+          <div class="flow-content">
+            <strong>Tự Động Lưu Vào Sổ Lỗi</strong>: Gọi tool <code>log_error_question()</code> lưu trực tiếp vào database mà người dùng không cần gõ lại.
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="border-left: 4px solid var(--accent-purple);">
+        <div style="font-size: 16px; font-weight: 800; color: var(--accent-purple); margin-bottom: 12px;">
+          🛠️ 2. Các Agent Tools Can Thiệp Trực Tiếp Vào Hệ Thống
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Tên Tool (Function Call)</th>
+                <th>Mục đích sử dụng</th>
+                <th>Dữ liệu can thiệp</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>get_user_learning_profile()</code></td>
+                <td>Đọc lịch sử học tập, thống kê điểm số, danh sách các câu sai gần đây</td>
+                <td>Bảng <code>error_logs</code>, <code>ai_learning_gaps</code></td>
+              </tr>
+              <tr>
+                <td><code>log_error_question()</code></td>
+                <td>Tự động lưu câu sai kèm nguyên nhân gốc RCA và bài học rút ra</td>
+                <td>Bảng <code>error_logs</code></td>
+              </tr>
+              <tr>
+                <td><code>create_flashcard()</code></td>
+                <td>Trích xuất từ mới trong lúc giảng bài và thêm ngay vào bộ thẻ SRS</td>
+                <td>Bảng <code>flashcards</code>, <code>user_flashcard_srs</code></td>
+              </tr>
+              <tr>
+                <td><code>recommend_remedial_exercises()</code></td>
+                <td>Chủ động đề xuất 3-5 câu bài tập khắc phục đúng chuyên đề học viên đang yếu</td>
+                <td>Bảng <code>ai_learning_gaps</code>, <code>knowledge_nodes</code></td>
+              </tr>
+              <tr>
+                <td><code>schedule_study_reminder()</code></td>
+                <td>Đặt lịch nhắc học viên ôn lại câu sai sau 24h, 3 ngày, 7 ngày</td>
+                <td>Bảng <code>study_reminders</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Reminders & Progress Tracking -->
+    <section id="reminders">
+      <div class="section-header">
+        <h2 class="section-title">6. Hệ Thống Nhắc Nhở & Theo Dõi Tiến Độ</h2>
+        <span class="section-tag">ACCOUNTABILITY & HABIT LOOP</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⏰ Nhắc Nhở Học Hàng Ngày</div>
+            <span class="badge badge-amber">Daily Ping</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+            Đặt khung giờ cố định (ví dụ 21:00 mỗi tối). Hệ thống gửi Web Push Notification hoặc nhắc nhở trên giao diện kèm thông điệp: <em>"Hôm nay bạn có 15 thẻ Flashcard đến hạn ôn tập và 1 bài tập cú pháp Bài 02 cần hoàn thành!"</em>
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🔄 Chu Kỳ Ôn Lỗi Sai (Spaced Review)</div>
+            <span class="badge badge-rose">Error Retention</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+            Khi bạn làm sai 1 câu, AI lên lịch nhắc ôn lại câu đó sau <strong>1 ngày ➔ 3 ngày ➔ 7 ngày</strong>. Câu hỏi chỉ được đóng lại khi bạn làm đúng 2 lần liên tiếp dưới dạng Quiz trắc nghiệm nhanh.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📈 Báo Cáo Tuần Tự Động (Sprint Report)</div>
+            <span class="badge badge-green">Weekly KPI</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+            Cuối mỗi tuần, AI tổng hợp: Số từ vựng đã nạp, số câu bài tập đã giải, tỉ lệ phân bổ lỗi sai theo 5 nhóm RCA, và cập nhật % tiến độ hoàn thành lộ trình 24 tuần.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7: Execution Roadmap -->
+    <section id="execution-plan">
+      <div class="section-header">
+        <h2 class="section-title">7. Lộ Trình Triển Khai Kỹ Thuật (5 Sprints)</h2>
+        <span class="section-tag">EXECUTION ROADMAP</span>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Sprint</th>
+              <th>Trọng tâm kỹ thuật</th>
+              <th>Đầu ra bàn giao (Deliverables)</th>
+              <th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sprint 1</strong></td>
+              <td><strong>Database Core & Backend REST APIs</strong></td>
+              <td>Khởi tạo SQLAlchemy ORM, SQLite/PostgreSQL, CRUD APIs cho Roadmap, Tasks, Flashcards, Error Logs.</td>
+              <td><span class="badge badge-blue">Ready to code</span></td>
+            </tr>
+            <tr>
+              <td><strong>Sprint 2</strong></td>
+              <td><strong>Kho Tri Thức & Thuật Toán SRS Spaced Repetition</strong></td>
+              <td>Số hóa 12 chuyên đề cú pháp, 100+ thẻ từ vựng Anki SRS, thuật toán SM-2 tính khoảng cách ôn tập.</td>
+              <td><span class="badge badge-amber">Planned</span></td>
+            </tr>
+            <tr>
+              <td><strong>Sprint 3</strong></td>
+              <td><strong>Proactive AI Agent & Vision Pipeline</strong></td>
+              <td>Endpoint <code>/api/ai/chat</code> hỗ trợ Vision OCR ảnh bài thi, function calling can thiệp database tri thức.</td>
+              <td><span class="badge badge-amber">Planned</span></td>
+            </tr>
+            <tr>
+              <td><strong>Sprint 4</strong></td>
+              <td><strong>Hệ Thống Nhắc Nhở & Frontend Dashboard Tái Cấu Trúc</strong></td>
+              <td>Tách giao diện thành các View chuyên biệt (Roadmap, SRS Studio, Knowledge Vault, AI Chat, Reminders).</td>
+              <td><span class="badge badge-amber">Planned</span></td>
+            </tr>
+            <tr>
+              <td><strong>Sprint 5</strong></td>
+              <td><strong>Dockerization, VPS Deploy & Production Verification</strong></td>
+              <td>Cập nhật <code>docker-compose.yml</code> chạy Backend + Frontend + DB trên VPS, test full E2E workflow.</td>
+              <td><span class="badge badge-amber">Planned</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+    }
+
+    function copyCode(btn) {
+      const code = btn.closest('.code-wrapper').querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = 'Copied! ✓';
+        setTimeout(() => { btn.innerText = originalText; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
