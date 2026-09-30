@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  toeic-audio-api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: toeic-audio-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    volumes:
+      - ./server/cache:/app/cache
+      - ./docs:/docs:ro
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

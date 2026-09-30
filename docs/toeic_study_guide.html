@@ -1498,17 +1498,29 @@
           </div>
         </div>
 
-        <!-- Audio TTS Settings Toolbar -->
+        <!-- Audio Studio & TTS Settings Toolbar -->
         <div class="tts-controls-bar">
-          <span style="font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 4px;">
-            <span>🔊</span> Audio:
-          </span>
           <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 11px;">Giọng đọc:</label>
-            <select id="ttsVoiceSelect" onchange="onVoiceSelected()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px; max-width: 170px;">
-              <option value="">Đang tải giọng...</option>
+            <span style="font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 4px;">
+              <span>🔊</span> Audio:
+            </span>
+            <select id="audioEngineSelect" onchange="onAudioEngineChange()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-size: 12px; font-weight: 700;">
+              <option value="studio" selected>🎙️ Studio MP3 (Chuẩn ETS 100%)</option>
+              <option value="server">⚡ Backend API (FastAPI)</option>
+              <option value="browser">💻 Web Speech (Trình duyệt)</option>
             </select>
           </div>
+
+          <div id="voiceSelectGroup" style="display: none; align-items: center; gap: 6px;">
+            <label style="font-size: 11px;">Giọng:</label>
+            <select id="ttsVoiceSelect" onchange="onVoiceSelected()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px; max-width: 170px;">
+              <option value="en-US-JennyNeural">🇺🇸 Jenny (Mỹ - Nữ)</option>
+              <option value="en-US-GuyNeural">🇺🇸 Guy (Mỹ - Nam)</option>
+              <option value="en-GB-SoniaNeural">🇬🇧 Sonia (Anh - Nữ)</option>
+              <option value="en-AU-NatashaNeural">🇦🇺 Natasha (Úc - Nữ)</option>
+            </select>
+          </div>
+
           <div style="display: flex; align-items: center; gap: 6px;">
             <label style="font-size: 11px;">Tốc độ:</label>
             <select id="ttsRateSelect" onchange="updateTtsSettings()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px;">
@@ -1517,9 +1529,15 @@
               <option value="1.15">🚀 1.15x</option>
             </select>
           </div>
-          <button type="button" onclick="testTtsVoice()" style="padding: 4px 10px; font-size: 11px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Nghe thử chất giọng hiện tại">
-            <span>▶️</span> Test giọng
+
+          <button type="button" onclick="testCurrentAudio()" style="padding: 4px 10px; font-size: 11px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Nghe thử âm thanh">
+            <span>▶️</span> Thử audio
           </button>
+
+          <button type="button" onclick="openServerConfigModal()" id="btnServerConfig" style="padding: 4px 8px; font-size: 11px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 6px; cursor: pointer;" title="Cấu hình URL VPS Backend">
+            ⚙️ Server: <span id="serverStatusBadge" style="color: var(--accent-green); font-weight: 700;">Ready</span>
+          </button>
+
           <span style="font-size: 11px; color: var(--text-muted); margin-left: auto;">(Phím tắt: <strong>P</strong> phát âm)</span>
         </div>
 
@@ -2946,95 +2964,76 @@
       renderCurrentCard();
     }
 
-    // Audio Speech Synthesis (TTS) - Persistent Voice Locker & Caching
-    let ttsVoices = [];
-    let selectedVoice = null;
+    // ==========================================
+    // Multi-Tier Audio Engine (Studio MP3 / FastAPI / WebSpeech)
+    // ==========================================
+    let audioEngine = localStorage.getItem('toeic_audio_engine') || 'studio';
+    let audioServerUrl = localStorage.getItem('toeic_audio_server_url') || '';
+    let selectedVoiceId = localStorage.getItem('toeic_tts_voice_id') || 'en-US-JennyNeural';
     let ttsRate = parseFloat(localStorage.getItem('toeic_tts_rate') || '1.0');
-    let savedVoiceName = localStorage.getItem('toeic_tts_voice_name') || '';
+    let currentAudioElement = null;
 
-    function loadVoices() {
-      if (!('speechSynthesis' in window)) return;
-      const allVoices = window.speechSynthesis.getVoices();
-      if (!allVoices || allVoices.length === 0) return;
+    // Web Speech API Fallback references
+    let ttsVoices = [];
+    let selectedBrowserVoice = null;
+    let savedBrowserVoiceName = localStorage.getItem('toeic_tts_voice_name') || '';
 
-      // Filter only English voices
-      const enVoices = allVoices.filter(v => v.lang && v.lang.replace('_', '-').toLowerCase().startsWith('en'));
-      ttsVoices = enVoices.length ? enVoices : allVoices;
+    function initAudioEngineUI() {
+      const engineSelect = document.getElementById('audioEngineSelect');
+      if (engineSelect) {
+        engineSelect.value = audioEngine;
+      }
+      const rateSelect = document.getElementById('ttsRateSelect');
+      if (rateSelect) {
+        rateSelect.value = ttsRate.toFixed(2) === '0.85' ? '0.85' : (ttsRate.toFixed(2) === '1.15' ? '1.15' : '1.0');
+      }
+      onAudioEngineChange(false);
+      checkBackendServerHealth();
+    }
 
-      // Populate voice selector UI
-      const select = document.getElementById('ttsVoiceSelect');
-      if (select) {
-        select.innerHTML = '';
-        ttsVoices.forEach(v => {
-          const opt = document.createElement('option');
-          opt.value = v.name;
-          const langUpper = (v.lang || '').toUpperCase();
-          const isUs = langUpper.includes('US');
-          const isGb = langUpper.includes('GB');
-          const isAu = langUpper.includes('AU');
-          const flag = isUs ? '🇺🇸' : (isGb ? '🇬🇧' : (isAu ? '🇦🇺' : '🌐'));
-          
-          let cleanName = v.name.replace(/Google /g, '').replace(/Microsoft /g, '').trim();
-          opt.textContent = `${flag} ${cleanName}`;
-          select.appendChild(opt);
-        });
-
-        // Determine which voice to pick & lock
-        let chosen = null;
-        if (savedVoiceName) {
-          chosen = ttsVoices.find(v => v.name === savedVoiceName);
+    function onAudioEngineChange(autoTest = false) {
+      const engineSelect = document.getElementById('audioEngineSelect');
+      if (engineSelect) {
+        audioEngine = engineSelect.value;
+        localStorage.setItem('toeic_audio_engine', audioEngine);
+      }
+      const voiceGroup = document.getElementById('voiceSelectGroup');
+      const voiceSelect = document.getElementById('ttsVoiceSelect');
+      
+      if (audioEngine === 'studio') {
+        if (voiceGroup) voiceGroup.style.display = 'none';
+      } else if (audioEngine === 'server') {
+        if (voiceGroup) voiceGroup.style.display = 'flex';
+        if (voiceSelect) {
+          voiceSelect.innerHTML = `
+            <option value="en-US-JennyNeural">🇺🇸 Jenny (Mỹ - Nữ)</option>
+            <option value="en-US-GuyNeural">🇺🇸 Guy (Mỹ - Nam)</option>
+            <option value="en-GB-SoniaNeural">🇬🇧 Sonia (Anh - Nữ)</option>
+            <option value="en-GB-RyanNeural">🇬🇧 Ryan (Anh - Nam)</option>
+            <option value="en-AU-NatashaNeural">🇦🇺 Natasha (Úc - Nữ)</option>
+            <option value="en-CA-ClaraNeural">🇨🇦 Clara (Canada - Nữ)</option>
+          `;
+          voiceSelect.value = selectedVoiceId;
         }
-
-        if (!chosen) {
-          // Auto select best quality voice
-          chosen = ttsVoices.find(v => v.name.includes('Samantha')) ||
-                   ttsVoices.find(v => v.name.includes('Google US English')) ||
-                   ttsVoices.find(v => v.name.includes('Natural') && v.lang.includes('US')) ||
-                   ttsVoices.find(v => v.name.includes('Siri')) ||
-                   ttsVoices.find(v => v.name.includes('Victoria')) ||
-                   ttsVoices.find(v => v.name.includes('Daniel')) ||
-                   ttsVoices.find(v => (v.lang || '').toLowerCase().includes('en-us')) ||
-                   ttsVoices[0];
-        }
-
-        if (chosen) {
-          selectedVoice = chosen;
-          select.value = chosen.name;
-          savedVoiceName = chosen.name;
-          localStorage.setItem('toeic_tts_voice_name', chosen.name);
-        }
-      } else {
-        if (savedVoiceName) {
-          selectedVoice = ttsVoices.find(v => v.name === savedVoiceName);
-        }
-        if (!selectedVoice) {
-          selectedVoice = ttsVoices.find(v => v.name.includes('Samantha')) ||
-                          ttsVoices.find(v => v.name.includes('Google US English')) ||
-                          ttsVoices[0];
-        }
+      } else if (audioEngine === 'browser') {
+        if (voiceGroup) voiceGroup.style.display = 'flex';
+        populateBrowserVoiceSelect();
       }
     }
 
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        loadVoices();
-      };
-      // Pre-warm voices immediately and retry with delays
-      loadVoices();
-      setTimeout(loadVoices, 100);
-      setTimeout(loadVoices, 300);
-      setTimeout(loadVoices, 1000);
-    }
-
     function onVoiceSelected() {
-      const select = document.getElementById('ttsVoiceSelect');
-      if (!select) return;
-      const voiceName = select.value;
-      const found = ttsVoices.find(v => v.name === voiceName);
-      if (found) {
-        selectedVoice = found;
-        savedVoiceName = found.name;
-        localStorage.setItem('toeic_tts_voice_name', found.name);
+      const voiceSelect = document.getElementById('ttsVoiceSelect');
+      if (!voiceSelect) return;
+      if (audioEngine === 'server') {
+        selectedVoiceId = voiceSelect.value;
+        localStorage.setItem('toeic_tts_voice_id', selectedVoiceId);
+      } else if (audioEngine === 'browser') {
+        const found = ttsVoices.find(v => v.name === voiceSelect.value);
+        if (found) {
+          selectedBrowserVoice = found;
+          savedBrowserVoiceName = found.name;
+          localStorage.setItem('toeic_tts_voice_name', found.name);
+        }
       }
     }
 
@@ -3046,69 +3045,188 @@
       }
     }
 
-    function testTtsVoice() {
-      speakText("Welcome to TOEIC Lab. Practice makes perfect!");
+    function checkBackendServerHealth() {
+      const badge = document.getElementById('serverStatusBadge');
+      const base = audioServerUrl || (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? window.location.origin : '');
+      const healthUrl = base ? `${base}/health` : '/health';
+      
+      fetch(healthUrl, { method: 'GET', mode: 'cors' })
+        .then(res => res.json())
+        .then(data => {
+          if (badge) {
+            badge.innerText = 'Online 🟢';
+            badge.style.color = 'var(--accent-green)';
+          }
+        })
+        .catch(() => {
+          if (badge) {
+            badge.innerText = audioServerUrl ? 'Offline 🔴' : 'Ready ✨';
+            badge.style.color = audioServerUrl ? 'var(--accent-amber)' : 'var(--accent-green)';
+          }
+        });
     }
 
-    function speakText(text, customRate = null) {
-      if (!('speechSynthesis' in window)) {
-        alert('Trình duyệt của bạn chưa hỗ trợ Web Speech API phát âm.');
-        return;
+    function openServerConfigModal() {
+      const input = prompt("Nhập URL của FastAPI TTS Server trên VPS của bạn:\nVí dụ: http://your-vps-ip:8000 hoặc https://api.yourdomain.com\n(Để trống nếu frontend và backend chạy cùng domain/port):", audioServerUrl);
+      if (input !== null) {
+        audioServerUrl = input.trim().replace(/\/+$/, '');
+        localStorage.setItem('toeic_audio_server_url', audioServerUrl);
+        checkBackendServerHealth();
       }
-      window.speechSynthesis.cancel();
+    }
 
-      // Clean HTML tags
+    // --- Audio Playback Engine ---
+    function stopAllAudio() {
+      if (currentAudioElement) {
+        currentAudioElement.pause();
+        currentAudioElement.currentTime = 0;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function playMp3File(url, fallbackFn) {
+      stopAllAudio();
+      const audio = new Audio(url);
+      audio.playbackRate = ttsRate;
+      currentAudioElement = audio;
+
+      audio.play().catch(err => {
+        console.warn("Direct MP3 play failed, invoking fallback:", err);
+        if (fallbackFn) fallbackFn();
+      });
+    }
+
+    function playViaServerApi(text, fallbackFn) {
+      stopAllAudio();
+      const base = audioServerUrl || '';
+      const clean = encodeURIComponent(text.replace(/<[^>]*>?/gm, '').trim());
+      const voice = encodeURIComponent(selectedVoiceId);
+      const rateParam = ttsRate === 1.0 ? "%2B0%25" : (ttsRate < 1.0 ? "-15%25" : "%2B15%25");
+      const url = `${base}/api/tts?text=${clean}&voice=${voice}&rate=${rateParam}`;
+
+      const audio = new Audio(url);
+      audio.playbackRate = ttsRate;
+      currentAudioElement = audio;
+
+      audio.play().catch(err => {
+        console.warn("Server TTS API failed, fallback to browser:", err);
+        if (fallbackFn) fallbackFn();
+      });
+    }
+
+    function playViaBrowserSpeech(text) {
+      stopAllAudio();
+      if (!('speechSynthesis' in window)) return;
       const cleanText = text.replace(/<[^>]*>?/gm, '').replace(/_+/g, 'blank').trim();
-      if (!cleanText) return;
-
       const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.rate = customRate || ttsRate;
+      utterance.rate = ttsRate;
 
-      // Lock voice
-      if (!selectedVoice && window.speechSynthesis.getVoices().length > 0) {
-        loadVoices();
+      if (!selectedBrowserVoice && ttsVoices.length > 0) {
+        selectedBrowserVoice = ttsVoices.find(v => v.name.includes('Samantha') || v.name.includes('Google US English')) || ttsVoices[0];
       }
 
-      if (selectedVoice) {
-        utterance.voice = selectedVoice;
-        utterance.lang = selectedVoice.lang;
+      if (selectedBrowserVoice) {
+        utterance.voice = selectedBrowserVoice;
+        utterance.lang = selectedBrowserVoice.lang;
       } else {
-        const voices = window.speechSynthesis.getVoices();
-        if (voices && voices.length) {
-          const pref = voices.find(v => (v.lang || '').startsWith('en')) || voices[0];
-          if (pref) {
-            utterance.voice = pref;
-            utterance.lang = pref.lang;
-            selectedVoice = pref;
-          }
-        } else {
-          utterance.lang = 'en-US';
-        }
+        utterance.lang = 'en-US';
       }
 
       window.speechSynthesis.speak(utterance);
+    }
+
+    function populateBrowserVoiceSelect() {
+      if (!('speechSynthesis' in window)) return;
+      const all = window.speechSynthesis.getVoices();
+      if (!all || !all.length) return;
+      const en = all.filter(v => v.lang && v.lang.replace('_', '-').toLowerCase().startsWith('en'));
+      ttsVoices = en.length ? en : all;
+
+      const select = document.getElementById('ttsVoiceSelect');
+      if (select && audioEngine === 'browser') {
+        select.innerHTML = '';
+        ttsVoices.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.name;
+          const lang = (v.lang || '').toUpperCase();
+          const flag = lang.includes('US') ? '🇺🇸' : (lang.includes('GB') ? '🇬🇧' : (lang.includes('AU') ? '🇦🇺' : '🌐'));
+          opt.textContent = `${flag} ${v.name.replace(/Google /g, '').trim()}`;
+          select.appendChild(opt);
+        });
+
+        const chosen = ttsVoices.find(v => v.name === savedBrowserVoiceName) ||
+                       ttsVoices.find(v => v.name.includes('Samantha')) ||
+                       ttsVoices.find(v => v.name.includes('Google US English')) ||
+                       ttsVoices[0];
+        if (chosen) {
+          selectedBrowserVoice = chosen;
+          select.value = chosen.name;
+        }
+      }
+    }
+
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        populateBrowserVoiceSelect();
+      };
+      setTimeout(populateBrowserVoiceSelect, 200);
+      setTimeout(populateBrowserVoiceSelect, 1000);
     }
 
     function speakCurrentWord() {
       const activeList = getActiveCards();
       if (!activeList.length) return;
       const card = activeList[currentCardIndex];
-      speakText(card.word);
+      const word = card.word.toLowerCase().trim();
+
+      if (audioEngine === 'studio') {
+        const staticUrl = `audio/words/${word}.mp3`;
+        playMp3File(staticUrl, () => {
+          playViaServerApi(word, () => playViaBrowserSpeech(word));
+        });
+      } else if (audioEngine === 'server') {
+        playViaServerApi(word, () => playViaBrowserSpeech(word));
+      } else {
+        playViaBrowserSpeech(word);
+      }
     }
 
     function speakCurrentFullSentence() {
       const activeList = getActiveCards();
       if (!activeList.length) return;
       const card = activeList[currentCardIndex];
-      speakText(card.fullSentence);
+      const sentence = card.sentence || card.fullSentence.replace(/<[^>]*>?/gm, '');
+
+      if (audioEngine === 'studio') {
+        const staticUrl = `audio/sentences/${card.id}_${card.word}.mp3`;
+        playMp3File(staticUrl, () => {
+          playViaServerApi(sentence, () => playViaBrowserSpeech(sentence));
+        });
+      } else if (audioEngine === 'server') {
+        playViaServerApi(sentence, () => playViaBrowserSpeech(sentence));
+      } else {
+        playViaBrowserSpeech(sentence);
+      }
     }
 
     function speakCurrentFrontSentence() {
-      const activeList = getActiveCards();
-      if (!activeList.length) return;
-      const card = activeList[currentCardIndex];
-      // Đọc đồng nhất toàn bộ câu hoàn chỉnh có chứa từ khóa để giọng đọc, ngữ điệu và phát âm chuẩn 100%
-      speakText(card.fullSentence);
+      // Đọc đồng nhất phát âm câu hoàn chỉnh có chứa từ khóa
+      speakCurrentFullSentence();
+    }
+
+    function testCurrentAudio() {
+      const sampleText = "The board of directors decided to postpone the annual shareholder meeting until next Friday.";
+      if (audioEngine === 'studio') {
+        playMp3File("audio/sentences/1_postpone.mp3", () => {
+          playViaServerApi(sampleText, () => playViaBrowserSpeech(sampleText));
+        });
+      } else if (audioEngine === 'server') {
+        playViaServerApi(sampleText, () => playViaBrowserSpeech(sampleText));
+      } else {
+        playViaBrowserSpeech(sampleText);
+      }
     }
 
     // Keyboard support for space and arrows
@@ -3141,11 +3259,8 @@
     const savedMode = localStorage.getItem('toeic_view_mode') || 'study';
     setViewMode(savedMode);
 
-    // Sync TTS settings controls
-    const langSelectEl = document.getElementById('ttsLangSelect');
-    if (langSelectEl) langSelectEl.value = ttsLang;
-    const rateSelectEl = document.getElementById('ttsRateSelect');
-    if (rateSelectEl) rateSelectEl.value = ttsRate.toString();
+    // Initialize Audio Engine UI
+    initAudioEngineUI();
   </script>
 
   <!-- Mobile Bottom Quick Navigation Bar -->
