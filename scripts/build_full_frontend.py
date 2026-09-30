@@ -1,0 +1,367 @@
+#!/usr/bin/env python3
+"""
+Build complete, clean, modular frontend docs/index.html:
+1. Baseline clean foundation from scratch/index_baseline.html.
+2. Full 60 Core Vocab Flashcards in FLASHCARDS array.
+3. Full 30 Part 5 Questions (Q101 -> Q130) with 3D RCA in PART5_QUESTIONS array.
+4. Mini-Test Module View (#view-minitest) with Timer, Jump Pills, 3D Review, and 1-Click Error Log.
+5. Vocabulary Notebook & Self-Study Hub (#view-vocab-hub) with:
+   - Vocab Vault table with Instant Search, Category Filter, Audio Speech, and Paraphrase pairs.
+   - Smart Word Logger with AI DeepSeek Auto-Fill.
+   - Self-Study Drills: 4-Choice Quick Quiz & Typing/Fill-in-the-blank challenge (No Anki needed!).
+6. Sidebar navigation linking all modules.
+"""
+
+import json
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+with open(BASE_DIR / "scratch" / "index_baseline.html", "r", encoding="utf-8") as f:
+    html = f.read()
+
+with open(BASE_DIR / "scratch" / "all_flashcards.json", "r", encoding="utf-8") as f:
+    flashcards_data = json.load(f)
+
+with open(BASE_DIR / "scratch" / "part5_questions.json", "r", encoding="utf-8") as f:
+    part5_data = json.load(f)
+
+with open(BASE_DIR / "scratch" / "minitest.js", "r", encoding="utf-8") as f:
+    minitest_js_template = f.read()
+
+with open(BASE_DIR / "scratch" / "vocab_hub.html", "r", encoding="utf-8") as f:
+    vocab_hub_html = f.read()
+
+with open(BASE_DIR / "scratch" / "vocab_hub.js", "r", encoding="utf-8") as f:
+    vocab_hub_js = f.read()
+
+# -------------------------------------------------------------
+# 1. Add CSS for Mini-Test and Vocab Hub
+# -------------------------------------------------------------
+extra_css = """
+    /* Mini-Test Part 5 Styles */
+    .test-timer-badge {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .test-jump-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 14px 0 20px;
+    }
+    .test-jump-pill {
+      width: 34px;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    .test-jump-pill:hover {
+      border-color: var(--accent);
+      color: var(--text-main);
+    }
+    .test-jump-pill.answered {
+      background: var(--accent-glow);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .test-jump-pill.correct {
+      background: rgba(52, 211, 153, 0.2) !important;
+      border-color: var(--accent-green) !important;
+      color: var(--accent-green) !important;
+    }
+    .test-jump-pill.incorrect {
+      background: rgba(251, 113, 133, 0.2) !important;
+      border-color: var(--accent-rose) !important;
+      color: var(--accent-rose) !important;
+    }
+    .test-question-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      transition: border-color 0.2s ease;
+    }
+    .test-choices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .test-choice-btn {
+      padding: 12px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      transition: all 0.15s ease;
+    }
+    .test-choice-btn:hover {
+      border-color: var(--accent);
+      background: var(--bg-secondary);
+    }
+    .test-choice-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .test-choice-btn.is-correct {
+      border-color: var(--accent-green) !important;
+      background: rgba(52, 211, 153, 0.15) !important;
+      color: var(--accent-green) !important;
+      font-weight: 700 !important;
+    }
+    .test-choice-btn.is-incorrect {
+      border-color: var(--accent-rose) !important;
+      background: rgba(251, 113, 133, 0.15) !important;
+      color: var(--accent-rose) !important;
+      font-weight: 700 !important;
+    }
+    .test-choice-letter {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .test-analysis-box {
+      margin-top: 14px;
+      padding: 16px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+      font-size: 13px;
+      line-height: 1.6;
+      display: none;
+    }
+    .test-analysis-box.show {
+      display: block;
+    }
+"""
+
+html = html.replace("/* Lesson Selector Pills */", extra_css + "\n    /* Lesson Selector Pills */")
+
+# -------------------------------------------------------------
+# 2. Update Sidebar Navigation
+# -------------------------------------------------------------
+old_nav = """      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('flashcards')" data-module="flashcards" class="active">🗂️ Flashcard SRS Web</a></li>"""
+
+new_nav = """      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('flashcards')" data-module="flashcards" class="active">🗂️ Flashcard SRS Web</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('vocab-hub')" data-module="vocab-hub" style="color: var(--accent-green); font-weight: 700;">📖 Sổ tay Từ vựng</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('minitest')" data-module="minitest" style="color: var(--accent); font-weight: 700;">🎯 Thi thử Part 5 (ETS 2024)</a></li>"""
+
+html = html.replace(old_nav, new_nav)
+
+# -------------------------------------------------------------
+# 3. Update navigateToModule function
+# -------------------------------------------------------------
+old_nav_fn = """    function navigateToModule(moduleId) {
+      const validModules = ['flashcards', 'lessons', 'error-log', 'calculator', 'roadmaps', 'settings', 'reference'];
+      if (!validModules.includes(moduleId)) {
+        moduleId = 'flashcards';
+      }
+
+      // Hide all panels
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active-view'));
+
+      // Show target panel
+      const target = document.getElementById('view-' + moduleId);
+      if (target) {
+        target.classList.add('active-view');
+      }"""
+
+new_nav_fn = """    function navigateToModule(moduleId) {
+      const validModules = ['flashcards', 'vocab-hub', 'minitest', 'lessons', 'error-log', 'calculator', 'roadmaps', 'settings', 'reference'];
+      if (!validModules.includes(moduleId)) {
+        moduleId = 'flashcards';
+      }
+
+      // Hide all panels
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active-view'));
+
+      // Show target panel
+      const target = document.getElementById('view-' + moduleId);
+      if (target) {
+        target.classList.add('active-view');
+      }
+
+      if (moduleId === 'vocab-hub' && typeof renderVocabTable === 'function') {
+        renderVocabTable();
+      }"""
+
+html = html.replace(old_nav_fn, new_nav_fn)
+
+# -------------------------------------------------------------
+# 4. Update count badges in Flashcards view (from 20 to 60)
+# -------------------------------------------------------------
+html = html.replace("0 / 20 từ", f"0 / {len(flashcards_data)} từ")
+html = html.replace("Thẻ 1 / 20", f"Thẻ 1 / {len(flashcards_data)}")
+html = html.replace("Tất cả (20)", f"Tất cả ({len(flashcards_data)})")
+
+# -------------------------------------------------------------
+# 5. Insert View Panels: view-vocab-hub and view-minitest
+# -------------------------------------------------------------
+minitest_view = """
+  <!-- ============================================================== -->
+  <!-- VIEW: THI THỬ PART 5 (ETS 2024 TEST 01 - 30 CÂU THỰC CHIẾN)    -->
+  <!-- ============================================================== -->
+  <div id="view-minitest" class="view-panel">
+    <div class="section-header">
+      <h2 class="section-title">🎯 Đề Thi Thử Part 5: ETS TOEIC 2024 Test 01</h2>
+      <span class="section-tag">REAL EXAM SIMULATION (Q101 - Q130)</span>
+    </div>
+
+    <!-- Test Control Header Bar -->
+    <div class="card" style="padding: 20px; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        <div>
+          <div style="font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+            <span>⏱️ Thời gian tiêu chuẩn:</span>
+            <span class="test-timer-badge" id="testTimerBadge">12:00</span>
+            <button type="button" id="btnToggleTimer" onclick="toggleTestTimer()" style="padding: 5px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              Tạm Dừng ⏸️
+            </button>
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+            Mục tiêu Part 5: Giải 30 câu trong 10 - 12 phút (20 - 24 giây/câu), đạt độ chính xác > 24/30 để hướng tới TOEIC 800+.
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <div style="font-size: 13px; font-weight: 700; color: var(--text-muted);">
+            Tiến độ: <span id="testAnsweredCount" style="color: var(--accent); font-weight: 800;">0</span> / 30 câu
+          </div>
+          <button type="button" onclick="submitPart5Test()" id="btnSubmitTest" style="padding: 10px 18px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+            <span>📝</span> Chấm Điểm & Phân Tích
+          </button>
+          <button type="button" onclick="resetPart5Test()" style="padding: 10px 14px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
+            🔄 Làm Lại
+          </button>
+        </div>
+      </div>
+
+      <!-- Jump Pills Bar -->
+      <div style="border-top: 1px solid var(--border-color); margin-top: 16px; padding-top: 14px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">
+          Bảng Chọn Câu Hỏi Nhanh (Click để nhảy tới câu):
+        </div>
+        <div class="test-jump-pills" id="testJumpPillsContainer">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Test Score Summary Banner (Hidden until submitted) -->
+      <div id="testResultBanner" style="display: none; margin-top: 16px; padding: 16px 20px; background: var(--bg-primary); border: 1px solid var(--accent-green); border-radius: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <div style="font-size: 13px; font-weight: 700; color: var(--accent-green); text-transform: uppercase;">
+              🎉 KẾT QUẢ BÀI THI THỬ PART 5
+            </div>
+            <div style="font-size: 24px; font-weight: 800; margin-top: 4px;">
+              Điểm số: <span id="testScoreVal" style="color: var(--accent);">0</span> / 30 câu đúng (<span id="testScorePercent">0%</span>)
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="testScoreFeedback">
+              <!-- Evaluation note -->
+            </div>
+          </div>
+          <div>
+            <span class="badge-pill" id="testCefrBadge" style="background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border-color: rgba(52, 211, 153, 0.3); font-size: 13px; padding: 6px 14px;">
+              B2 - Working Proficiency
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Questions Container List -->
+    <div id="testQuestionsList">
+      <!-- 30 Questions rendered dynamically via JS -->
+    </div>
+  </div>
+"""
+
+panels_to_insert = "\n" + vocab_hub_html + "\n" + minitest_view + "\n"
+html = html.replace('<div id="view-lessons" class="view-panel">', panels_to_insert + '  <div id="view-lessons" class="view-panel">')
+
+# -------------------------------------------------------------
+# 6. Replace FLASHCARDS array with 60 words (using `let` for mutability)
+# -------------------------------------------------------------
+fc_start = html.find("const FLASHCARDS = [")
+fc_end = html.find("let currentCardIndex = 0;", fc_start)
+if fc_start != -1 and fc_end != -1:
+    new_flashcards_js = "let FLASHCARDS = " + json.dumps(flashcards_data, ensure_ascii=False, indent=2) + ";\n\n    "
+    html = html[:fc_start] + new_flashcards_js + html[fc_end:]
+else:
+    print("WARNING: Could not find FLASHCARDS array boundaries!")
+
+# -------------------------------------------------------------
+# 7. Append Mini-Test and Vocab Hub JS before closing </script>
+# -------------------------------------------------------------
+minitest_js_final = minitest_js_template.replace("___PART5_JSON_DATA___", json.dumps(part5_data, ensure_ascii=False, indent=4))
+
+js_bundle = f"""
+    // ==============================================================
+    // PART 5 BENCHMARK TEST (ETS 2024 TEST 01: Q101 - Q130)
+    // ==============================================================
+    {minitest_js_final}
+
+    // ==============================================================
+    // VOCABULARY NOTEBOOK & SELF-STUDY HUB LOGIC
+    // ==============================================================
+    {vocab_hub_js}
+
+    // Auto-init on page load
+    if (typeof renderPart5Test === 'function') renderPart5Test();
+    if (typeof renderVocabTable === 'function') renderVocabTable();
+"""
+
+script_close_tag = "</script>"
+last_script_idx = html.rfind(script_close_tag)
+if last_script_idx != -1:
+    html = html[:last_script_idx] + js_bundle + "\n  " + html[last_script_idx:]
+else:
+    print("WARNING: Could not find </script> tag!")
+
+# Write output to docs/index.html
+with open(BASE_DIR / "docs" / "index.html", "w", encoding="utf-8") as f:
+    f.write(html)
+
+# Also copy to docs/toeic_study_guide.html
+with open(BASE_DIR / "docs" / "toeic_study_guide.html", "w", encoding="utf-8") as f:
+    f.write(html)
+
+print("SUCCESS: Rebuilt docs/index.html and docs/toeic_study_guide.html cleanly!")
+print(f"Total lines: {len(html.splitlines())}")

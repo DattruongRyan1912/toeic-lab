@@ -50,6 +50,30 @@ class RoadmapRead(BaseModel):
         from_attributes = True
 
 # --- Flashcards & SRS ---
+class FlashcardCreate(BaseModel):
+    category: str = "General Business"
+    word: str
+    ipa: Optional[str] = None
+    word_type: Optional[str] = None
+    meaning: str
+    collocations: Optional[str] = None
+    paraphrase_pair: Optional[str] = None
+    example_sentence: str
+
+class AIFillVocabRequest(BaseModel):
+    word: str
+    context: Optional[str] = None
+
+class AIFillVocabResponse(BaseModel):
+    word: str
+    ipa: str
+    word_type: str
+    category: str
+    meaning: str
+    collocations: str
+    paraphrase_pair: str
+    example_sentence: str
+
 class FlashcardRead(BaseModel):
     id: int
     category: str
