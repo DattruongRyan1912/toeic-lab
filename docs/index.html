@@ -1320,6 +1320,54 @@
     }
 
     
+    /* Unified Modern Button System (Dark Theme First) */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      border: 1px solid transparent;
+      text-decoration: none;
+      outline: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0b132b !important;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .btn-accent-glow {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.25) 100%);
+      border: 1px solid var(--accent) !important;
+      color: var(--accent) !important;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.1);
+    }
+    .btn-accent-glow:hover {
+      background: var(--accent) !important;
+      color: #0b132b !important;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+    }
+    .btn-outline {
+      background: var(--bg-card) !important;
+      border: 1px solid var(--border-color) !important;
+      color: var(--text-main) !important;
+    }
+    .btn-outline:hover {
+      background: var(--bg-hover) !important;
+      border-color: var(--text-muted) !important;
+      color: #ffffff !important;
+    }
+
     /* Mini-Test Part 5 Styles */
     .test-timer-badge {
       font-family: var(--font-mono);
@@ -2229,14 +2277,6 @@
         <div style="min-width: 180px;">
           <select id="vocabCategorySelect" onchange="handleVocabFilterChange()" style="width: 100%; padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 13px; cursor: pointer;">
             <option value="all">Tất cả chủ đề</option>
-            <option value="General Business">General Business</option>
-            <option value="Finance & Banking">Finance & Banking</option>
-            <option value="Personnel & HR">Personnel & HR</option>
-            <option value="Contracts & Agreements">Contracts & Agreements</option>
-            <option value="Marketing & Sales">Marketing & Sales</option>
-            <option value="Office Operations">Office Operations</option>
-            <option value="Travel & Hospitality">Travel & Hospitality</option>
-            <option value="Logistics & Production">Logistics & Production</option>
           </select>
         </div>
 
@@ -2247,12 +2287,12 @@
           <button class="tab-btn" id="btnVocabStatusMastered" onclick="setVocabStatusFilter('mastered')" style="padding: 6px 12px; font-size: 12px;">Đã thuộc</button>
         </div>
 
-        <!-- Action Buttons -->
+        <!-- Action Buttons (Styled to match dark theme perfectly) -->
         <div style="display: flex; gap: 8px;">
-          <button onclick="switchVocabHubTab('add')" class="btn btn-primary" style="padding: 8px 14px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+          <button type="button" onclick="openAddVocabModal()" class="btn btn-accent-glow" style="padding: 9px 16px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer;">
             <span>➕ Thêm từ mới</span>
           </button>
-          <button onclick="exportVocabNotebookCSV()" class="btn btn-outline" style="padding: 8px 12px; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+          <button type="button" onclick="exportVocabNotebookCSV()" class="btn btn-outline" style="padding: 9px 14px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer;">
             <span>📥 Xuất CSV</span>
           </button>
         </div>
@@ -2275,18 +2315,18 @@
             </tr>
           </thead>
           <tbody id="vocabTableBody">
-            <!-- Dynamically populated -->
+            <!-- Dynamically populated via renderVocabTable() -->
           </tbody>
         </table>
       </div>
       <div style="padding: 12px 20px; background: var(--bg-secondary); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted);">
-        <span>Hiển thị <strong id="vocabDisplayedCount" style="color: var(--text-main);">0</strong> từ vựng phù hợp</span>
+        <span>Hiển thị <strong id="vocabDisplayedCount" style="color: var(--accent); font-weight: 700;">0</strong> từ vựng phù hợp</span>
         <span>Mẹo: Bấm biểu tượng 🔊 để nghe phát âm giọng chuẩn bản ngữ US</span>
       </div>
     </div>
   </div>
 
-  <!-- TAB 2: THÊM TỪ VỰNG MỚI (AI DEEPSEEK AUTO-FILL) -->
+  <!-- TAB 2: THÊM TỪ VỰNG MỚI (PAGE VIEW - AI DEEPSEEK AUTO-FILL) -->
   <div id="vocabSubTabAdd" style="display: none;">
     <div class="card" style="max-width: 900px; margin: 0 auto; padding: 28px;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px;">
@@ -2318,10 +2358,10 @@
 
         <!-- AI Trigger Button -->
         <div>
-          <button type="button" onclick="triggerAiFillNewWord()" id="btnAiFillWord" class="btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff; width: 100%; padding: 12px; font-size: 14px; font-weight: 700; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+          <button type="button" onclick="triggerAiFillNewWord()" id="btnAiFillWord" class="btn" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(14, 165, 233, 0.35) 100%); border: 1px solid var(--accent); color: var(--accent); width: 100%; padding: 12px; font-size: 14px; font-weight: 700; border-radius: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
             <span>✨ AI DeepSeek Phân Tích & Tự Động Điền (Auto-fill)</span>
           </button>
-          <div id="aiFillStatus" style="display: none; font-size: 12px; color: var(--accent-green); margin-top: 6px; text-align: center;">
+          <div id="aiFillStatus" style="display: none; font-size: 12px; color: var(--accent); margin-top: 6px; text-align: center;">
             ⏳ Đang kết nối AI DeepSeek để phân tích ngữ nghĩa và trích xuất Collocation...
           </div>
         </div>
@@ -2339,16 +2379,7 @@
             </div>
             <div>
               <label style="display: block; font-size: 11px; font-weight: 600; margin-bottom: 4px; color: var(--text-muted);">Chủ đề TOEIC</label>
-              <select id="inputNewCategory" style="width: 100%; padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 13px;">
-                <option value="General Business">General Business</option>
-                <option value="Finance & Banking">Finance & Banking</option>
-                <option value="Personnel & HR">Personnel & HR</option>
-                <option value="Contracts & Agreements">Contracts & Agreements</option>
-                <option value="Marketing & Sales">Marketing & Sales</option>
-                <option value="Office Operations">Office Operations</option>
-                <option value="Travel & Hospitality">Travel & Hospitality</option>
-                <option value="Logistics & Production">Logistics & Production</option>
-              </select>
+              <input type="text" id="inputNewCategory" placeholder="General Business" style="width: 100%; padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 13px;">
             </div>
           </div>
 
@@ -2380,10 +2411,10 @@
 
         <!-- Action Buttons -->
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px;">
-          <button type="button" onclick="clearNewVocabForm()" class="btn btn-outline" style="padding: 10px 18px; font-size: 13px;">
+          <button type="button" onclick="clearNewVocabForm()" class="btn btn-outline" style="padding: 10px 18px; font-size: 13px; cursor: pointer;">
             🔄 Xóa trắng
           </button>
-          <button type="button" onclick="saveNewVocabWord()" class="btn btn-primary" style="padding: 10px 24px; font-size: 13px; font-weight: 700; background: var(--accent); color: #fff;">
+          <button type="button" onclick="saveNewVocabWord()" class="btn btn-primary" style="padding: 10px 24px; font-size: 13px; font-weight: 700; background: var(--accent); color: #0b132b; cursor: pointer;">
             💾 Lưu vào Sổ tay Từ vựng
           </button>
         </div>
@@ -2412,7 +2443,7 @@
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
               Hệ thống sẽ lấy ngẫu nhiên 10 từ trong kho từ vựng của bạn để kiểm tra khả năng nhớ nghĩa và chọn đáp án chính xác trong ngữ cảnh.
             </p>
-            <button onclick="startVocabQuiz()" class="btn btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700;">
+            <button onclick="startVocabQuiz()" class="btn btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700; background: var(--accent); color: #0b132b; cursor: pointer;">
               🚀 Bắt Đầu Làm Bài
             </button>
           </div>
@@ -2436,10 +2467,105 @@
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
               Đọc ngữ cảnh câu và nghĩa tiếng Việt, sau đó tự tay gõ lại từ vựng chính xác để khắc sâu mặt chữ vào trí nhớ dài hạn.
             </p>
-            <button onclick="startTypingDrill()" class="btn btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700; background: var(--accent-green); color: #000;">
+            <button onclick="startTypingDrill()" class="btn btn-primary" style="padding: 10px 24px; font-size: 14px; font-weight: 700; background: var(--accent-green); color: #0b132b; cursor: pointer;">
               🚀 Bắt Đầu Gõ Từ
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- POPUP MODAL: THÊM TỪ VỰNG NHANH CÓ AI DEEPSEEK AUTO-FILL -->
+  <div id="modalAddVocab" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(11, 19, 43, 0.85); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; max-width: 650px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); position: relative;">
+      
+      <!-- Close button -->
+      <button onclick="closeAddVocabModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 22px; color: var(--text-muted); cursor: pointer; line-height: 1; transition: color 0.15s;" onmouseover="this.style.color='var(--accent-rose)'" onmouseout="this.style.color='var(--text-muted)'">
+        ✕
+      </button>
+
+      <!-- Modal Header -->
+      <div style="margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 8px;">
+          <span>✨</span> Thêm Từ Vựng Mới Vào Sổ Tay
+        </h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+          Nhập từ vựng tiếng Anh rồi bấm <strong>"AI DeepSeek Phân Tích"</strong> để tự động điền mọi thông tin chỉ trong 1 giây!
+        </p>
+      </div>
+
+      <!-- Quick Add Form -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+              Từ vựng tiếng Anh <span style="color: var(--accent-rose);">*</span>
+            </label>
+            <input type="text" id="modalInputWord" placeholder="ví dụ: designate, negotiate..." style="width: 100%; padding: 9px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 13px; font-weight: 700;">
+          </div>
+          <div>
+            <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+              Nguồn đề / Ngữ cảnh
+            </label>
+            <input type="text" id="modalInputContext" placeholder="ví dụ: ETS 2024 Test 01 câu 112" style="width: 100%; padding: 9px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 13px;">
+          </div>
+        </div>
+
+        <button type="button" onclick="triggerAiFillModalWord()" id="btnModalAiFill" class="btn btn-accent-glow" style="padding: 10px; font-size: 13px; font-weight: 700; width: 100%; cursor: pointer;">
+          <span>✨ AI DeepSeek Phân Tích & Tự Động Điền (Auto-fill)</span>
+        </button>
+        <div id="modalAiFillStatus" style="display: none; font-size: 12px; color: var(--accent); text-align: center;">
+          ⏳ Đang hỏi AI DeepSeek phân tích từ vựng...
+        </div>
+
+        <!-- Output Fields in Modal -->
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">IPA</label>
+              <input type="text" id="modalInputIpa" placeholder="/ˈdezɪɡneɪt/" style="width: 100%; padding: 7px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 12px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">Từ loại</label>
+              <input type="text" id="modalInputType" placeholder="[v]" style="width: 100%; padding: 7px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 12px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">Chủ đề</label>
+              <input type="text" id="modalInputCategory" placeholder="General Business" style="width: 100%; padding: 7px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 12px;">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">Nghĩa tiếng Việt (*)</label>
+            <input type="text" id="modalInputMeaning" placeholder="chỉ định, bổ nhiệm, phân công" style="width: 100%; padding: 7px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 12px;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">Collocations</label>
+              <input type="text" id="modalInputCollocations" placeholder="designate a replacement" style="width: 100%; padding: 7px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 12px;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">Paraphrase</label>
+              <input type="text" id="modalInputParaphrase" placeholder="designate = appoint = assign" style="width: 100%; padding: 7px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 12px;">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">Câu ví dụ ngữ cảnh (có '______') (*)</label>
+            <textarea id="modalInputExample" rows="2" placeholder="The board will ______ a new director next week." style="width: 100%; padding: 7px 10px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 12px; font-family: inherit; resize: vertical;"></textarea>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
+          <button type="button" onclick="closeAddVocabModal()" class="btn btn-outline" style="padding: 8px 16px; font-size: 13px; cursor: pointer;">
+            Hủy
+          </button>
+          <button type="button" onclick="saveModalVocabWord()" class="btn btn-primary" style="padding: 8px 20px; font-size: 13px; font-weight: 700; background: var(--accent); color: #0b132b; cursor: pointer;">
+            💾 Lưu Vào Sổ Tay
+          </button>
         </div>
       </div>
     </div>
@@ -5890,6 +6016,16 @@
 // VOCABULARY NOTEBOOK & SELF-STUDY HUB LOGIC
 // ==============================================================
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 let vocabStatusFilter = 'all'; // 'all', 'learning', 'mastered'
 
 function switchVocabHubTab(tabName) {
@@ -5934,9 +6070,25 @@ function setVocabStatusFilter(status) {
   renderVocabTable();
 }
 
+function populateCategoryFilter() {
+  const sel = document.getElementById('vocabCategorySelect');
+  if (!sel) return;
+  const currentVal = sel.value;
+  const cats = Array.from(new Set(FLASHCARDS.map(c => c.cat).filter(Boolean))).sort();
+  
+  sel.innerHTML = '<option value="all">Tất cả chủ đề</option>' +
+    cats.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('');
+  
+  if (currentVal && (currentVal === 'all' || cats.includes(currentVal))) {
+    sel.value = currentVal;
+  }
+}
+
 function renderVocabTable() {
   const tbody = document.getElementById('vocabTableBody');
   if (!tbody) return;
+
+  populateCategoryFilter();
 
   const searchQuery = (document.getElementById('vocabSearchInput')?.value || '').toLowerCase().trim();
   const categoryFilter = document.getElementById('vocabCategorySelect')?.value || 'all';
@@ -5947,7 +6099,7 @@ function renderVocabTable() {
   const filtered = FLASHCARDS.filter(card => {
     // 1. Search Query
     if (searchQuery) {
-      const matchWord = card.word.toLowerCase().includes(searchQuery);
+      const matchWord = (card.word || '').toLowerCase().includes(searchQuery);
       const matchMeaning = (card.meaning || '').toLowerCase().includes(searchQuery);
       const matchColloc = (card.collocations || '').toLowerCase().includes(searchQuery);
       const matchPara = (card.paraphrase || '').toLowerCase().includes(searchQuery);
@@ -5999,7 +6151,7 @@ function renderVocabTable() {
 
   tbody.innerHTML = filtered.map(card => {
     const isMastered = masteredIds.includes(card.id);
-    const displaySentence = card.front && card.front.includes('______') ? card.front : (card.fullSentence || card.front);
+    const displaySentence = card.front && card.front.includes('______') ? card.front : (card.fullSentence || card.front || '');
 
     return `
       <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
@@ -6068,7 +6220,6 @@ function playVocabWord(word) {
     utter.rate = 0.9;
     window.speechSynthesis.speak(utter);
   } else {
-    // Fallback audio element
     const audio = new Audio(`/api/audio/tts?text=${encodeURIComponent(word)}&voice=en-US-Standard-B`);
     audio.play().catch(e => console.warn("TTS Audio error:", e));
   }
@@ -6077,7 +6228,7 @@ function playVocabWord(word) {
 function toggleVocabMastered(cardId) {
   let mastered = JSON.parse(localStorage.getItem('toeic_mastered_cards') || '[]');
   const idx = mastered.indexOf(cardId);
-  const rating = idx > -1 ? 1 : 4; // 4 = Good/Mastered, 1 = Again
+  const rating = idx > -1 ? 1 : 4;
 
   if (idx > -1) {
     mastered.splice(idx, 1);
@@ -6086,7 +6237,6 @@ function toggleVocabMastered(cardId) {
   }
   localStorage.setItem('toeic_mastered_cards', JSON.stringify(mastered));
 
-  // Sync to API backend asynchronously
   fetch(`/api/flashcards/${cardId}/review`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -6106,13 +6256,11 @@ function deleteVocabCard(cardId) {
     return;
   }
 
-  // Remove from local array
   const index = FLASHCARDS.findIndex(c => c.id === cardId);
   if (index > -1) {
     FLASHCARDS.splice(index, 1);
   }
 
-  // Call API delete
   fetch(`/api/flashcards/${cardId}`, { method: 'DELETE' })
     .catch(e => console.warn("API delete error:", e));
 
@@ -6124,19 +6272,158 @@ function deleteVocabCard(cardId) {
 
 function askDeepSeekAboutVocab(word) {
   const msg = `Giải thích chi tiết sắc thái nghĩa (nuance), các collocations then chốt và các bẫy thường gặp trong đề thi TOEIC của từ "${word}".`;
-  const chatInput = document.getElementById('chatInput');
+  const chatInput = document.getElementById('aiChatInputText');
   if (chatInput) {
     chatInput.value = msg;
-    const chatPanel = document.getElementById('aiChatPanel');
-    if (chatPanel) chatPanel.style.display = 'flex';
-    if (typeof handleSendMessage === 'function') {
-      handleSendMessage();
+    const chatPanel = document.getElementById('aiMentorDrawer');
+    if (chatPanel) chatPanel.classList.add('open');
+    if (typeof submitUserChatMessage === 'function') {
+      submitUserChatMessage();
     }
   } else {
     alert(`💡 Mẹo TOEIC cho từ "${word}":\n- Hãy ghi nhớ các cụm Collocation đi liền.\n- Chú ý các bẫy từ loại (Noun vs Adjective) trong Part 5!`);
   }
 }
 
+// ==============================================================
+// MODAL QUICK ADD VOCAB WITH AI AUTO-FILL
+// ==============================================================
+function openAddVocabModal() {
+  const modal = document.getElementById('modalAddVocab');
+  if (modal) {
+    modal.style.display = 'flex';
+    const input = document.getElementById('modalInputWord');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  }
+}
+
+function closeAddVocabModal() {
+  const modal = document.getElementById('modalAddVocab');
+  if (modal) modal.style.display = 'none';
+}
+
+async function triggerAiFillModalWord() {
+  const wordInput = document.getElementById('modalInputWord');
+  const word = (wordInput?.value || '').trim();
+  const context = (document.getElementById('modalInputContext')?.value || '').trim();
+
+  if (!word) {
+    alert("Vui lòng nhập từ vựng tiếng Anh trước khi bấm AI Phân Tích!");
+    wordInput?.focus();
+    return;
+  }
+
+  const btn = document.getElementById('btnModalAiFill');
+  const status = document.getElementById('modalAiFillStatus');
+  if (btn) btn.disabled = true;
+  if (status) status.style.display = 'block';
+
+  try {
+    const res = await fetch('/api/flashcards/ai-fill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ word: word, context: context })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (document.getElementById('modalInputIpa')) document.getElementById('modalInputIpa').value = data.ipa || '';
+      if (document.getElementById('modalInputType')) document.getElementById('modalInputType').value = data.word_type || '';
+      if (document.getElementById('modalInputCategory')) document.getElementById('modalInputCategory').value = data.category || 'General Business';
+      if (document.getElementById('modalInputMeaning')) document.getElementById('modalInputMeaning').value = data.meaning || '';
+      if (document.getElementById('modalInputCollocations')) document.getElementById('modalInputCollocations').value = data.collocations || '';
+      if (document.getElementById('modalInputParaphrase')) document.getElementById('modalInputParaphrase').value = data.paraphrase_pair || '';
+      if (document.getElementById('modalInputExample')) document.getElementById('modalInputExample').value = data.example_sentence || '';
+    } else {
+      fallbackFillModal(word);
+    }
+  } catch (err) {
+    console.warn("AI Fill error:", err);
+    fallbackFillModal(word);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (status) status.style.display = 'none';
+  }
+}
+
+function fallbackFillModal(word) {
+  if (document.getElementById('modalInputIpa')) document.getElementById('modalInputIpa').value = `/${word.toLowerCase()}/`;
+  if (document.getElementById('modalInputType')) document.getElementById('modalInputType').value = '[v/n]';
+  if (document.getElementById('modalInputMeaning')) document.getElementById('modalInputMeaning').value = 'Thuật ngữ kinh doanh quan trọng trong TOEIC';
+  if (document.getElementById('modalInputCollocations')) document.getElementById('modalInputCollocations').value = `apply ${word.toLowerCase()}, effective ${word.toLowerCase()}`;
+  if (document.getElementById('modalInputParaphrase')) document.getElementById('modalInputParaphrase').value = `${word.toLowerCase()} = essential term`;
+  if (document.getElementById('modalInputExample')) document.getElementById('modalInputExample').value = `All employees must follow the ______ outlined in the guidelines.`;
+}
+
+async function saveModalVocabWord() {
+  const word = (document.getElementById('modalInputWord')?.value || '').trim();
+  const meaning = (document.getElementById('modalInputMeaning')?.value || '').trim();
+  const example = (document.getElementById('modalInputExample')?.value || '').trim();
+
+  if (!word || !meaning) {
+    alert("Vui lòng nhập Từ vựng tiếng Anh và Nghĩa tiếng Việt!");
+    return;
+  }
+
+  const category = (document.getElementById('modalInputCategory')?.value || 'General Business').trim();
+  const ipa = (document.getElementById('modalInputIpa')?.value || '').replace(/\//g, '').trim();
+  const wordType = (document.getElementById('modalInputType')?.value || '').trim();
+  const collocations = (document.getElementById('modalInputCollocations')?.value || '').trim();
+  const paraphrase = (document.getElementById('modalInputParaphrase')?.value || '').trim();
+  const displayExample = example || `The manager requested a ______ before finalizing the decision.`;
+
+  if (FLASHCARDS.some(c => c.word.toLowerCase() === word.toLowerCase())) {
+    alert(`Từ "${word}" đã có sẵn trong Sổ tay từ vựng!`);
+    return;
+  }
+
+  const newId = FLASHCARDS.length > 0 ? Math.max(...FLASHCARDS.map(c => c.id)) + 1 : 1;
+  const newCard = {
+    id: newId,
+    cat: category,
+    front: displayExample,
+    word: word.toLowerCase(),
+    ipa: ipa,
+    type: wordType,
+    meaning: meaning,
+    collocations: collocations,
+    paraphrase: paraphrase,
+    fullSentence: displayExample.replace('______', word.toLowerCase())
+  };
+
+  FLASHCARDS.unshift(newCard);
+
+  try {
+    await fetch('/api/flashcards', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        word: newCard.word,
+        category: newCard.cat,
+        ipa: newCard.ipa,
+        word_type: newCard.type,
+        meaning: newCard.meaning,
+        collocations: newCard.collocations,
+        paraphrase_pair: newCard.paraphrase,
+        example_sentence: newCard.front
+      })
+    });
+  } catch (e) {
+    console.warn("API save flashcard warning:", e);
+  }
+
+  closeAddVocabModal();
+  renderVocabTable();
+  if (typeof renderCurrentCard === 'function') {
+    renderCurrentCard();
+  }
+  alert(`🎉 Đã thêm thành công từ "${word}" vào Sổ tay từ vựng!`);
+}
+
+// Page View Add Word Handlers
 async function triggerAiFillNewWord() {
   const wordInput = document.getElementById('inputNewWord');
   const word = (wordInput?.value || '').trim();
@@ -6207,14 +6494,13 @@ async function saveNewVocabWord() {
     return;
   }
 
-  const category = document.getElementById('inputNewCategory')?.value || 'General Business';
+  const category = (document.getElementById('inputNewCategory')?.value || 'General Business').trim();
   const ipa = (document.getElementById('inputNewIpa')?.value || '').replace(/\//g, '').trim();
   const wordType = (document.getElementById('inputNewType')?.value || '').trim();
   const collocations = (document.getElementById('inputNewCollocations')?.value || '').trim();
   const paraphrase = (document.getElementById('inputNewParaphrase')?.value || '').trim();
   const displayExample = example || `The manager requested a ______ before finalizing the decision.`;
 
-  // Check duplicate
   if (FLASHCARDS.some(c => c.word.toLowerCase() === word.toLowerCase())) {
     alert(`Từ "${word}" đã có sẵn trong Sổ tay từ vựng!`);
     return;
@@ -6236,7 +6522,6 @@ async function saveNewVocabWord() {
 
   FLASHCARDS.unshift(newCard);
 
-  // Call API to persist in SQLite
   try {
     await fetch('/api/flashcards', {
       method: 'POST',
@@ -6298,12 +6583,10 @@ function startVocabQuiz() {
     return;
   }
 
-  // Shuffle and pick 10 words
   const shuffled = [...FLASHCARDS].sort(() => 0.5 - Math.random());
   const selected = shuffled.slice(0, Math.min(10, shuffled.length));
 
   quizQuestions = selected.map(targetCard => {
-    // Pick 3 distractors
     const otherCards = FLASHCARDS.filter(c => c.id !== targetCard.id).sort(() => 0.5 - Math.random()).slice(0, 3);
     const options = [targetCard, ...otherCards].sort(() => 0.5 - Math.random());
     return {
@@ -6323,7 +6606,6 @@ function renderQuizQuestion() {
   if (!container) return;
 
   if (quizCurrentIndex >= quizQuestions.length) {
-    // Quiz completed
     const percent = Math.round((quizScore / quizQuestions.length) * 100);
     container.innerHTML = `
       <div style="text-align: center; padding: 24px 16px;">
@@ -6335,7 +6617,7 @@ function renderQuizQuestion() {
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
           ${percent >= 80 ? 'Xuất sắc! Phản xạ từ vựng của bạn rất nhạy bén.' : 'Hãy tiếp tục ôn luyện để nâng cao phản xạ nhé!'}
         </p>
-        <button onclick="startVocabQuiz()" class="btn btn-primary" style="padding: 10px 20px; font-weight: 700;">
+        <button onclick="startVocabQuiz()" class="btn btn-primary" style="padding: 10px 20px; font-weight: 700; background: var(--accent); color: #0b132b; cursor: pointer;">
           🔄 Luyện Lại Lần Nữa
         </button>
       </div>
@@ -6363,7 +6645,7 @@ function renderQuizQuestion() {
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
         ${q.options.map((opt, idx) => {
           return `
-            <button onclick="handleQuizAnswer(${idx})" id="quizChoiceBtn_${idx}" class="btn" style="text-align: left; padding: 12px 14px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); transition: all 0.15s; display: flex; align-items: center; justify-content: space-between;">
+            <button onclick="handleQuizAnswer(${idx})" id="quizChoiceBtn_${idx}" class="btn" style="text-align: left; padding: 12px 14px; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--text-main); transition: all 0.15s; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
               <span><strong>${['A', 'B', 'C', 'D'][idx]}.</strong> ${escapeHtml(opt.word)}</span>
               <span style="font-size: 11px; color: var(--text-muted);">/${escapeHtml(opt.ipa || '')}/</span>
             </button>
@@ -6374,7 +6656,7 @@ function renderQuizQuestion() {
       <div id="quizFeedbackBox" style="display: none; padding: 12px 16px; border-radius: 8px; margin-bottom: 14px; font-size: 13px;"></div>
 
       <div style="display: flex; justify-content: flex-end;">
-        <button id="btnQuizNext" onclick="nextQuizStep()" style="display: none;" class="btn btn-primary" style="padding: 8px 18px; font-size: 13px; font-weight: 600;">
+        <button id="btnQuizNext" onclick="nextQuizStep()" style="display: none;" class="btn btn-primary" style="padding: 8px 18px; font-size: 13px; font-weight: 600; background: var(--accent); color: #0b132b; cursor: pointer;">
           Câu tiếp theo ➔
         </button>
       </div>
@@ -6384,7 +6666,7 @@ function renderQuizQuestion() {
 
 function handleQuizAnswer(choiceIdx) {
   const q = quizQuestions[quizCurrentIndex];
-  if (q.selectedIndex !== null) return; // Already answered
+  if (q.selectedIndex !== null) return;
   q.selectedIndex = choiceIdx;
 
   const target = q.target;
@@ -6393,7 +6675,6 @@ function handleQuizAnswer(choiceIdx) {
 
   if (isCorrect) quizScore++;
 
-  // Style buttons
   q.options.forEach((opt, idx) => {
     const btn = document.getElementById(`quizChoiceBtn_${idx}`);
     if (!btn) return;
@@ -6459,7 +6740,7 @@ function renderTypingStep() {
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
           Gõ chính xác mặt chữ giúp bạn không bị nhầm lẫn giữa các từ đồng âm trong Part 1, 2 và nhận diện tức thì trong Part 5.
         </p>
-        <button onclick="startTypingDrill()" class="btn btn-primary" style="padding: 10px 20px; font-weight: 700; background: var(--accent-green); color: #000;">
+        <button onclick="startTypingDrill()" class="btn btn-primary" style="padding: 10px 20px; font-weight: 700; background: var(--accent-green); color: #0b132b; cursor: pointer;">
           🔄 Luyện Tiếp Lượt Mới
         </button>
       </div>
@@ -6490,7 +6771,7 @@ function renderTypingStep() {
         </label>
         <div style="display: flex; gap: 8px;">
           <input type="text" id="typingInputWord" onkeydown="if(event.key==='Enter') checkTypingWord()" placeholder="Gõ từ vựng tiếng Anh vào đây..." autocomplete="off" style="flex: 1; padding: 10px 14px; background: var(--bg-primary); border: 2px solid var(--border-color); border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--text-main); outline: none;">
-          <button onclick="checkTypingWord()" class="btn btn-primary" style="padding: 10px 18px; font-weight: 700; background: var(--accent-green); color: #000;">
+          <button onclick="checkTypingWord()" class="btn btn-primary" style="padding: 10px 18px; font-weight: 700; background: var(--accent-green); color: #0b132b; cursor: pointer;">
             Kiểm tra
           </button>
         </div>
@@ -6499,7 +6780,7 @@ function renderTypingStep() {
       <div id="typingFeedbackBox" style="display: none; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 12px;"></div>
 
       <div style="display: flex; justify-content: flex-end;">
-        <button id="btnTypingNext" onclick="nextTypingStep()" style="display: none;" class="btn btn-outline" style="padding: 6px 14px; font-size: 12px;">
+        <button id="btnTypingNext" onclick="nextTypingStep()" style="display: none;" class="btn btn-outline" style="padding: 6px 14px; font-size: 12px; cursor: pointer;">
           Từ tiếp theo ➔
         </button>
       </div>

@@ -39,6 +39,54 @@ with open(BASE_DIR / "scratch" / "vocab_hub.js", "r", encoding="utf-8") as f:
 # 1. Add CSS for Mini-Test and Vocab Hub
 # -------------------------------------------------------------
 extra_css = """
+    /* Unified Modern Button System (Dark Theme First) */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      border: 1px solid transparent;
+      text-decoration: none;
+      outline: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #0b132b !important;
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+    .btn-accent-glow {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15) 0%, rgba(14, 165, 233, 0.25) 100%);
+      border: 1px solid var(--accent) !important;
+      color: var(--accent) !important;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.1);
+    }
+    .btn-accent-glow:hover {
+      background: var(--accent) !important;
+      color: #0b132b !important;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+    }
+    .btn-outline {
+      background: var(--bg-card) !important;
+      border: 1px solid var(--border-color) !important;
+      color: var(--text-main) !important;
+    }
+    .btn-outline:hover {
+      background: var(--bg-hover) !important;
+      border-color: var(--text-muted) !important;
+      color: #ffffff !important;
+    }
+
     /* Mini-Test Part 5 Styles */
     .test-timer-badge {
       font-family: var(--font-mono);
