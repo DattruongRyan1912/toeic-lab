@@ -1319,6 +1319,71 @@
       }
     }
 
+    /* Lesson Selector Pills */
+    .lesson-quick-nav {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 8px 0 12px;
+      margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    .lesson-pill-btn {
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+    .lesson-pill-btn:hover {
+      color: var(--text-main);
+      border-color: var(--accent);
+    }
+    .lesson-pill-btn.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* Speed Option Buttons */
+    .speed-opt-btn {
+      transition: all 0.15s ease;
+    }
+    .speed-opt-btn.active {
+      background: var(--accent-glow) !important;
+      border-color: var(--accent) !important;
+      color: var(--accent) !important;
+      font-weight: 700 !important;
+    }
+
+    /* Flashcard Header Settings Shortcut */
+    .fc-settings-shortcut {
+      padding: 4px 10px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+    .fc-settings-shortcut:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
     /* Backend Connection Status Badge */
     .server-status-pill {
       display: inline-flex;
@@ -1694,11 +1759,12 @@
 
     <!-- Nav List for Study Mode (Default) -->
     <ul class="nav-list" id="navGroupStudy">
-      <li class="nav-item"><a href="#flashcards" class="active" onclick="closeMobileSidebar()">🗂️ Flashcard SRS Web</a></li>
-      <li class="nav-item"><a href="#lessons" onclick="closeMobileSidebar()">📚 12 Chuyên đề Cú pháp</a></li>
-      <li class="nav-item"><a href="#error-log" onclick="closeMobileSidebar()">📝 Sổ tay lỗi sai (RCA)</a></li>
-      <li class="nav-item"><a href="#calculator" onclick="closeMobileSidebar()">🧮 Bảng tính điểm ETS</a></li>
-      <li class="nav-item"><a href="#roadmaps" onclick="closeMobileSidebar()">📅 Lộ trình 24 tuần</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('flashcards')" data-module="flashcards" class="active">🗂️ Flashcard SRS Web</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('lessons')" data-module="lessons">📚 12 Chuyên đề Cú pháp</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('error-log')" data-module="error-log">📝 Sổ tay lỗi sai (RCA)</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('calculator')" data-module="calculator">🧮 Bảng tính điểm ETS</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('roadmaps')" data-module="roadmaps">📅 Lộ trình 24 tuần</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('settings')" data-module="settings" style="color: var(--accent-amber); font-weight: 600;">⚙️ Cài đặt & Âm thanh</a></li>
       <li class="nav-divider"></li>
       <li class="nav-item">
         <a href="curated_study_resources_matrix.html" target="_blank" style="color: var(--accent-amber);">
@@ -1714,8 +1780,8 @@
       </li>
       <li class="nav-divider"></li>
       <li class="nav-item">
-        <a href="javascript:void(0)" onclick="setViewMode('reference'); closeMobileSidebar();" style="font-size: 12px; color: var(--accent); opacity: 0.9;">
-          <span>📖 Mở tài liệu & bot</span>
+        <a href="javascript:void(0)" onclick="navigateToModule('reference')" data-module="reference" style="font-size: 12px; color: var(--accent); opacity: 0.9;">
+          <span>📖 Tài liệu & Agent Guide</span>
           <span>➔</span>
         </a>
       </li>
@@ -1723,27 +1789,12 @@
 
     <!-- Nav List for Reference Mode -->
     <ul class="nav-list" id="navGroupRef" style="display: none;">
-      <li class="nav-item"><a href="#overview" onclick="closeMobileSidebar()">🎯 Giới thiệu hệ sinh thái</a></li>
-      <li class="nav-item"><a href="#methodology" onclick="closeMobileSidebar()">🔬 Nghiên cứu phương pháp</a></li>
-      <li class="nav-item"><a href="#agent-config" onclick="closeMobileSidebar()">🤖 Kiến trúc Agent Coach</a></li>
-      <li class="nav-item"><a href="#skills-catalog" onclick="closeMobileSidebar()">⚡ 5 Skills chuyên sâu</a></li>
-      <li class="nav-item"><a href="#prompts" onclick="closeMobileSidebar()">💬 Mẫu Prompt tương tác</a></li>
+      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('reference')">🎯 Giới thiệu hệ sinh thái</a></li>
+      <li class="nav-item"><a href="curated_study_resources_matrix.html" target="_blank" style="color: var(--accent-amber);"><span>📚 Kho tài liệu ETS/Hacker</span> <span>↗</span></a></li>
+      <li class="nav-item"><a href="toeic_platform_master_plan.html" target="_blank" style="color: var(--accent-purple);"><span>🏛️ Master Plan Kiến Trúc</span> <span>↗</span></a></li>
       <li class="nav-divider"></li>
       <li class="nav-item">
-        <a href="curated_study_resources_matrix.html" target="_blank" style="color: var(--accent-amber);">
-          <span>📚 Kho tài liệu ETS/Hacker</span>
-          <span>↗</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="toeic_platform_master_plan.html" target="_blank" style="color: var(--accent-purple);">
-          <span>🏛️ Master Plan Kiến Trúc</span>
-          <span>↗</span>
-        </a>
-      </li>
-      <li class="nav-divider"></li>
-      <li class="nav-item">
-        <a href="javascript:void(0)" onclick="setViewMode('study'); closeMobileSidebar();" style="font-size: 12px; color: var(--accent-green); font-weight: 700;">
+        <a href="javascript:void(0)" onclick="navigateToModule('flashcards')" style="font-size: 12px; color: var(--accent-green); font-weight: 700;">
           <span>🎓 Quay lại Góc Học Tập</span>
           <span>↵</span>
         </a>
@@ -1758,9 +1809,9 @@
   <!-- Main Content Area -->
   <main class="main-wrapper">
     <!-- ============================================================== -->
-    <!-- VIEW 1: KHU VỰC CHUYÊN HỌC (STUDY ZONE - DEFAULT)             -->
+    <!-- VIEW 1: THẺ TỪ VỰNG SRS (FLASHCARDS MODULE)                   -->
     <!-- ============================================================== -->
-    <div id="studyZoneView" class="view-panel active-view">
+    <div id="view-flashcards" class="view-panel active-view">
 
       <!-- Study Focus Header -->
       <div class="study-focus-header">
@@ -1774,9 +1825,12 @@
               Không gian học tập chuyên biệt: Học từ vựng Flashcard SRS, 12 chuyên đề cú pháp Part 5, sổ tay phân tích lỗi sai và tính điểm chuẩn ETS.
             </p>
           </div>
-          <div>
-            <button onclick="setViewMode('reference')" style="padding: 9px 16px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
-              <span>📖</span> Mở tài liệu & cấu hình bot
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="navigateToModule('settings')" style="padding: 9px 14px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--accent-amber); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <span>⚙️</span> Cài đặt & Âm thanh
+            </button>
+            <button onclick="navigateToModule('reference')" style="padding: 9px 14px; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <span>📖</span> Tài liệu & Bot
             </button>
           </div>
         </div>
@@ -1842,47 +1896,26 @@
           </div>
         </div>
 
-        <!-- Audio Studio & TTS Settings Toolbar -->
-        <div class="tts-controls-bar">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span style="font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 4px;">
-              <span>🔊</span> Audio:
+        <!-- Audio Quick Info & Settings Link -->
+        <div class="tts-controls-bar" style="justify-content: space-between; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 700; color: var(--accent); font-size: 12px; display: flex; align-items: center; gap: 4px;">
+              <span>🔊</span> Âm thanh:
             </span>
-            <select id="audioEngineSelect" onchange="onAudioEngineChange()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--accent); color: var(--accent); border-radius: 6px; font-size: 12px; font-weight: 700;">
-              <option value="studio" selected>🎙️ Studio MP3 (Chuẩn ETS 100%)</option>
-              <option value="server">⚡ Backend API (FastAPI)</option>
-              <option value="browser">💻 Web Speech (Trình duyệt)</option>
-            </select>
+            <span id="fcAudioEngineBadge" class="badge-pill" style="margin: 0; background: var(--accent-glow); color: var(--accent); border-color: var(--accent); font-size: 11px; font-weight: 700;">
+              🎙️ Studio MP3 (Chuẩn ETS)
+            </span>
           </div>
 
-          <div id="voiceSelectGroup" style="display: none; align-items: center; gap: 6px;">
-            <label style="font-size: 11px;">Giọng:</label>
-            <select id="ttsVoiceSelect" onchange="onVoiceSelected()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px; max-width: 170px;">
-              <option value="en-US-JennyNeural">🇺🇸 Jenny (Mỹ - Nữ)</option>
-              <option value="en-US-GuyNeural">🇺🇸 Guy (Mỹ - Nam)</option>
-              <option value="en-GB-SoniaNeural">🇬🇧 Sonia (Anh - Nữ)</option>
-              <option value="en-AU-NatashaNeural">🇦🇺 Natasha (Úc - Nữ)</option>
-            </select>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" onclick="testCurrentAudio()" style="padding: 4px 10px; font-size: 11px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Nghe thử âm thanh">
+              <span>▶️</span> Thử audio
+            </button>
+            <button type="button" onclick="navigateToModule('settings')" class="fc-settings-shortcut" title="Chuyển sang trang Cài đặt âm thanh">
+              <span>⚙️</span> Cài đặt âm thanh ➔
+            </button>
+            <span style="font-size: 11px; color: var(--text-muted);">(Phím <strong>P</strong> phát âm)</span>
           </div>
-
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <label style="font-size: 11px;">Tốc độ:</label>
-            <select id="ttsRateSelect" onchange="updateTtsSettings()" style="padding: 4px 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px;">
-              <option value="0.85">🐢 0.85x</option>
-              <option value="1.0" selected>⚡ 1.0x</option>
-              <option value="1.15">🚀 1.15x</option>
-            </select>
-          </div>
-
-          <button type="button" onclick="testCurrentAudio()" style="padding: 4px 10px; font-size: 11px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Nghe thử âm thanh">
-            <span>▶️</span> Thử audio
-          </button>
-
-          <button type="button" onclick="openServerConfigModal()" id="btnServerConfig" style="padding: 4px 8px; font-size: 11px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 6px; cursor: pointer;" title="Cấu hình URL VPS Backend">
-            ⚙️ Server: <span id="serverStatusBadge" style="color: var(--accent-green); font-weight: 700;">Ready</span>
-          </button>
-
-          <span style="font-size: 11px; color: var(--text-muted); margin-left: auto;">(Phím tắt: <strong>P</strong> phát âm)</span>
         </div>
 
         <!-- Flip Card Component -->
@@ -1977,22 +2010,42 @@
         </div>
       </div>
     </section>
+  </div>
 
-      <!-- 2. Lessons (12 Chuyên đề cú pháp Part 5) -->
-      <!-- Section: 12 Chuyên Đề Cú Pháp Part 5 -->
+  <!-- ============================================================== -->
+  <!-- VIEW 2: 12 CHUYÊN ĐỀ CÚ PHÁP PART 5 (LESSONS MODULE)          -->
+  <!-- ============================================================== -->
+  <div id="view-lessons" class="view-panel">
     <section id="lessons">
       <div class="section-header">
         <h2 class="section-title">📚 12 Chuyên Đề Cú Pháp Part 5 (Sprint 1)</h2>
         <span class="section-tag">CORE GRAMMAR & SYNTAX RULES</span>
       </div>
 
-      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+      <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 14px;">
         12 bài học cú pháp toán học giải nhanh Part 5 từ 10 - 20s/câu, không cần dịch nghĩa toàn câu:
       </p>
 
+      <!-- Lesson Quick Selector Navigation (Tránh cuộn trang quá dài) -->
+      <div class="lesson-quick-nav">
+        <button class="lesson-pill-btn active" onclick="filterLessonView('all', this)">Tất cả (12)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('1', this)">Bài 01 (Đang học ⭐)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('2', this)">Bài 02 (Liên từ / Giới từ)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('3', this)">Bài 03 (Dạng Động từ)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('4', this)">Bài 04 (Bị động)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('5', this)">Bài 05 (Chủ - Vị)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('6', this)">Bài 06 (6 Thì)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('7', this)">Bài 07 (Đại từ)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('8', this)">Bài 08 (Rút gọn)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('9', this)">Bài 09 (Giả định)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('10', this)">Bài 10 (Điều kiện)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('11', this)">Bài 11 (So sánh)</button>
+        <button class="lesson-pill-btn" onclick="filterLessonView('12', this)">Bài 12 (Collocations)</button>
+      </div>
+
       <div class="grid-3">
         <!-- Bài 1: Active -->
-        <div class="card" style="border: 2px solid var(--accent); position: relative; overflow: hidden;">
+        <div class="card lesson-item" data-lesson-num="1" style="border: 2px solid var(--accent); position: relative; overflow: hidden;">
           <div style="position: absolute; top: 0; right: 0; background: var(--accent); color: #fff; font-size: 10px; font-weight: 800; padding: 4px 10px; border-bottom-left-radius: 8px;">
             ĐANG HỌC
           </div>
@@ -2012,7 +2065,7 @@
         </div>
 
         <!-- Bài 2 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="2">
           <div class="card-header">
             <span style="font-size: 22px;">🔗</span>
             <div>
@@ -2025,7 +2078,7 @@
         </div>
 
         <!-- Bài 3 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="3">
           <div class="card-header">
             <span style="font-size: 22px;">🎯</span>
             <div>
@@ -2038,7 +2091,7 @@
         </div>
 
         <!-- Bài 4 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="4">
           <div class="card-header">
             <span style="font-size: 22px;">🛡️</span>
             <div>
@@ -2051,7 +2104,7 @@
         </div>
 
         <!-- Bài 5 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="5">
           <div class="card-header">
             <span style="font-size: 22px;">⚖️</span>
             <div>
@@ -2064,7 +2117,7 @@
         </div>
 
         <!-- Bài 6 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="6">
           <div class="card-header">
             <span style="font-size: 22px;">⏰</span>
             <div>
@@ -2077,7 +2130,7 @@
         </div>
 
         <!-- Bài 7 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="7">
           <div class="card-header">
             <span style="font-size: 22px;">👤</span>
             <div>
@@ -2090,7 +2143,7 @@
         </div>
 
         <!-- Bài 8 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="8">
           <div class="card-header">
             <span style="font-size: 22px;">✂️</span>
             <div>
@@ -2103,7 +2156,7 @@
         </div>
 
         <!-- Bài 9 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="9">
           <div class="card-header">
             <span style="font-size: 22px;">📜</span>
             <div>
@@ -2116,7 +2169,7 @@
         </div>
 
         <!-- Bài 10 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="10">
           <div class="card-header">
             <span style="font-size: 22px;">🔀</span>
             <div>
@@ -2129,7 +2182,7 @@
         </div>
 
         <!-- Bài 11 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="11">
           <div class="card-header">
             <span style="font-size: 22px;">📊</span>
             <div>
@@ -2142,7 +2195,7 @@
         </div>
 
         <!-- Bài 12 -->
-        <div class="card">
+        <div class="card lesson-item" data-lesson-num="12">
           <div class="card-header">
             <span style="font-size: 22px;">💼</span>
             <div>
@@ -2155,6 +2208,12 @@
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- VIEW 3: SỔ TAY PHÂN TÍCH LỖI SAI (ERROR LOG MODULE)           -->
+  <!-- ============================================================== -->
+  <div id="view-error-log" class="view-panel">
 
       <!-- 3. Error Log (Sổ ghi nhận lỗi sai & phân tích bẫy) -->
       <!-- Section 6: Error Log & RCA -->
@@ -2297,9 +2356,12 @@
         </div>
       </div>
     </section>
+  </div>
 
-      <!-- 4. Calculator (Bảng quy đổi điểm ETS & Gap Analysis) -->
-      <!-- Section 2: Interactive Calculator -->
+  <!-- ============================================================== -->
+  <!-- VIEW 4: BẢNG TÍNH ĐIỂM ETS & GAP ANALYSIS (CALCULATOR MODULE)  -->
+  <!-- ============================================================== -->
+  <div id="view-calculator" class="view-panel">
     <section id="calculator">
       <div class="section-header">
         <h2 class="section-title">🧮 Bảng tính điểm TOEIC & Phân tích khoảng cách (Gap Analysis)</h2>
@@ -2374,9 +2436,12 @@
         </div>
       </div>
     </section>
+  </div>
 
-      <!-- 5. Roadmaps (Checklist lộ trình 24 tuần) -->
-      <!-- Section 5: Roadmaps -->
+  <!-- ============================================================== -->
+  <!-- VIEW 5: BẢN ĐỒ LỘ TRÌNH 24 TUẦN (ROADMAPS MODULE)             -->
+  <!-- ============================================================== -->
+  <div id="view-roadmaps" class="view-panel">
     <section id="roadmaps">
       <div class="section-header">
         <h2 class="section-title">📅 Bản Đồ Lộ Trình (Interactive Visual Roadmap)</h2>
@@ -2624,24 +2689,224 @@
         </div>
       </div>
     </section>
+  </div>
 
+  <!-- ============================================================== -->
+  <!-- VIEW 6: CÀI ĐẶT HỆ THỐNG & ÂM THANH (SETTINGS MODULE)          -->
+  <!-- ============================================================== -->
+  <div id="view-settings" class="view-panel">
+    <div class="section-header">
+      <h2 class="section-title">⚙️ Cài Đặt Hệ Thống & Bộ Máy Âm Thanh (Audio Engine)</h2>
+      <span class="section-tag">PREFERENCES & SYSTEM CONFIG</span>
     </div>
 
-    <!-- ============================================================== -->
-    <!-- VIEW 2: TÀI LIỆU & CẤU HÌNH AGENT (REFERENCE DOCS)              -->
-    <!-- ============================================================== -->
-    <div id="referenceView" class="view-panel">
+    <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px;">
+      Tùy chỉnh giọng đọc TOEIC chuẩn ETS, tốc độ phát âm, server kết nối và đồng bộ dữ liệu học tập cá nhân.
+    </p>
 
-      <!-- Reference Banner Top -->
-      <div class="reference-banner-top">
-        <div>
-          <strong style="color: var(--accent-purple); font-size: 14px;">📖 Chế độ Tra Cứu Tài Liệu & Cấu Hình Agent</strong>
-          <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Tham khảo tài liệu nghiên cứu phương pháp, kiến trúc agent và catalog 5 kỹ năng chuyên sâu.</p>
+    <div class="grid-2">
+      <!-- Card 1: Cấu hình Audio Engine -->
+      <div class="card" style="padding: 24px;">
+        <div class="card-header">
+          <span style="font-size: 24px;">🔊</span>
+          <div>
+            <div class="card-title">Cấu hình Bộ máy Âm thanh (Audio Engine)</div>
+            <div class="card-subtitle">Lựa chọn nguồn phát âm cho Flashcards & Luyện nghe</div>
+          </div>
         </div>
-        <button onclick="setViewMode('study')" style="padding: 8px 16px; background: var(--accent-green); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">
-          🎓 Quay lại Góc Học Tập ↵
-        </button>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 14px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 6px;">
+              1. Nguồn phát âm (Engine):
+            </label>
+            <select id="audioEngineSelect" onchange="onAudioEngineChange()" style="width: 100%; padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--accent); color: var(--accent); border-radius: 8px; font-size: 13px; font-weight: 700;">
+              <option value="studio" selected>🎙️ Studio MP3 (File phòng thu chuẩn ETS 100% - Khuyên dùng)</option>
+              <option value="server">⚡ Backend API (FastAPI Edge-TTS đa giọng đọc ETS)</option>
+              <option value="browser">💻 Web Speech (Bộ tổng hợp âm thanh trên trình duyệt)</option>
+            </select>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.5;">
+              • <strong>Studio MP3</strong>: Giọng chuẩn phòng thu bản địa, hỗ trợ cả từ vựng và câu ví dụ hoàn chỉnh.<br>
+              • <strong>Backend API</strong>: Chuyển đổi giọng 4 nước (Mỹ, Anh, Úc, Canada) qua Microsoft Neural Edge-TTS.<br>
+              • <strong>Web Speech</strong>: Hoạt động offline hoàn toàn trên trình duyệt mà không cần mạng.
+            </p>
+          </div>
+
+          <!-- Voice selector -->
+          <div id="voiceSelectGroup" style="display: none; flex-direction: column; gap: 6px;">
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-main);">
+              2. Chọn giọng đọc ETS (Giọng đọc 4 nước):
+            </label>
+            <select id="ttsVoiceSelect" onchange="onVoiceSelected()" style="width: 100%; padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-size: 13px;">
+              <option value="en-US-JennyNeural">🇺🇸 Jenny (Mỹ - Nữ - Rõ ràng)</option>
+              <option value="en-US-GuyNeural">🇺🇸 Guy (Mỹ - Nam - Trầm ấm)</option>
+              <option value="en-GB-SoniaNeural">🇬🇧 Sonia (Anh - Nữ - Chuẩn RP)</option>
+              <option value="en-GB-RyanNeural">🇬🇧 Ryan (Anh - Nam)</option>
+              <option value="en-AU-NatashaNeural">🇦🇺 Natasha (Úc - Nữ - Biến âm khó)</option>
+              <option value="en-CA-ClaraNeural">🇨🇦 Clara (Canada - Nữ)</option>
+            </select>
+          </div>
+
+          <!-- Playback Speed -->
+          <div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 6px;">
+              3. Tốc độ phát âm (Playback Speed):
+            </label>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <select id="ttsRateSelect" onchange="updateTtsSettings()" style="padding: 8px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-size: 13px; font-weight: 600; min-width: 120px;">
+                <option value="0.85">🐢 0.85x (Chậm)</option>
+                <option value="1.0" selected>⚡ 1.0x (Chuẩn)</option>
+                <option value="1.15">🚀 1.15x (Nhanh)</option>
+              </select>
+              <div style="display: flex; gap: 4px;">
+                <button type="button" class="lesson-pill-btn speed-opt-btn" onclick="setQuickSpeed(0.85)">0.85x</button>
+                <button type="button" class="lesson-pill-btn speed-opt-btn active" onclick="setQuickSpeed(1.0)">1.0x</button>
+                <button type="button" class="lesson-pill-btn speed-opt-btn" onclick="setQuickSpeed(1.15)">1.15x</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Test Audio & Status -->
+          <div style="padding-top: 10px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <button type="button" onclick="testCurrentAudio()" style="padding: 9px 18px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>▶️</span> Nghe thử âm thanh mẫu
+            </button>
+            <div style="font-size: 12px; color: var(--text-muted);">
+              Trạng thái: <span id="serverStatusBadge" style="color: var(--accent-green); font-weight: 700;">Ready ✨</span>
+            </div>
+          </div>
+        </div>
       </div>
+
+      <!-- Card 2: Cấu hình Server & AI Backend -->
+      <div class="card" style="padding: 24px;">
+        <div class="card-header">
+          <span style="font-size: 24px;">🖥️</span>
+          <div>
+            <div class="card-title">Kết Nối Server & AI Copilot</div>
+            <div class="card-subtitle">Endpoint FastAPI, Database và Model DeepSeek / Gemini</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 14px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 6px;">
+              Backend API Server URL:
+            </label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="settingServerUrl" placeholder="Ví dụ: https://toeic.truongquocdat.id.vn (Để trống nếu cùng domain)" style="flex: 1; padding: 10px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-size: 13px; font-family: var(--font-mono);">
+              <button type="button" onclick="saveServerUrlSetting()" style="padding: 10px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                Lưu
+              </button>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+              Hiện tại: Frontend & Backend chạy đồng bộ trên container Docker (FastAPI SQLite + Static Web).
+            </p>
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 700; color: var(--text-main); display: block; margin-bottom: 6px;">
+              AI Copilot Engine:
+            </label>
+            <div style="background: var(--bg-primary); border-radius: 8px; padding: 12px; font-size: 13px; border: 1px solid var(--border-color);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; color: var(--accent);">🤖 DeepSeek V3 / R1 + Vision</span>
+                <span class="badge-pill" style="margin: 0; background: rgba(52, 211, 153, 0.15); color: var(--accent-green); border-color: rgba(52, 211, 153, 0.3);">Active</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                Hỗ trợ OCR hình ảnh đề thi (Gemini 2.5 Flash), giải thích 3 chiều bẫy ETS và tự động ghi lỗi sai / tạo thẻ SRS vào cơ sở dữ liệu.
+              </div>
+            </div>
+          </div>
+
+          <div style="padding-top: 10px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: var(--text-muted);">Kiểm tra kết nối backend:</span>
+            <button type="button" onclick="checkBackendServerHealth(); alert('Đã kiểm tra lại kết nối máy chủ!')" style="padding: 6px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px; cursor: pointer;">
+              🔄 Ping Healthcheck
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Thói Quen Học Tập & Nhắc Nhở -->
+      <div class="card" style="padding: 24px;">
+        <div class="card-header">
+          <span style="font-size: 24px;">⏰</span>
+          <div>
+            <div class="card-title">Mục Tiêu Học Tập Hàng Ngày</div>
+            <div class="card-subtitle">Kỷ luật học tập & Thống kê cá nhân</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 13px; font-weight: 700;">Chỉ tiêu từ vựng mới mỗi ngày</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Số thẻ SRS cần ôn tập trong phiên học</div>
+            </div>
+            <select id="settingDailyCards" onchange="localStorage.setItem('toeic_daily_cards', this.value)" style="padding: 6px 12px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 13px; font-weight: 700;">
+              <option value="10">10 từ / ngày</option>
+              <option value="20" selected>20 từ / ngày (Khuyên dùng)</option>
+              <option value="30">30 từ / ngày</option>
+              <option value="50">50 từ / ngày (Cấp tốc)</option>
+            </select>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px;">
+            <div>
+              <div style="font-size: 13px; font-weight: 700;">Chu trình Time-Boxing đề xuất</div>
+              <div style="font-size: 12px; color: var(--text-muted);">45 - 60 phút mỗi tối</div>
+            </div>
+            <span class="badge-pill" style="margin: 0; background: var(--accent-glow); color: var(--accent); border-color: var(--accent);">
+              15p SRS ➔ 20p Cú Pháp ➔ 15p Sổ Lỗi
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Quản Lý Dữ Liệu Học Tập -->
+      <div class="card" style="padding: 24px;">
+        <div class="card-header">
+          <span style="font-size: 24px;">💾</span>
+          <div>
+            <div class="card-title">Quản Lý & Sao Lưu Dữ Liệu</div>
+            <div class="card-subtitle">Sao lưu Error Log, Flashcards và tiến độ học</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 14px;">
+          <p style="font-size: 13px; color: var(--text-muted);">
+            Dữ liệu của bạn được đồng bộ liên tục giữa Trình duyệt (LocalStorage) và Database SQLite của hệ thống.
+          </p>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button type="button" onclick="exportErrorLogCSV()" style="padding: 8px 14px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-main); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>📥</span> Tải Error Log (CSV)
+            </button>
+            <button type="button" onclick="syncErrorLogsFromDb(); syncFlashcardsFromDb(); fetchDashboardStatsFromDb(); alert('Đã đồng bộ lại toàn bộ dữ liệu từ Database!')" style="padding: 8px 14px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--accent-green); border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <span>🔄</span> Ép buộc đồng bộ DB
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- VIEW 7: TÀI LIỆU & CẤU HÌNH AGENT (REFERENCE DOCS)              -->
+  <!-- ============================================================== -->
+  <div id="view-reference" class="view-panel">
+
+    <!-- Reference Banner Top -->
+    <div class="reference-banner-top">
+      <div>
+        <strong style="color: var(--accent-purple); font-size: 14px;">📖 Chế độ Tra Cứu Tài Liệu & Cấu Hình Agent</strong>
+        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Tham khảo tài liệu nghiên cứu phương pháp, kiến trúc agent và catalog 5 kỹ năng chuyên sâu.</p>
+      </div>
+      <button onclick="navigateToModule('flashcards')" style="padding: 8px 16px; background: var(--accent-green); color: #fff; border: none; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">
+        🎓 Quay lại Góc Học Tập ↵
+      </button>
+    </div>
 
       <!-- Hero Banner -->
       <!-- Hero Banner -->
@@ -2939,41 +3204,102 @@
       return Math.max(5, raw * 3.25);
     }
 
-    
-    // View Mode Management (Study Zone vs Reference)
-    function setViewMode(mode) {
-      localStorage.setItem('toeic_view_mode', mode);
-      const studyView = document.getElementById('studyZoneView');
-      const refView = document.getElementById('referenceView');
-      const btnStudy = document.getElementById('btnModeStudy');
-      const btnRef = document.getElementById('btnModeRef');
-      const mBtnStudy = document.getElementById('mBtnStudy');
-      const mBtnRef = document.getElementById('mBtnRef');
-      const navStudy = document.getElementById('navGroupStudy');
-      const navRef = document.getElementById('navGroupRef');
-
-      if (!studyView || !refView) return;
-
-      if (mode === 'reference') {
-        studyView.classList.remove('active-view');
-        refView.classList.add('active-view');
-        if (btnStudy) btnStudy.classList.remove('active');
-        if (btnRef) btnRef.classList.add('active');
-        if (mBtnStudy) mBtnStudy.classList.remove('active');
-        if (mBtnRef) mBtnRef.classList.add('active');
-        if (navStudy) navStudy.style.display = 'none';
-        if (navRef) navRef.style.display = 'flex';
-      } else {
-        refView.classList.remove('active-view');
-        studyView.classList.add('active-view');
-        if (btnRef) btnRef.classList.remove('active');
-        if (btnStudy) btnStudy.classList.add('active');
-        if (mBtnRef) mBtnRef.classList.remove('active');
-        if (mBtnStudy) mBtnStudy.classList.add('active');
-        if (navRef) navRef.style.display = 'none';
-        if (navStudy) navStudy.style.display = 'flex';
+    // ==============================================================
+    // MODULAR SINGLE-VIEW ROUTER & NAVIGATION
+    // ==============================================================
+    function navigateToModule(moduleId) {
+      const validModules = ['flashcards', 'lessons', 'error-log', 'calculator', 'roadmaps', 'settings', 'reference'];
+      if (!validModules.includes(moduleId)) {
+        moduleId = 'flashcards';
       }
+
+      // Hide all panels
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active-view'));
+
+      // Show target panel
+      const target = document.getElementById('view-' + moduleId);
+      if (target) {
+        target.classList.add('active-view');
+      }
+
+      // Update sidebar nav items
+      document.querySelectorAll('#navGroupStudy .nav-item a, #navGroupRef .nav-item a').forEach(a => {
+        if (a.getAttribute('data-module') === moduleId) {
+          a.classList.add('active');
+        } else {
+          a.classList.remove('active');
+        }
+      });
+
+      // Update mobile bottom nav
+      document.querySelectorAll('.bottom-nav-item').forEach(b => {
+        if (b.getAttribute('data-module') === moduleId) {
+          b.classList.add('active');
+        } else {
+          b.classList.remove('active');
+        }
+      });
+
+      // Persist state
+      localStorage.setItem('toeic_active_module', moduleId);
+      history.replaceState(null, null, '#' + moduleId);
+
+      // Scroll top smoothly
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      closeMobileSidebar();
       updateFocusHeaderStats();
+    }
+
+    // Filter 12 Syntax Lessons to prevent endless scrolling
+    function filterLessonView(lessonNum, btn) {
+      document.querySelectorAll('.lesson-pill-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const items = document.querySelectorAll('.lesson-item');
+      items.forEach(card => {
+        if (lessonNum === 'all' || card.getAttribute('data-lesson-num') === String(lessonNum)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Set Quick Audio Playback Speed
+    function setQuickSpeed(speed) {
+      ttsRate = speed;
+      localStorage.setItem('toeic_tts_rate', ttsRate);
+      const rateSelect = document.getElementById('ttsRateSelect');
+      if (rateSelect) {
+        rateSelect.value = speed.toFixed(2) === '0.85' ? '0.85' : (speed.toFixed(2) === '1.15' ? '1.15' : '1.0');
+      }
+      document.querySelectorAll('.speed-opt-btn').forEach(btn => {
+        if (parseFloat(btn.textContent) === speed) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    // Save Backend API Server URL Setting
+    function saveServerUrlSetting() {
+      const input = document.getElementById('settingServerUrl');
+      if (input) {
+        audioServerUrl = input.value.trim().replace(/\/+$/, '');
+        localStorage.setItem('toeic_audio_server_url', audioServerUrl);
+        checkBackendServerHealth();
+        alert('Đã cập nhật Backend API URL: ' + (audioServerUrl || '(Mặc định - Cùng domain)'));
+      }
+    }
+
+    // Backwards compatible wrapper for setViewMode
+    function setViewMode(mode) {
+      if (mode === 'reference') {
+        navigateToModule('reference');
+      } else {
+        navigateToModule('flashcards');
+      }
     }
 
     // Mobile Drawer Controls
@@ -3000,14 +3326,8 @@
     }
 
     function handleBottomNav(targetId) {
-      const studySections = ['#flashcards', '#lessons', '#error-log', '#calculator', '#roadmaps'];
-      if (studySections.includes(targetId)) {
-        setViewMode('study');
-      }
-      closeMobileSidebar();
-      document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
-      const activeLink = document.querySelector(`.bottom-nav-item[href="${targetId}"]`);
-      if (activeLink) activeLink.classList.add('active');
+      const cleanMod = targetId.replace('#', '');
+      navigateToModule(cleanMod);
     }
 
     function toggleTheme() {
@@ -3466,6 +3786,20 @@
       if (rateSelect) {
         rateSelect.value = ttsRate.toFixed(2) === '0.85' ? '0.85' : (ttsRate.toFixed(2) === '1.15' ? '1.15' : '1.0');
       }
+      const settingServerInput = document.getElementById('settingServerUrl');
+      if (settingServerInput) {
+        settingServerInput.value = audioServerUrl;
+      }
+
+      // Sync active state for speed buttons
+      document.querySelectorAll('.speed-opt-btn').forEach(btn => {
+        if (parseFloat(btn.textContent) === ttsRate) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
       onAudioEngineChange(false);
       checkBackendServerHealth();
     }
@@ -3479,17 +3813,29 @@
       const voiceGroup = document.getElementById('voiceSelectGroup');
       const voiceSelect = document.getElementById('ttsVoiceSelect');
       
+      // Update Flashcard badge
+      const fcBadge = document.getElementById('fcAudioEngineBadge');
+      if (fcBadge) {
+        if (audioEngine === 'studio') {
+          fcBadge.innerHTML = '🎙️ Studio MP3 (Chuẩn ETS)';
+        } else if (audioEngine === 'server') {
+          fcBadge.innerHTML = '⚡ Edge-TTS Backend';
+        } else {
+          fcBadge.innerHTML = '💻 Web Speech Trình duyệt';
+        }
+      }
+
       if (audioEngine === 'studio') {
         if (voiceGroup) voiceGroup.style.display = 'none';
       } else if (audioEngine === 'server') {
         if (voiceGroup) voiceGroup.style.display = 'flex';
         if (voiceSelect) {
           voiceSelect.innerHTML = `
-            <option value="en-US-JennyNeural">🇺🇸 Jenny (Mỹ - Nữ)</option>
-            <option value="en-US-GuyNeural">🇺🇸 Guy (Mỹ - Nam)</option>
-            <option value="en-GB-SoniaNeural">🇬🇧 Sonia (Anh - Nữ)</option>
+            <option value="en-US-JennyNeural">🇺🇸 Jenny (Mỹ - Nữ - Rõ ràng)</option>
+            <option value="en-US-GuyNeural">🇺🇸 Guy (Mỹ - Nam - Trầm ấm)</option>
+            <option value="en-GB-SoniaNeural">🇬🇧 Sonia (Anh - Nữ - Chuẩn RP)</option>
             <option value="en-GB-RyanNeural">🇬🇧 Ryan (Anh - Nam)</option>
-            <option value="en-AU-NatashaNeural">🇦🇺 Natasha (Úc - Nữ)</option>
+            <option value="en-AU-NatashaNeural">🇦🇺 Natasha (Úc - Nữ - Biến âm)</option>
             <option value="en-CA-ClaraNeural">🇨🇦 Clara (Canada - Nữ)</option>
           `;
           voiceSelect.value = selectedVoiceId;
@@ -4006,12 +4352,14 @@
     renderCustomErrors();
     renderCurrentCard();
 
-    // Initialize View Mode (Default is 'study')
-    const savedMode = localStorage.getItem('toeic_view_mode') || 'study';
-    setViewMode(savedMode);
-
     // Initialize Audio Engine UI
     initAudioEngineUI();
+
+    // Initialize Modular Active View (from URL hash or localStorage)
+    const hashModule = window.location.hash.replace('#', '');
+    const validMods = ['flashcards', 'lessons', 'error-log', 'calculator', 'roadmaps', 'settings', 'reference'];
+    const initialModule = validMods.includes(hashModule) ? hashModule : (localStorage.getItem('toeic_active_module') || 'flashcards');
+    navigateToModule(initialModule);
 
     // Initialize Full-Stack Database Sync
     fetchDashboardStatsFromDb();
@@ -4083,21 +4431,21 @@
 
   <!-- Mobile Bottom Quick Navigation Bar -->
   <nav class="mobile-bottom-nav">
-    <a href="#flashcards" class="bottom-nav-item active" id="bNavFlashcards" onclick="handleBottomNav('#flashcards')">
+    <a href="javascript:void(0)" class="bottom-nav-item active" id="bNavFlashcards" data-module="flashcards" onclick="navigateToModule('flashcards')">
       <span class="bottom-nav-icon">🗂️</span>
       <span class="bottom-nav-label">Thẻ SRS</span>
     </a>
-    <a href="#lessons" class="bottom-nav-item" id="bNavLessons" onclick="handleBottomNav('#lessons')">
+    <a href="javascript:void(0)" class="bottom-nav-item" id="bNavLessons" data-module="lessons" onclick="navigateToModule('lessons')">
       <span class="bottom-nav-icon">📚</span>
       <span class="bottom-nav-label">Cú Pháp</span>
     </a>
-    <a href="#error-log" class="bottom-nav-item" id="bNavErrorLog" onclick="handleBottomNav('#error-log')">
+    <a href="javascript:void(0)" class="bottom-nav-item" id="bNavErrorLog" data-module="error-log" onclick="navigateToModule('error-log')">
       <span class="bottom-nav-icon">📝</span>
       <span class="bottom-nav-label">Sổ Lỗi</span>
     </a>
-    <a href="#calculator" class="bottom-nav-item" id="bNavCalculator" onclick="handleBottomNav('#calculator')">
-      <span class="bottom-nav-icon">🧮</span>
-      <span class="bottom-nav-label">Tính Điểm</span>
+    <a href="javascript:void(0)" class="bottom-nav-item" id="bNavSettings" data-module="settings" onclick="navigateToModule('settings')">
+      <span class="bottom-nav-icon">⚙️</span>
+      <span class="bottom-nav-label">Cài Đặt</span>
     </a>
     <button class="bottom-nav-item" onclick="toggleMobileSidebar()" style="background:transparent; border:none; color:inherit; font-family:inherit;">
       <span class="bottom-nav-icon">☰</span>
