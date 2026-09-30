@@ -4,3 +4,7 @@ __pycache__/
 .DS_Store
 server/.venv/
 server/cache/*.mp3
+.env
+.env.*
+scratch/
+server/toeic_data.db
