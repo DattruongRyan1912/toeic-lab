@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """
-Build complete, clean, modular frontend docs/index.html:
+Build complete, clean, modular frontend docs/index.html with:
 1. Baseline clean foundation from scratch/index_baseline.html.
-2. Full 60 Core Vocab Flashcards in FLASHCARDS array.
-3. Full 30 Part 5 Questions (Q101 -> Q130) with 3D RCA in PART5_QUESTIONS array.
-4. Mini-Test Module View (#view-minitest) with Timer, Jump Pills, 3D Review, and 1-Click Error Log.
-5. Vocabulary Notebook & Self-Study Hub (#view-vocab-hub) with:
+2. Full 60 Core Vocab Flashcards pre-rendered directly into HTML (Server-Side Pre-rendered)
+   ensuring the table is NEVER EMPTY even before JavaScript executes or if scripts are delayed!
+3. Pre-populated category filter options for instant filtering.
+4. Full 30 Part 5 Questions (Q101 -> Q130) with 3D RCA in PART5_QUESTIONS array.
+5. Mini-Test Module View (#view-minitest) with Timer, Jump Pills, 3D Review, and 1-Click Error Log.
+6. Vocabulary Notebook & Self-Study Hub (#view-vocab-hub) with:
    - Vocab Vault table with Instant Search, Category Filter, Audio Speech, and Paraphrase pairs.
-   - Smart Word Logger with AI DeepSeek Auto-Fill.
+   - Quick Add Vocab Modal with AI DeepSeek Auto-Fill.
    - Self-Study Drills: 4-Choice Quick Quiz & Typing/Fill-in-the-blank challenge (No Anki needed!).
-6. Sidebar navigation linking all modules.
+7. Sidebar navigation linking all modules.
 """
 
 import json
+import html as html_lib
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -36,7 +39,92 @@ with open(BASE_DIR / "scratch" / "vocab_hub.js", "r", encoding="utf-8") as f:
     vocab_hub_js = f.read()
 
 # -------------------------------------------------------------
-# 1. Add CSS for Mini-Test and Vocab Hub
+# 1. Pre-render 60 Vocab Rows directly into HTML table (SSR)
+# -------------------------------------------------------------
+def generate_static_vocab_rows(cards):
+    rows = []
+    for card in cards:
+        word = html_lib.escape(card.get("word", ""))
+        ipa = html_lib.escape(card.get("ipa", ""))
+        w_type = html_lib.escape(card.get("type", "v"))
+        cat = html_lib.escape(card.get("cat", "General Business"))
+        meaning = html_lib.escape(card.get("meaning", ""))
+        colloc = html_lib.escape(card.get("collocations", "---"))
+        para = html_lib.escape(card.get("paraphrase", "---"))
+        front = card.get("front", "")
+        full = card.get("fullSentence", "")
+        display = front if ("______" in front) else (full or front)
+        display = html_lib.escape(display)
+        cid = card.get("id", 1)
+
+        row = f"""            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='transparent'">
+              <td style="padding: 12px 16px; vertical-align: top;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-weight: 700; font-size: 15px; color: var(--accent);">{word}</span>
+                  <button onclick="playVocabWord('{word}')" title="Nghe phát âm US" style="background: none; border: none; cursor: pointer; font-size: 15px; padding: 2px; color: var(--text-muted); transition: color 0.15s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">
+                    🔊
+                  </button>
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                  /{ipa}/ <span style="color: var(--accent-purple); font-weight: 600;">({w_type})</span>
+                </div>
+              </td>
+              <td style="padding: 12px 16px; vertical-align: top;">
+                <span class="badge-error badge-vocab" style="font-size: 10px; padding: 2px 6px;">{cat}</span>
+              </td>
+              <td style="padding: 12px 16px; vertical-align: top; font-weight: 500; color: var(--text-main);">
+                {meaning}
+              </td>
+              <td style="padding: 12px 16px; vertical-align: top; font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                {colloc}
+              </td>
+              <td style="padding: 12px 16px; vertical-align: top; font-size: 12px; color: var(--accent-amber); font-weight: 500;">
+                {para}
+              </td>
+              <td style="padding: 12px 16px; vertical-align: top; font-size: 12px; color: var(--text-muted); font-style: italic; line-height: 1.4;">
+                "{display}"
+              </td>
+              <td style="padding: 12px 16px; vertical-align: top; text-align: center;">
+                <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+                  <button onclick="toggleVocabMastered({cid})" title="Đánh dấu đã thuộc" style="padding: 4px 8px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-muted); cursor: pointer;">
+                    ⭐ Ôn
+                  </button>
+                  <button onclick="askDeepSeekAboutVocab('{word}')" title="Hỏi AI DeepSeek về sắc thái từ này" style="padding: 4px 6px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--accent-purple); cursor: pointer;">
+                    🤖
+                  </button>
+                  <button onclick="deleteVocabCard({cid})" title="Xóa từ khỏi sổ tay" style="padding: 4px 6px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--accent-rose); cursor: pointer;">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>"""
+        rows.append(row)
+    return "\n".join(rows)
+
+static_rows_html = generate_static_vocab_rows(flashcards_data)
+
+# Pre-populate categories in select
+unique_cats = sorted(list(set(c.get("cat", "General Business") for c in flashcards_data if c.get("cat"))))
+cat_options = '<option value="all">Tất cả chủ đề</option>\n' + "\n".join(
+    f'            <option value="{html_lib.escape(c)}">{html_lib.escape(c)}</option>' for c in unique_cats
+)
+
+# Inject pre-rendered rows into vocab_hub_html
+vocab_hub_html = vocab_hub_html.replace(
+    '<tbody id="vocabTableBody">\n            <!-- Dynamically populated via renderVocabTable() -->\n          </tbody>',
+    f'<tbody id="vocabTableBody">\n{static_rows_html}\n          </tbody>'
+)
+vocab_hub_html = vocab_hub_html.replace(
+    '<strong id="vocabDisplayedCount" style="color: var(--accent); font-weight: 700;">0</strong>',
+    f'<strong id="vocabDisplayedCount" style="color: var(--accent); font-weight: 700;">{len(flashcards_data)}</strong>'
+)
+vocab_hub_html = vocab_hub_html.replace(
+    '<option value="all">Tất cả chủ đề</option>',
+    cat_options
+)
+
+# -------------------------------------------------------------
+# 2. Add CSS for Mini-Test and Vocab Hub
 # -------------------------------------------------------------
 extra_css = """
     /* Unified Modern Button System (Dark Theme First) */
@@ -223,7 +311,7 @@ extra_css = """
 html = html.replace("/* Lesson Selector Pills */", extra_css + "\n    /* Lesson Selector Pills */")
 
 # -------------------------------------------------------------
-# 2. Update Sidebar Navigation
+# 3. Update Sidebar Navigation
 # -------------------------------------------------------------
 old_nav = """      <li class="nav-item"><a href="javascript:void(0)" onclick="navigateToModule('flashcards')" data-module="flashcards" class="active">🗂️ Flashcard SRS Web</a></li>"""
 
@@ -234,7 +322,7 @@ new_nav = """      <li class="nav-item"><a href="javascript:void(0)" onclick="na
 html = html.replace(old_nav, new_nav)
 
 # -------------------------------------------------------------
-# 3. Update navigateToModule function
+# 4. Update navigateToModule and validMods
 # -------------------------------------------------------------
 old_nav_fn = """    function navigateToModule(moduleId) {
       const validModules = ['flashcards', 'lessons', 'error-log', 'calculator', 'roadmaps', 'settings', 'reference'];
@@ -272,15 +360,21 @@ new_nav_fn = """    function navigateToModule(moduleId) {
 
 html = html.replace(old_nav_fn, new_nav_fn)
 
+# Also update validMods at bottom init
+html = html.replace(
+    "const validMods = ['flashcards', 'lessons', 'error-log', 'calculator', 'roadmaps', 'settings', 'reference'];",
+    "const validMods = ['flashcards', 'vocab-hub', 'minitest', 'lessons', 'error-log', 'calculator', 'roadmaps', 'settings', 'reference'];"
+)
+
 # -------------------------------------------------------------
-# 4. Update count badges in Flashcards view (from 20 to 60)
+# 5. Update count badges in Flashcards view (from 20 to 60)
 # -------------------------------------------------------------
 html = html.replace("0 / 20 từ", f"0 / {len(flashcards_data)} từ")
 html = html.replace("Thẻ 1 / 20", f"Thẻ 1 / {len(flashcards_data)}")
 html = html.replace("Tất cả (20)", f"Tất cả ({len(flashcards_data)})")
 
 # -------------------------------------------------------------
-# 5. Insert View Panels: view-vocab-hub and view-minitest
+# 6. Insert View Panels: view-vocab-hub and view-minitest
 # -------------------------------------------------------------
 minitest_view = """
   <!-- ============================================================== -->
@@ -365,7 +459,7 @@ panels_to_insert = "\n" + vocab_hub_html + "\n" + minitest_view + "\n"
 html = html.replace('<div id="view-lessons" class="view-panel">', panels_to_insert + '  <div id="view-lessons" class="view-panel">')
 
 # -------------------------------------------------------------
-# 6. Replace FLASHCARDS array with 60 words (using `let` for mutability)
+# 7. Replace FLASHCARDS array with 60 words (using `let` for mutability)
 # -------------------------------------------------------------
 fc_start = html.find("const FLASHCARDS = [")
 fc_end = html.find("let currentCardIndex = 0;", fc_start)
@@ -376,9 +470,15 @@ else:
     print("WARNING: Could not find FLASHCARDS array boundaries!")
 
 # -------------------------------------------------------------
-# 7. Append Mini-Test and Vocab Hub JS before closing </script>
+# 8. Append Mini-Test and Vocab Hub JS before closing </script>
 # -------------------------------------------------------------
 minitest_js_final = minitest_js_template.replace("__PART5_QUESTIONS_PLACEHOLDER__", json.dumps(part5_data, ensure_ascii=False, indent=4))
+
+# Also ensure syncFlashcardsFromDb triggers renderVocabTable
+html = html.replace(
+    "FLASHCARDS.splice(0, FLASHCARDS.length, ...mapped);\n              renderCurrentCard();",
+    "FLASHCARDS.splice(0, FLASHCARDS.length, ...mapped);\n              renderCurrentCard();\n              if (typeof renderVocabTable === 'function') renderVocabTable();"
+)
 
 js_bundle = f"""
     // ==============================================================
@@ -392,8 +492,12 @@ js_bundle = f"""
     {vocab_hub_js}
 
     // Auto-init on page load
-    if (typeof renderPart5Test === 'function') renderPart5Test();
-    if (typeof renderVocabTable === 'function') renderVocabTable();
+    try {{
+      if (typeof renderPart5Test === 'function') renderPart5Test();
+      if (typeof renderVocabTable === 'function') renderVocabTable();
+    }} catch (err) {{
+      console.warn("Auto-init warning:", err);
+    }}
 """
 
 script_close_tag = "</script>"
@@ -411,5 +515,5 @@ with open(BASE_DIR / "docs" / "index.html", "w", encoding="utf-8") as f:
 with open(BASE_DIR / "docs" / "toeic_study_guide.html", "w", encoding="utf-8") as f:
     f.write(html)
 
-print("SUCCESS: Rebuilt docs/index.html and docs/toeic_study_guide.html cleanly!")
+print("SUCCESS: Rebuilt docs/index.html with pre-rendered vocab table and clean JS!")
 print(f"Total lines: {len(html.splitlines())}")
