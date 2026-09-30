@@ -15,6 +15,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
     volumes:
+      - ./server:/app/server
       - ./server/data:/app/server/data
       - ./server/cache:/app/server/cache
       - ./docs:/app/docs
