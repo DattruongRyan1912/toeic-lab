@@ -1,19 +1,23 @@
 version: '3.8'
 
 services:
-  toeic-audio-api:
+  toeic-lab-app:
     build:
       context: .
       dockerfile: server/Dockerfile
-    container_name: toeic-audio-service
+    container_name: toeic-lab-app
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - PORT=8000
+      - DATABASE_URL=sqlite:////app/server/data/toeic_lab.db
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
     volumes:
-      - ./server/cache:/app/cache
-      - ./docs:/docs:ro
+      - ./server/data:/app/server/data
+      - ./server/cache:/app/server/cache
+      - ./docs:/app/docs
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s

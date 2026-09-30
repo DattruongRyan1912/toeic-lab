@@ -1,6 +1,7 @@
 import os
 import hashlib
 from pathlib import Path
+from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,13 +9,33 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import edge_tts
 
-app = FastAPI(
-    title="TOEIC Studio Audio Microservice",
-    description="High-fidelity Azure Neural TTS service tailored for TOEIC learning with disk caching.",
-    version="1.0.0"
+from server.config import PORT
+from server.database import init_db
+from server.routers import (
+    dashboard_router,
+    roadmap_router,
+    flashcard_router,
+    error_log_router,
+    knowledge_router,
+    test_router,
+    reminder_router,
+    ai_agent_router
 )
 
-# Enable CORS for all domains so frontend can call from anywhere
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on startup
+    init_db()
+    yield
+
+app = FastAPI(
+    title="TOEIC Lab Full-Stack Platform API",
+    description="Backend API with SQLite/Postgres ORM, Spaced Repetition SRS, AI Vision Mentor and Audio Engine.",
+    version="2.0.0",
+    lifespan=lifespan
+)
+
+# Enable CORS for cross-domain access (e.g. GitHub Pages or separate ports)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,11 +44,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include Modular Routers
+app.include_router(dashboard_router.router)
+app.include_router(roadmap_router.router)
+app.include_router(flashcard_router.router)
+app.include_router(error_log_router.router)
+app.include_router(knowledge_router.router)
+app.include_router(test_router.router)
+app.include_router(reminder_router.router)
+app.include_router(ai_agent_router.router)
+
 BASE_DIR = Path(__file__).resolve().parent
 CACHE_DIR = BASE_DIR / "cache"
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
-# Path to static web app if running as standalone monolithic server
 DOCS_DIR = BASE_DIR.parent / "docs"
 
 # Curated list of ETS-like native accents
@@ -81,7 +111,8 @@ async def health_check():
     cached_files = list(CACHE_DIR.glob("*.mp3"))
     return {
         "status": "healthy",
-        "service": "TOEIC Audio Engine",
+        "service": "TOEIC Lab Full-Stack Engine",
+        "version": "2.0.0",
         "cached_audio_count": len(cached_files),
         "cache_dir": str(CACHE_DIR)
     }
@@ -97,15 +128,10 @@ async def text_to_speech(
     rate: str = Query("+0%", description="Rate adjustment (e.g. +0%, -15%, +15%)"),
     cache: bool = Query(True, description="Whether to utilize disk cache")
 ):
-    """
-    Synthesize high-fidelity MP3 using Microsoft Azure Neural TTS.
-    Utilizes MD5 disk cache for instant 0ms responses on repeated requests.
-    """
     clean_text = text.strip()
     if not clean_text:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
-    # Generate MD5 hash key based on text, voice, and rate
     hash_key = hashlib.md5(f"{clean_text}_{voice}_{rate}".encode("utf-8")).hexdigest()
     cache_file = CACHE_DIR / f"{hash_key}.mp3"
 
@@ -142,5 +168,4 @@ if DOCS_DIR.exists():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("server.main:app", host="0.0.0.0", port=PORT, reload=True)
