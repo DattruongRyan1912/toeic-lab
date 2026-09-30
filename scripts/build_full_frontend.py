@@ -378,7 +378,7 @@ else:
 # -------------------------------------------------------------
 # 7. Append Mini-Test and Vocab Hub JS before closing </script>
 # -------------------------------------------------------------
-minitest_js_final = minitest_js_template.replace("___PART5_JSON_DATA___", json.dumps(part5_data, ensure_ascii=False, indent=4))
+minitest_js_final = minitest_js_template.replace("__PART5_QUESTIONS_PLACEHOLDER__", json.dumps(part5_data, ensure_ascii=False, indent=4))
 
 js_bundle = f"""
     // ==============================================================
