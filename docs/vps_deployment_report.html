@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Triển Khai VPS: TOEIC Self-Study Platform & AI Voice Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased p-4 sm:p-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <header class="border-b border-slate-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          VPS Production Deployed & Healthy
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-white">Triển Khai Hoàn Tất Nền Tảng TOEIC Lên VPS</h1>
+        <p class="text-slate-400 text-sm">Target Domain: <a href="https://toeic.truongquocdat.id.vn" target="_blank" class="text-blue-400 underline font-mono">https://toeic.truongquocdat.id.vn</a></p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="https://toeic.truongquocdat.id.vn" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2">
+          <span>Mở Ứng Dụng Web</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- Key Metrics Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Trạng thái Container</div>
+        <div class="text-2xl font-bold text-emerald-400 flex items-center gap-2">
+          <span>2 / 2</span>
+          <span class="text-xs text-slate-400 font-normal">Healthy</span>
+        </div>
+        <div class="text-[11px] text-slate-500">toeic-lab-app & toeic-lab-web</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Kho Từ Vựng (SRS)</div>
+        <div class="text-2xl font-bold text-white">684 Từ</div>
+        <div class="text-[11px] text-slate-500">Gồm 600 từ ETS + Gói Chuyên Ngành IT</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Edge TTS Engine</div>
+        <div class="text-2xl font-bold text-cyan-400">6 Giọng Chuẩn</div>
+        <div class="text-[11px] text-slate-500">Mỹ (US), Anh (UK), Úc (AU), Canada (CA)</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Giao Tiếp Voice AI</div>
+        <div class="text-2xl font-bold text-purple-400">1-on-1 Studio</div>
+        <div class="text-[11px] text-slate-500">Chấm điểm IPA + Feedback phát âm</div>
+      </div>
+    </div>
+
+    <!-- Architecture & Port Mapping Diagram -->
+    <section class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 space-y-4">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+        Kiến Trúc Luồng Mạng & Phân Định Cổng (Network Topology)
+      </h2>
+      <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 overflow-x-auto text-xs font-mono leading-relaxed text-slate-300">
+Browser (Client)
+      │  HTTPS (Port 443)
+      ▼
+[shared-nginx-proxy] (Nginx Edge Proxy Docker)
+      │  proxy_pass http://127.0.0.1:18160;
+      │  (timeouts: 300s, client_max_body_size: 50M)
+      ▼
+[toeic-lab-web] (Next.js 16 App - Standalone Docker)
+      │  Host Port: 18160 -> Container Port: 3000
+      │  Serving: UI Pages, Static Assets, Chunks, Fonts
+      │  BFF API Proxy: /app/api/[...path]/route.ts
+      ▼  Internal Docker Network (http://toeic-lab-app:8000)
+[toeic-lab-app] (FastAPI Backend Engine Docker)
+      │  Host Port: 18161 -> Container Port: 8000
+      ├── Database: SQLite (server/data/toeic_lab.db, 684 Flashcards, 12 Lessons)
+      ├── TTS Engine: Edge-TTS (server/cache disk caching)
+      └── AI Services: DeepSeek & Gemini (Voice Coach 1-on-1, Pronunciation RCA)
+      </div>
+    </section>
+
+    <!-- Verification Results Table -->
+    <section class="space-y-4">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        Bằng Chứng Kiểm Thử Trực Tiếp (Live Verification Smoke Tests)
+      </h2>
+      <div class="overflow-hidden rounded-xl border border-slate-800">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/80 text-slate-400 text-xs uppercase font-semibold border-b border-slate-800">
+            <tr>
+              <th class="p-3">Hạng Mục</th>
+              <th class="p-3">Target Endpoint</th>
+              <th class="p-3">Kết Quả Kiểm Thử Thực Tế</th>
+              <th class="p-3">Trạng Thái</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 bg-slate-900/20 text-slate-300">
+            <tr>
+              <td class="p-3 font-medium text-white">Next.js Web UI</td>
+              <td class="p-3 font-mono text-xs text-blue-400">GET https://toeic.truongquocdat.id.vn</td>
+              <td class="p-3 text-xs">HTTP/2 200, HTML SSR prerendered (29.2 KB), Cloudflare CDN OK</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-medium text-white">BFF Proxy & Health</td>
+              <td class="p-3 font-mono text-xs text-blue-400">GET /api/health</td>
+              <td class="p-3 text-xs">HTTP 200, Status: healthy, DB: ok, Provider: deepseek, version: 2.2.0</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-medium text-white">Edge TTS Synthesis</td>
+              <td class="p-3 font-mono text-xs text-blue-400">GET /api/tts?voice=en-US-JennyNeural</td>
+              <td class="p-3 text-xs">HTTP 200, Content-Type: audio/mpeg (19.2 KB), Cache HIT xác nhận</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-medium text-white">Vocab Database</td>
+              <td class="p-3 font-mono text-xs text-blue-400">GET /api/flashcards?limit=2</td>
+              <td class="p-3 text-xs">HTTP 200, 684 từ vựng hoạt động, IT Pack + ETS 600 sẵn sàng</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-medium text-white">Voice Coach 1-on-1</td>
+              <td class="p-3 font-mono text-xs text-blue-400">POST /api/ai/voice-coach/start</td>
+              <td class="p-3 text-xs">HTTP 200, trả về scenario "Phản xạ Công sở", opening statement + link audio</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="p-3 font-medium text-white">Chấm Điểm Phát Âm</td>
+              <td class="p-3 font-mono text-xs text-blue-400">POST /api/ai/pronounce-vocab</td>
+              <td class="p-3 text-xs">HTTP 200, phân tích audio base64, trả về điểm số, IPA, feedback nguyên âm/phụ âm</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">PASS</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Operational Commands Guide -->
+    <section class="p-6 rounded-2xl bg-slate-900/40 border border-slate-800 space-y-3">
+      <h2 class="text-base font-bold text-white flex items-center gap-2">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        Lệnh Vận Hành Nhanh Trên VPS (Cheatsheet)
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
+        <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
+          <div class="text-slate-400 font-sans font-semibold">Xem trạng thái container:</div>
+          <div class="text-emerald-400">sudo -n docker ps --filter name=toeic-lab</div>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
+          <div class="text-slate-400 font-sans font-semibold">Xem log realtime của Next.js:</div>
+          <div class="text-emerald-400">sudo -n docker logs -f --tail 50 toeic-lab-web</div>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
+          <div class="text-slate-400 font-sans font-semibold">Xem log realtime của FastAPI:</div>
+          <div class="text-emerald-400">sudo -n docker logs -f --tail 50 toeic-lab-app</div>
+        </div>
+        <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 space-y-1">
+          <div class="text-slate-400 font-sans font-semibold">Sao lưu thủ công SQLite Database:</div>
+          <div class="text-emerald-400">cp server/data/toeic_lab.db server/data/backup_$(date +%s).db</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="pt-4 border-t border-slate-800 text-center text-xs text-slate-500">
+      Báo cáo triển khai tự động sinh bởi Antigravity CLI • TOEIC Self-Study Platform v2.2.0 • 2026-10-02
+    </footer>
+  </div>
+</body>
+</html>
