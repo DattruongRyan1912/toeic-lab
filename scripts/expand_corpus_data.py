@@ -9,14 +9,16 @@ Corpus Expansion Script for TOEIC Lab:
 
 import sys
 from pathlib import Path
-from datetime import datetime
+
+from sqlalchemy import func
 
 # Set up environment path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
-from server.database import SessionLocal
+from server.database import SessionLocal, init_db
 from server.models import Flashcard, UserCardSRS, TestQuestion, MockTest
+from server.utils.timeutil import utcnow
 
 # -------------------------------------------------------------
 # 1. 30 Part 5 Benchmark Questions (ETS 2024 Test 01: Q101 -> Q130)
@@ -972,6 +974,7 @@ ADDITIONAL_FLASHCARDS = [
 
 def main():
     print("=== TOEIC LAB: EXPANDING CORPUS DATA ===")
+    init_db()
     db = SessionLocal()
 
     try:
@@ -1034,10 +1037,10 @@ def main():
         print("\n--- 2. Ingesting 40 Additional Flashcards (Cards #21 -> #60) ---")
         fc_count = 0
         for item in ADDITIONAL_FLASHCARDS:
-            existing_fc = db.query(Flashcard).filter_by(id=item["id"]).first()
+            # Match by word, never by id: an id may already belong to a card the learner added.
+            existing_fc = db.query(Flashcard).filter(func.lower(Flashcard.word) == item["word"].lower()).first()
             if existing_fc:
                 existing_fc.category = item["category"]
-                existing_fc.word = item["word"]
                 existing_fc.ipa = item["ipa"]
                 existing_fc.word_type = item["word_type"]
                 existing_fc.meaning = item["meaning"]
@@ -1046,9 +1049,9 @@ def main():
                 existing_fc.example_sentence = item["example_sentence"]
                 existing_fc.audio_word_url = item["audio_word_url"]
                 existing_fc.audio_sentence_url = item["audio_sentence_url"]
+                card = existing_fc
             else:
-                new_fc = Flashcard(
-                    id=item["id"],
+                card = Flashcard(
                     category=item["category"],
                     word=item["word"],
                     ipa=item["ipa"],
@@ -1060,19 +1063,22 @@ def main():
                     audio_word_url=item["audio_word_url"],
                     audio_sentence_url=item["audio_sentence_url"]
                 )
-                db.add(new_fc)
+                if db.get(Flashcard, item["id"]) is None:
+                    card.id = item["id"]  # keep the canonical id when it is free
+                db.add(card)
+                db.flush()
 
             # Ensure UserCardSRS record exists
-            srs = db.query(UserCardSRS).filter_by(card_id=item["id"], user_id=1).first()
+            srs = db.query(UserCardSRS).filter_by(card_id=card.id, user_id=1).first()
             if not srs:
                 srs = UserCardSRS(
                     user_id=1,
-                    card_id=item["id"],
+                    card_id=card.id,
                     ease_factor=2.5,
                     interval_days=1,
                     repetition_count=0,
                     state="new",
-                    next_review_at=datetime.utcnow()
+                    next_review_at=utcnow()
                 )
                 db.add(srs)
             fc_count += 1

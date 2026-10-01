@@ -1,5 +1,8 @@
-version: '3.8'
-
+# TOEIC Lab: FastAPI (API, legacy UI, TTS) + Next.js web app.
+#   cp -n .env.example .env      # optional: AI keys, Telegram, CORS...
+#   docker compose up -d --build
+# Web: http://localhost:3005  •  API docs: http://localhost:8000/docs  •  Legacy UI: http://localhost:8000/legacy/
+# No authentication yet: keep these ports private (API_BIND/WEB_BIND=127.0.0.1 behind a reverse proxy with auth).
 services:
   toeic-lab-app:
     build:
@@ -8,14 +11,25 @@ services:
     container_name: toeic-lab-app
     restart: unless-stopped
     ports:
-      - "${HOST_PORT:-8000}:8000"
+      - "${API_BIND:-0.0.0.0}:${HOST_PORT:-8000}:8000"
     environment:
-      - PORT=8000
-      - DATABASE_URL=sqlite:////app/server/data/toeic_lab.db
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      PORT: "8000"
+      DATABASE_URL: sqlite:////app/server/data/toeic_lab.db
+      AI_PROVIDER: ${AI_PROVIDER:-auto}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-flash}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Ho_Chi_Minh}
+      SRS_NEW_CARDS_PER_DAY: ${SRS_NEW_CARDS_PER_DAY:-15}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3005,http://localhost:8000}
+      WEB_APP_URL: ${WEB_APP_URL:-http://localhost:3005}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     volumes:
-      - ./server:/app/server
+      - ./server:/app/server # live backend code: restart the container after pulling
       - ./server/data:/app/server/data
       - ./server/cache:/app/server/cache
       - ./docs:/app/docs
@@ -24,3 +38,17 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
+
+  toeic-lab-web:
+    build:
+      context: ./apps/web
+    container_name: toeic-lab-web
+    restart: unless-stopped
+    environment:
+      BACKEND_URL: http://toeic-lab-app:8000
+    ports:
+      - "${WEB_BIND:-0.0.0.0}:${WEB_PORT:-3005}:3000"
+    depends_on:
+      toeic-lab-app:
+        condition: service_healthy

@@ -426,23 +426,38 @@ VOCAB_DATA = [
     )
 ]
 
-def main():
+def main(argv=None):
+    import argparse
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parent.parent
+    parser = argparse.ArgumentParser(description="Tạo bộ thẻ Anki (.apkg) từ Sổ tay từ vựng của app")
+    parser.add_argument("--out", type=Path, default=root / "decks" / "TOEIC_Sprint1_Core_Vocab.apkg", help="Đường dẫn file .apkg")
+    parser.add_argument("--static", action="store_true", help="Dùng 20 từ mẫu cố định thay vì database")
+    args = parser.parse_args(argv)
+
+    if args.static:
+        rows = VOCAB_DATA
+    else:
+        sys.path.insert(0, str(root))
+        from scripts.vocab_rows import rows_from_db
+
+        rows = rows_from_db()
+    if not rows:
+        print("❌ Database chưa có flashcard nào — chạy `make seed` trước.")
+        return 1
+
     deck = genanki.Deck(
         DECK_ID,
         'TOEIC 750+ :: Sprint 1 Core Business Vocab'
     )
+    for item in rows:
+        deck.add_note(genanki.Note(model=toeic_model, fields=list(item)))
 
-    for item in VOCAB_DATA:
-        note = genanki.Note(
-            model=toeic_model,
-            fields=list(item)
-        )
-        deck.add_note(note)
-
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    out_file = os.path.join(base_dir, "decks", "TOEIC_Sprint1_Core_Vocab.apkg")
-    genanki.Package(deck).write_to_file(out_file)
-    print(f"🎉 Đã xuất thành công bộ thẻ Anki: {out_file} ({len(VOCAB_DATA)} thẻ chuẩn ETS)")
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    genanki.Package(deck).write_to_file(str(args.out))
+    print(f"🎉 Đã xuất thành công bộ thẻ Anki: {args.out} ({len(rows)} thẻ)")
+    return 0
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

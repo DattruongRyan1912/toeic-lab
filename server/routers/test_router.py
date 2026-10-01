@@ -1,83 +1,140 @@
+from collections import Counter
 from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+
 from server.database import get_db
-from server.models import MockTest, TestQuestion
+from server.deps import current_user_id
+from server.models import MockTest, TestQuestion, UserTestSubmission
+from server.schemas import (
+    MockTestRead,
+    QuestionRead,
+    QuizSubmitRequest,
+    QuizSubmitResult,
+    ScoreCalcRequest,
+    ScoreCalcResponse,
+    SubmissionRead,
+)
+from server.services import curriculum, error_log_service, insights, practice_service, scoring
 
 router = APIRouter(prefix="/api/tests", tags=["Benchmark Tests"])
 
-class ScoreCalcRequest(BaseModel):
-    raw_listening: int
-    raw_reading: int
 
-class ScoreCalcResponse(BaseModel):
-    raw_listening: int
-    raw_reading: int
-    scaled_listening: int
-    scaled_reading: int
-    total_score: int
-    cefr_level: str
-    target_gap: int
+def serialize_question(question: TestQuestion) -> dict:
+    return {
+        "id": question.id,
+        "test_id": question.test_id,
+        "part": question.part,
+        "question_no": question.question_no,
+        "sentence": question.sentence,
+        "choice_a": question.choice_a,
+        "choice_b": question.choice_b,
+        "choice_c": question.choice_c,
+        "choice_d": question.choice_d,
+        "correct_choice": question.correct_choice,
+        "explanation": question.explanation,
+        "distractor_analysis": question.distractor_analysis,
+        "paraphrase_pair": question.paraphrase_pair,
+        "source": question.source or "seed",
+        **curriculum.classify_question(question),
+    }
 
-# ETS Standard Score Conversion Curve Table
-def convert_toeic_score(l_raw: int, r_raw: int, target: int = 800) -> ScoreCalcResponse:
-    # Listening curve approximation
-    if l_raw >= 96: l_scale = 495
-    elif l_raw >= 90: l_scale = 460 + (l_raw - 90) * 5
-    elif l_raw >= 80: l_scale = 395 + (l_raw - 80) * 6
-    elif l_raw >= 70: l_scale = 330 + (l_raw - 70) * 6
-    elif l_raw >= 60: l_scale = 270 + (l_raw - 60) * 6
-    elif l_raw >= 50: l_scale = 220 + (l_raw - 50) * 5
-    else: l_scale = max(5, l_raw * 4)
-
-    # Reading curve approximation
-    if r_raw >= 97: r_scale = 495
-    elif r_raw >= 90: r_scale = 450 + (r_raw - 90) * 6
-    elif r_raw >= 80: r_scale = 385 + (r_raw - 80) * 6
-    elif r_raw >= 70: r_scale = 325 + (r_raw - 70) * 6
-    elif r_raw >= 60: r_scale = 260 + (r_raw - 60) * 6
-    elif r_raw >= 50: r_scale = 205 + (r_raw - 50) * 5
-    else: r_scale = max(5, r_raw * 4)
-
-    total = min(990, l_scale + r_scale)
-
-    # CEFR Level
-    if total >= 945: cefr = "C1 - Advanced"
-    elif total >= 785: cefr = "B2 - Working Proficiency (Target 800+)"
-    elif total >= 550: cefr = "B1 - Limited Working"
-    elif total >= 225: cefr = "A2 - Elementary"
-    else: cefr = "A1 - Beginner"
-
-    gap = max(0, target - total)
-    return ScoreCalcResponse(
-        raw_listening=l_raw,
-        raw_reading=r_raw,
-        scaled_listening=l_scale,
-        scaled_reading=r_scale,
-        total_score=total,
-        cefr_level=cefr,
-        target_gap=gap
-    )
 
 @router.post("/calculate-score", response_model=ScoreCalcResponse)
-def calculate_score(payload: ScoreCalcRequest, target: int = 800):
-    return convert_toeic_score(payload.raw_listening, payload.raw_reading, target)
+def calculate_score(
+    payload: ScoreCalcRequest,
+    target: Optional[int] = Query(None, ge=10, le=990, description="Mặc định lấy mục tiêu trong hồ sơ học viên"),
+    user_id: int = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    if target is None:
+        target = insights.get_or_create_user(db, user_id).target_score or 800
+    return scoring.convert(payload.raw_listening, payload.raw_reading, target).as_dict()
 
-@router.get("")
+
+@router.get("", response_model=List[MockTestRead])
 def list_mock_tests(db: Session = Depends(get_db)):
-    return db.query(MockTest).all()
+    result = []
+    for test in db.query(MockTest).order_by(MockTest.year.desc(), MockTest.test_id.asc()).all():
+        parts = Counter(part for (part,) in db.query(TestQuestion.part).filter_by(test_id=test.test_id))
+        result.append(
+            {
+                "id": test.id,
+                "test_id": test.test_id,
+                "name": test.name,
+                "year": test.year,
+                "publisher": test.publisher,
+                "total_questions": test.total_questions,
+                "available_questions": sum(parts.values()),
+                "parts": dict(sorted(parts.items())),
+            }
+        )
+    return result
 
-@router.get("/{test_id}/questions")
+
+@router.get("/submissions", response_model=List[SubmissionRead])
+def list_submissions(
+    limit: int = Query(20, ge=1, le=200),
+    user_id: int = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(UserTestSubmission)
+        .filter_by(user_id=user_id)
+        .order_by(UserTestSubmission.submitted_at.desc(), UserTestSubmission.id.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+@router.get("/{test_id}/questions", response_model=List[QuestionRead])
 def get_test_questions(
     test_id: str,
     part: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    lesson: Optional[int] = Query(None, ge=1, le=12, description="Chỉ lấy câu thuộc chuyên đề cú pháp này"),
+    db: Session = Depends(get_db),
 ):
-    q = db.query(TestQuestion).filter_by(test_id=test_id)
+    query = db.query(TestQuestion).filter_by(test_id=test_id)
     if part:
-        q = q.filter_by(part=part)
-    questions = q.order_by(TestQuestion.question_no.asc()).all()
+        query = query.filter_by(part=curriculum.normalize_part(part) or part)
+    questions = [serialize_question(q) for q in query.order_by(TestQuestion.question_no.asc()).all()]
+    if lesson is not None:
+        questions = [q for q in questions if q["lesson_number"] == lesson]
     if not questions:
         raise HTTPException(status_code=404, detail="No questions found for this test")
     return questions
+
+
+@router.get("/{test_id}/questions/{question_no}", response_model=QuestionRead)
+def get_test_question(test_id: str, question_no: int, db: Session = Depends(get_db)):
+    question = error_log_service.find_question(db, test_id, question_no)
+    if question is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy câu hỏi")
+    return serialize_question(question)
+
+
+@router.post("/{test_id}/submit", response_model=QuizSubmitResult)
+def submit_quiz(
+    test_id: str,
+    payload: QuizSubmitRequest,
+    user_id: int = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Grade a set from one test. Same pipeline as /api/practice/submit (attempts, error log, reviews, study time)."""
+    answers = {str(key): value for key, value in payload.answers.items()}
+    ids = list(dict.fromkeys(list(payload.question_ids) + [int(key) for key in answers if key.isdigit()]))
+    if not ids:
+        raise HTTPException(status_code=422, detail="Bài nộp không có câu hỏi nào")
+    items = [
+        practice_service.Answer(qid, answers.get(str(qid)), payload.answer_times.get(str(qid)))
+        for qid in ids
+    ]
+    try:
+        return practice_service.submit(
+            db, user_id, items, mode=payload.mode, part=payload.part, lesson_number=payload.lesson_number,
+            time_spent_seconds=payload.time_spent_seconds, log_errors=payload.log_errors, test_id=test_id,
+        )
+    except practice_service.PracticeError as exc:
+        db.rollback()
+        raise HTTPException(status_code=422, detail=str(exc))

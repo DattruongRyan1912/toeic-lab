@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "TOEIC Self-Study Platform Architecture",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "full-flow",
+        "label": "Toàn bộ luồng hệ thống",
+        "focus": ["client", "edge", "fe_spa", "api", "sqlite", "ai_llm"],
+        "note": "Tổng thể luồng dữ liệu từ Client qua Nginx tới Backend FastAPI, SQLite và AI services."
+      },
+      {
+        "id": "core-backend",
+        "label": "Tầng Backend & Lưu trữ",
+        "focus": ["api", "sqlite", "ai_llm", "tts_engine"],
+        "note": "FastAPI ASGI xử lý thuật toán SuperMemo SM-2, AI RCA và quản lý SQLite DB."
+      },
+      {
+        "id": "ai-tts",
+        "label": "Tầng AI & Âm thanh",
+        "focus": ["api", "ai_llm", "gemini_ocr", "tts_engine"],
+        "note": "Tích hợp DeepSeek, Gemini Vision và Edge-TTS sinh file âm thanh."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "client",
+      "type": "external",
+      "label": "Web Client",
+      "sublabel": "Desktop / Mobile Browser",
+      "pos": [40, 260],
+      "size": [130, 60]
+    },
+    {
+      "id": "edge",
+      "type": "cloud",
+      "label": "Reverse Proxy",
+      "sublabel": "Nginx / Cloudflare HTTPS",
+      "pos": [230, 260],
+      "size": [140, 60]
+    },
+    {
+      "id": "fe_spa",
+      "type": "frontend",
+      "label": "Pre-rendered SPA",
+      "sublabel": "Vanilla JS / CSS + SSR HTML",
+      "pos": [450, 90],
+      "size": [160, 64],
+      "tag": "FCP ~0ms"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "FastAPI Core",
+      "sublabel": "Python Async ASGI :8000",
+      "pos": [450, 260],
+      "size": [160, 60]
+    },
+    {
+      "id": "tts_engine",
+      "type": "backend",
+      "label": "Audio TTS Service",
+      "sublabel": "Web Speech + Edge-TTS Cache",
+      "pos": [450, 430],
+      "size": [160, 60]
+    },
+    {
+      "id": "ai_llm",
+      "type": "external",
+      "label": "DeepSeek API",
+      "sublabel": "Chat / Vocab Auto-Fill",
+      "pos": [740, 90],
+      "size": [150, 64],
+      "tag": "RCA Analysis"
+    },
+    {
+      "id": "sqlite",
+      "type": "database",
+      "label": "SQLite Database",
+      "sublabel": "toeic_lab.db (WAL Mode)",
+      "pos": [740, 260],
+      "size": [150, 60],
+      "tag": "SQLAlchemy"
+    },
+    {
+      "id": "gemini_ocr",
+      "type": "external",
+      "label": "Gemini 2.5 Flash",
+      "sublabel": "Vision OCR Mock Tests",
+      "pos": [740, 430],
+      "size": [150, 60],
+      "tag": "Image OCR"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "VPS Host: Ubuntu 22.04 LTS (Production Docker)",
+      "wraps": ["edge", "fe_spa", "api", "sqlite", "tts_engine"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Application Container Network",
+      "wraps": ["fe_spa", "api", "sqlite", "tts_engine"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "client-to-edge",
+      "from": "client",
+      "to": "edge",
+      "label": "HTTPS :443",
+      "variant": "emphasis"
+    },
+    {
+      "id": "edge-to-fe",
+      "from": "edge",
+      "to": "fe_spa",
+      "label": "static docs/",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "edge-to-api",
+      "from": "edge",
+      "to": "api",
+      "label": "proxy /api/*",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "fe-to-api",
+      "from": "fe_spa",
+      "to": "api",
+      "label": "fetch REST",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 30
+    },
+    {
+      "id": "api-to-ai",
+      "from": "api",
+      "to": "ai_llm",
+      "label": "prompt/explain",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "api-to-sqlite",
+      "from": "api",
+      "to": "sqlite",
+      "label": "SQL queries",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "api-to-tts",
+      "from": "api",
+      "to": "tts_engine",
+      "label": "gen audio",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 40
+    },
+    {
+      "id": "api-to-gemini",
+      "from": "api",
+      "to": "gemini_ocr",
+      "label": "vision extract",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Tầng Client & Edge",
+      "items": [
+        "Nginx reverse proxy quản lý SSL/TLS và serve static docs/",
+        "Pre-rendered Single Page HTML nạp 100% dữ liệu ngay từ First Paint"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Tầng Backend & Data",
+      "items": [
+        "FastAPI Async xử lý CRUD flashcards và thuật toán SRS SM-2",
+        "SQLite WAL mode tối ưu tốc độ đọc, zero resource footprint (<30MB RAM)"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Tầng AI & Multi-Model",
+      "items": [
+        "DeepSeek phân tích lỗi sai 3 chiều và tự động điền từ vựng",
+        "Gemini Vision trích xuất đề thi từ ảnh + Fallback Offline chống sập"
+      ]
+    }
+  ]
+}

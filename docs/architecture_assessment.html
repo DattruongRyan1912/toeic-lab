@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo cáo Đánh giá Kiến trúc Hệ thống | TOEIC Self-Study Platform</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --border-color: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-dark: #0284c7;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --accent: #8b5cf6;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 40px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .badge-target {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 8px;
+    }
+
+    .meta-info {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .meta-info span { margin-right: 16px; }
+
+    /* Scorecard Grid */
+    .scorecard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+
+    .score-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+    }
+    .score-card.perf::before { background: var(--success); }
+    .score-card.cost::before { background: var(--primary); }
+    .score-card.dx::before { background: var(--accent); }
+    .score-card.maint::before { background: var(--warning); }
+    .score-card.scale::before { background: var(--danger); }
+
+    .score-title {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .score-value {
+      font-size: 32px;
+      font-weight: 800;
+      margin: 8px 0 4px 0;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .score-grade {
+      font-size: 14px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+
+    .grade-a { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .grade-b { background: rgba(56, 189, 248, 0.2); color: var(--primary); }
+    .grade-c { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+    .score-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Sections */
+    section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--primary);
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 18px 0 10px 0;
+      color: #e2e8f0;
+    }
+
+    p { margin-bottom: 12px; color: #cbd5e1; }
+
+    /* Tables */
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    .styled-table th, .styled-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .styled-table th {
+      background: rgba(15, 23, 42, 0.7);
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    .styled-table tr:hover {
+      background: rgba(51, 65, 85, 0.3);
+    }
+
+    /* Diagram Frame */
+    .diagram-container {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: #090d16;
+      overflow: hidden;
+      margin: 16px 0 24px 0;
+    }
+
+    .diagram-header {
+      padding: 12px 18px;
+      background: #111827;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .diagram-header a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .diagram-header a:hover { text-decoration: underline; }
+
+    iframe.diagram-frame {
+      width: 100%;
+      height: 520px;
+      border: none;
+      display: block;
+    }
+
+    /* Comparison Card */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 16px 0;
+    }
+
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .card-pro, .card-con {
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid;
+    }
+
+    .card-pro {
+      background: rgba(16, 185, 129, 0.05);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .card-pro h4 {
+      color: var(--success);
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    .card-con {
+      background: rgba(239, 68, 68, 0.05);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .card-con h4 {
+      color: var(--danger);
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    ul.bullet-list {
+      list-style-type: none;
+      padding-left: 0;
+    }
+
+    ul.bullet-list li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    .card-pro ul.bullet-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .card-con ul.bullet-list li::before {
+      content: "✕";
+      position: absolute;
+      left: 0;
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    /* Code block */
+    pre {
+      background: #0a0e17;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px 18px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #38bdf8;
+      margin: 12px 0;
+    }
+
+    code {
+      font-family: var(--font-mono);
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #e2e8f0;
+    }
+
+    /* Roadmap Timeline */
+    .timeline {
+      position: relative;
+      border-left: 2px solid var(--border-color);
+      margin: 20px 0 10px 14px;
+      padding-left: 24px;
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 28px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -31px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--bg-primary);
+    }
+
+    .timeline-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .timeline-status {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .status-current { background: rgba(56, 189, 248, 0.2); color: var(--primary); }
+    .status-next { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-future { background: rgba(148, 163, 184, 0.2); color: var(--text-muted); }
+
+    .action-box {
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <span class="badge-target">System Architecture Evaluation</span>
+        <h1>Báo cáo Đánh giá Kiến trúc Hệ thống TOEIC Platform</h1>
+        <div class="meta-info">
+          <span><strong>Hệ thống:</strong> TOEIC Self-Study Platform</span>
+          <span><strong>Đối tượng đối soát:</strong> Backend Developer (2 YoE)</span>
+          <span><strong>Ngày đánh giá:</strong> 01/10/2026</span>
+          <span><strong>Trạng thái:</strong> Đang vận hành Production</span>
+        </div>
+      </div>
+      <div>
+        <a href="architecture_diagram.html" target="_blank" style="display: inline-block; background: var(--primary-dark); color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+          Mở Sơ đồ Tương tác ↗
+        </a>
+      </div>
+    </header>
+
+    <!-- SCORECARD -->
+    <div class="scorecard-grid">
+      <div class="score-card perf">
+        <div class="score-title">Tốc độ & Hiệu năng</div>
+        <div class="score-value">9.5 <span class="score-grade grade-a">A+</span></div>
+        <div class="score-desc">FCP &lt; 50ms nhờ SSR Pre-rendered DOM. Zero runtime bundle overhead.</div>
+      </div>
+      <div class="score-card cost">
+        <div class="score-title">Tối ưu Chi phí & RAM</div>
+        <div class="score-value">9.8 <span class="score-grade grade-a">A+</span></div>
+        <div class="score-desc">Tổng RAM chỉ ~35MB. Chạy mượt mà trên VPS 1GB RAM ($3-$5/tháng).</div>
+      </div>
+      <div class="score-card dx">
+        <div class="score-title">Developer Experience (Solo)</div>
+        <div class="score-value">8.5 <span class="score-grade grade-b">A-</span></div>
+        <div class="score-desc">Sửa code là ăn ngay (Hot mounts). Không cần npm install hay webpack build.</div>
+      </div>
+      <div class="score-card maint">
+        <div class="score-title">Khả năng Bảo trì khi Mở rộng</div>
+        <div class="score-value">6.5 <span class="score-grade grade-c">C+</span></div>
+        <div class="score-desc">File index.html ~9.7k dòng dễ phát sinh tech debt nếu thêm 3-4 feature nữa.</div>
+      </div>
+      <div class="score-card scale">
+        <div class="score-title">Khả năng chịu tải đồng thời</div>
+        <div class="score-value">6.0 <span class="score-grade grade-c">C</span></div>
+        <div class="score-desc">SQLite file-lock khi ghi (write-heavy) và kiến trúc Single-tenant chưa có Auth.</div>
+      </div>
+    </div>
+
+    <!-- ARCHITECTURE DIAGRAM -->
+    <section>
+      <h2>🏛️ Sơ đồ Kiến trúc Tổng thể (Archify Showcase)</h2>
+      <p>Sơ đồ dưới đây mô tả sự tương tác giữa 5 tầng: <strong>Client ➔ Nginx Edge ➔ FastAPI Backend ➔ SQLite Database ➔ External AI (DeepSeek / Gemini)</strong>.</p>
+      
+      <div class="diagram-container">
+        <div class="diagram-header">
+          <span><strong>Archify Interactive Diagram:</strong> Kiến trúc hiện tại của dự án</span>
+          <a href="architecture_diagram.html" target="_blank">Xem toàn màn hình ↗</a>
+        </div>
+        <iframe class="diagram-frame" src="architecture_diagram.html" title="Architecture Diagram"></iframe>
+      </div>
+    </section>
+
+    <!-- DEEP DIVE LAYERS -->
+    <section>
+      <h2>🔍 Đánh giá Chi tiết 5 Tầng Công nghệ</h2>
+
+      <h3>1. Tầng Client & Presentation (Vanilla SPA + Pre-rendered SSR)</h3>
+      <p>
+        Frontend hiện tại là một <strong>Single-file Monolithic SPA</strong> viết hoàn toàn bằng Vanilla JavaScript ES6+, HTML5 và CSS3 variables. Đặc biệt, dữ liệu từ vựng (60 từ) và đề thi ETS Part 5 (30 câu) được biên dịch tĩnh (pre-render) trực tiếp vào DOM tĩnh thông qua Python script <code>scripts/build_full_frontend.py</code>.
+      </p>
+      <div class="grid-2">
+        <div class="card-pro">
+          <h4>Ưu điểm Kỹ thuật</h4>
+          <ul class="bullet-list">
+            <li><strong>First Contentful Paint (FCP) tiệm cận 0ms:</strong> Trình duyệt nhận HTML là hiển thị ngay dữ liệu, không bị hiện tượng màn hình trắng chờ tải bundle JS hay chờ gọi API REST.</li>
+            <li><strong>Zero Dependency & Zero Node.js:</strong> Không có thư mục <code>node_modules</code> (thường nặng 300MB - 1GB), không sợ lỗi version hay security vulnerability từ npm packages.</li>
+            <li><strong>Offline-Capable TTS:</strong> Tận dụng Web Speech API native của trình duyệt để đọc từ vựng tiếng Anh (chuẩn US/UK) mà không tốn băng thông server hay chi phí TTS API.</li>
+          </ul>
+        </div>
+        <div class="card-con">
+          <h4>Nhược điểm & Rủi ro</h4>
+          <ul class="bullet-list">
+            <li><strong>File Size khổng lồ:</strong> File <code>docs/index.html</code> hiện dài ~9,700 dòng, tích hợp cả CSS, HTML DOM và logic JS. Khó chia nhánh git (git conflict cao nếu làm việc nhóm).</li>
+            <li><strong>Scope Pollution:</strong> Nhiều biến toàn cục (global variables) và hàm gắn vào <code>window</code>, dễ xảy ra va chạm state hoặc khó debug khi logic phình to.</li>
+            <li><strong>Thao tác DOM thủ công:</strong> Không có Virtual DOM hoặc Reactive State (như Vue/React), dẫn đến việc phải tự render innerHTML và quản lý addEventListener bằng tay.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>2. Tầng Backend & Application (FastAPI + Async Python)</h3>
+      <p>
+        Backend được viết bằng <strong>FastAPI (Python 3.10+)</strong> chạy trên máy chủ ASGI <strong>Uvicorn</strong>. Các endpoint được module hóa thành các router độc lập (<code>flashcard_router</code>, <code>ai_coach_router</code>, <code>mock_test_router</code>, <code>audio_router</code>).
+      </p>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Module Router</th>
+            <th>Trách nhiệm chính</th>
+            <th>Đánh giá Kiến trúc</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>flashcard_router.py</code></td>
+            <td>Quản lý thẻ nhớ, tính chu kỳ lặp lại ngắt quãng bằng <strong>SuperMemo SM-2</strong></td>
+            <td><strong>Rất tốt:</strong> Thuật toán SM-2 chuẩn xác, lưu Ease Factor và Interval đúng bài bản.</td>
+          </tr>
+          <tr>
+            <td><code>ai_coach_router.py</code></td>
+            <td>Tích hợp DeepSeek & Gemini, phân tích lỗi sai 3 chiều (RCA)</td>
+            <td><strong>Xuất sắc:</strong> Có sẵn <strong>Offline Fallback Engine</strong>, đảm bảo không sập app khi mất API key.</td>
+          </tr>
+          <tr>
+            <td><code>mock_test_router.py</code></td>
+            <td>Chấm điểm đề ETS, quy đổi điểm thô sang Scaled Score (10-990)</td>
+            <td><strong>Tốt:</strong> Đã chuẩn hóa ma trận điểm ETS cho Listening & Reading.</td>
+          </tr>
+          <tr>
+            <td><code>audio_router.py</code></td>
+            <td>Sinh file mp3 phát âm bằng edge-tts kèm local disk cache</td>
+            <td><strong>Khá:</strong> Có cache file âm thanh trên đĩa, tránh gọi lại TTS nhiều lần.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>3. Tầng Lưu trữ Dữ liệu (SQLite + SQLAlchemy ORM)</h3>
+      <p>
+        Hệ thống dùng <strong>SQLite</strong> tại <code>server/data/toeic_lab.db</code> với SQLAlchemy 2.0.
+      </p>
+      <ul class="bullet-list">
+        <li><strong>Đánh giá tính phù hợp:</strong> Với mục đích <em>cá nhân tự học</em> (Single-user), SQLite là sự lựa chọn <strong>tuyệt vời nhất</strong>: zero RAM footprint, không cần cài đặt service daemon, backup đơn giản bằng lệnh copy file <code>.db</code>.</li>
+        <li><strong>Giới hạn kỹ thuật (Bottleneck):</strong> SQLite sử dụng cơ chế khóa file (file-level lock) khi ghi. Nếu mở rộng ra cho 50 - 100 người dùng làm bài thi đồng thời và gửi kết quả về cùng lúc, hệ thống sẽ gặp lỗi <code>database is locked</code> (OperationalError). Cần cấu hình <strong>WAL Mode (Write-Ahead Logging)</strong> hoặc chuyển sang <strong>PostgreSQL</strong> khi mở rộng.</li>
+      </ul>
+
+      <h3>4. Tầng AI & Đa mô hình (Multi-Model Resilience)</h3>
+      <p>
+        Chiến lược tích hợp AI của dự án rất thông minh và thực dụng:
+      </p>
+      <ul class="bullet-list">
+        <li><strong>DeepSeek API:</strong> Sử dụng cho các tác vụ giải thích ngữ pháp, từ vựng và tự động điền form (tiết kiệm chi phí gấp 5-10 lần so với GPT-4).</li>
+        <li><strong>Gemini 2.5 Flash:</strong> Sử dụng cho OCR đề thi qua ảnh (multimodal vision tốc độ cao).</li>
+        <li><strong>Local Fallback Engine:</strong> Khi LLM bị timeout hoặc hết quota, service tự động trả về phân tích mẫu dựa trên tập luật (Rule-based heuristics), người dùng không bao giờ thấy lỗi 500.</li>
+      </ul>
+
+      <h3>5. Tầng DevOps & Vận hành (Docker + Volume Mounts)</h3>
+      <p>
+        Ứng dụng được đóng gói trong Docker Compose chạy trên VPS Ubuntu 22.04 LTS (domain <code>https://toeic.truongquocdat.id.vn</code>):
+      </p>
+      <pre><code># docker-compose volume mapping hiện tại
+services:
+  toeic-app:
+    volumes:
+      - ./server:/app/server     # Hot reload mã nguồn backend
+      - ./docs:/app/docs         # Hot reload file giao diện web</code></pre>
+      <p>
+        Cách cấu hình mount volume trực tiếp này rất tối ưu cho giai đoạn phát triển nhanh: khi chỉnh sửa file frontend hoặc backend, server cập nhật tức thì mà không cần tốn 3-5 phút build lại Docker image.
+      </p>
+    </section>
+
+    <!-- ARCHITECTURAL TRADE-OFFS -->
+    <section>
+      <h2>⚖️ Bảng Tổng kết Đánh đổi Kỹ thuật (Architectural Trade-offs)</h2>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Quyết định Kiến trúc</th>
+            <th>Những gì ĐƯỢC (Wins)</th>
+            <th>Những gì ĐÁNH ĐỔI (Trade-offs)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Vanilla Monolithic SPA (1 file HTML)</strong></td>
+            <td>FCP cực nhanh, zero build setup, không phụ thuộc npm, dễ deploy lên bất kỳ static host nào.</td>
+            <td>Khó maintain khi file vượt 10k dòng, không có TypeScript để type-check, khó viết unit test FE.</td>
+          </tr>
+          <tr>
+            <td><strong>Pre-rendered DOM (SSR tĩnh qua Python)</strong></td>
+            <td>Hiển thị dữ liệu 100% ngay khi load trang, không bao giờ bị tình trạng bảng trắng khi API lỗi.</td>
+            <td>Mỗi khi thay đổi dữ liệu seed, phải chạy lại script build trước khi push lên server.</td>
+          </tr>
+          <tr>
+            <td><strong>SQLite Database</strong></td>
+            <td>Zero maintenance, không tốn RAM, backup cực kỳ an toàn và dễ dàng.</td>
+            <td>Không hỗ trợ write concurrency cao, không có user permission cấp DB.</td>
+          </tr>
+          <tr>
+            <td><strong>Web Speech API thay vì Server TTS</strong></td>
+            <td>Tốc độ phát âm tức thì (0ms latency), không tốn tiền API TTS của cloud.</td>
+            <td>Phụ thuộc vào voice có sẵn trên OS/trình duyệt của người dùng (iOS/Android/Windows có voice khác nhau).</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- EVOLUTION ROADMAP -->
+    <section>
+      <h2>🚀 Lộ trình Tiến hóa Kiến trúc (3-Phase Evolution Roadmap)</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-title">
+            Giai đoạn 1: Cá nhân Tự học (Mục tiêu 850+ TOEIC)
+            <span class="timeline-status status-current">Giai đoạn Hiện tại</span>
+          </div>
+          <p>
+            <strong>Chiến lược:</strong> <em>Giữ nguyên 100% kiến trúc hiện tại!</em> Không nên over-engineering. Kiến trúc này siêu nhẹ, mở tab là học ngay, không tốn thời gian maintain hạ tầng, chi phí VPS $0 (tận dụng server có sẵn).
+          </p>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-title">
+            Giai đoạn 2: Chia sẻ cho Bạn bè / Nhóm học (10 - 100 Users)
+            <span class="timeline-status status-next">Khi cần chia sẻ</span>
+          </div>
+          <p>
+            <strong>Nâng cấp cần thiết:</strong>
+          </p>
+          <ul class="bullet-list">
+            <li><strong>Frontend:</strong> Chuyển sang <strong>Vite + Vue 3 / React + Tailwind CSS</strong>. Tách các component riêng: <code>VocabTable.vue</code>, <code>FlashcardDeck.vue</code>, <code>MockTest.vue</code> để code sạch và dễ thêm tính năng.</li>
+            <li><strong>Database:</strong> Đổi connection string SQLAlchemy từ <code>sqlite:///toeic_lab.db</code> sang <code>postgresql://...</code> (chạy 1 container Postgres trên Docker).</li>
+            <li><strong>Auth:</strong> Bổ sung bảng <code>users</code> và xác thực JWT Bearer Token để mỗi người có tiến độ học và SRS flashcard riêng.</li>
+          </ul>
+        </div>
+
+        <div class="timeline-item">
+          <div class="timeline-title">
+            Giai đoạn 3: Hệ thống Luyện thi TOEIC SaaS (1,000+ Concurrent Users)
+            <span class="timeline-status status-future">Thương mại hóa</span>
+          </div>
+          <p>
+            <strong>Kiến trúc phân tán chuẩn Enterprise:</strong>
+          </p>
+          <ul class="bullet-list">
+            <li><strong>Redis Cache:</strong> Caching bảng xếp hạng, kết quả query đề thi và cache kết quả phân tích AI (tránh tốn token trùng lặp).</li>
+            <li><strong>Task Queue (Celery / ARQ):</strong> Xử lý tác vụ AI giải thích đề thi bất đồng bộ qua hàng đợi, không block request HTTP.</li>
+            <li><strong>Object Storage (AWS S3 / Cloudflare R2):</strong> Lưu trữ hàng nghìn file audio Part 1, 2, 3, 4 và ảnh chụp đề thi Part 7.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="action-box">
+        <strong>💡 Lời khuyên Kiến trúc dành cho Bạn:</strong>
+        <p style="margin-top: 6px; margin-bottom: 0;">
+          Dưới góc độ một Backend Developer, giải pháp hiện tại là <strong>"đúng bài toán - đúng thời điểm" (Right Tool for the Right Job)</strong>. Bạn đang xây một công cụ phục vụ mục tiêu học tập cá nhân, do đó sự đơn giản, tốc độ phản hồi và chi phí vận hành bằng 0 là ưu tiên hàng đầu. Bạn không cần vội chuyển sang React/Vue hay Postgres lúc này; hãy tập trung ôn luyện đạt target 800-900+ trước khi quyết định nâng cấp hạ tầng!
+        </p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

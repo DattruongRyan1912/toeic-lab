@@ -1,10 +1,29 @@
+# Python
 .venv/
+server/.venv/
 __pycache__/
 *.pyc
-.DS_Store
-server/.venv/
-server/cache/*.mp3
+.pytest_cache/
+
+# Node / Next.js (apps/web has its own .gitignore as well)
+node_modules/
+.next/
+
+# Secrets: only the example file is committed
 .env
 .env.*
-scratch/
+!.env.example
+
+# Runtime data
+server/cache/*.mp3
+server/cache/*.tmp
+server/data/backups/
+server/data/*.db-journal
+server/data/*.db-wal
+server/data/*.db-shm
 server/toeic_data.db
+
+# Local inputs for the legacy HTML generators (scripts/build_full_frontend.py, update_frontend_corpus.py)
+scratch/
+
+.DS_Store

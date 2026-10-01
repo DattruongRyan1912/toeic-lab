@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOEIC Master - SaaS Migration Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#4F46E5',
+                        dark: '#0F172A',
+                        surface: '#1E293B',
+                    }
+                }
+            }
+        }
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    </script>
+    <style>
+        body { background-color: #0F172A; color: #F8FAFC; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .gradient-text { background: linear-gradient(to right, #60A5FA, #A78BFA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="p-8 font-sans antialiased">
+    <div class="max-w-6xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="glass-panel p-8 rounded-2xl shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-primary rounded-full filter blur-3xl opacity-20 transform translate-x-1/2 -translate-y-1/2"></div>
+            <h1 class="text-4xl font-bold mb-4 gradient-text">Kế Hoạch Chuyển Đổi SaaS (Migration Plan)</h1>
+            <p class="text-gray-400 text-lg">Hành trình nâng cấp TOEIC Master từ Personal Tool sang nền tảng Multi-tenant SaaS với Next.js & TypeScript.</p>
+            <div class="mt-6 flex gap-4">
+                <span class="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm border border-blue-500/30">Next.js 14 (App Router)</span>
+                <span class="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm border border-yellow-500/30">FastAPI</span>
+                <span class="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm border border-green-500/30">PostgreSQL</span>
+                <span class="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30">TypeScript</span>
+            </div>
+        </header>
+
+        <!-- Kiến trúc Hệ thống -->
+        <section class="glass-panel p-8 rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Kiến trúc C4 (Container Level)
+            </h2>
+            <div class="bg-gray-900 rounded-xl p-4 overflow-x-auto">
+                <div class="mermaid">
+                    flowchart TD
+                        User([User / Learner])
+
+                        subgraph "Frontend / BFF (Next.js)"
+                            NextUI[Next.js UI\nTailwind + Shadcn]
+                            NextAPI[Next.js Route Handlers\nAuth.js, Stripe BFF]
+                            NextUI --> NextAPI
+                        end
+
+                        subgraph "Core AI Backend (FastAPI)"
+                            FastAPI[FastAPI Service\nAI, RAG, TTS]
+                        end
+
+                        subgraph "Data Layer"
+                            Postgres[(PostgreSQL\nUsers, Subscriptions, Mock Tests)]
+                            Redis[(Redis\nRate Limits, Session)]
+                        end
+
+                        User -- HTTPS --> NextUI
+                        NextAPI -- OAuth / Session --> Postgres
+                        NextAPI -- HTTPS/REST --> FastAPI
+                        FastAPI -- SQLAlchemy --> Postgres
+                        FastAPI -- Pub/Sub --> Redis
+                        
+                        NextAPI -- "Thanh toán" --> Stripe((Stripe API))
+                        FastAPI -- "LLM/Vision" --> DeepSeek((DeepSeek/Gemini))
+                </div>
+            </div>
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-300">
+                <div class="p-4 bg-surface rounded-lg border border-gray-700">
+                    <h3 class="text-white font-medium mb-2">Quyết định Kiến trúc (ADR)</h3>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li><b>Frontend & Web API:</b> Dời hoàn toàn logic HTML tĩnh hiện tại sang <b>Next.js App Router</b>. Sử dụng Next.js làm BFF để quản lý User Session (Auth.js) và Routing phân quyền.</li>
+                        <li><b>Backend Core:</b> <b>Giữ nguyên FastAPI</b> làm Microservice chuyên trách xử lý AI (DeepSeek, Gemini, OCR, Audio TTS). Việc này giúp tách biệt rõ logic Web (TS) và logic AI (Python).</li>
+                        <li><b>Cơ sở dữ liệu:</b> Từ bỏ SQLite (bị bottleneck khi multi-tenant), chuyển lên <b>PostgreSQL</b>. Dùng Prisma/Drizzle (ở Next) hoặc SQLAlchemy (ở FastAPI).</li>
+                    </ul>
+                </div>
+                <div class="p-4 bg-surface rounded-lg border border-gray-700">
+                    <h3 class="text-white font-medium mb-2">Design System & UI/UX</h3>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li><b>Framework:</b> Tailwind CSS + Radix UI (Shadcn/UI).</li>
+                        <li><b>Tổ chức Module:</b> Feature-Sliced Design.
+                            <br/><code>/app/(dashboard)/mock-tests</code>
+                            <br/><code>/app/(dashboard)/vocab-srs</code>
+                        </li>
+                        <li><b>Màu sắc chủ đạo:</b> Dark mode native, Accent Blue/Purple cho môi trường học tập tập trung (Focus-driven UI).</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lộ trình triển khai (Roadmap) -->
+        <section class="glass-panel p-8 rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-semibold mb-6 flex items-center gap-2">
+                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Lộ Trình Triển Khai (Migration Roadmap)
+            </h2>
+            
+            <div class="relative border-l border-gray-700 ml-3 md:ml-6 space-y-10 pb-4">
+                
+                <!-- Phase 1 -->
+                <div class="relative pl-8 md:pl-10">
+                    <div class="absolute -left-3 md:-left-3.5 top-1 w-6 h-6 bg-surface border-2 border-primary rounded-full z-10"></div>
+                    <div class="bg-surface p-6 rounded-xl border border-gray-700/50 hover:border-primary/50 transition-colors">
+                        <span class="text-xs font-semibold text-primary uppercase tracking-wider">Phase 1: Foundation</span>
+                        <h3 class="text-xl font-bold text-white mt-1 mb-3">Khởi tạo Next.js & Thiết lập Database</h3>
+                        <ul class="text-gray-400 space-y-2 text-sm">
+                            <li>• <b>Repo:</b> Khởi tạo dự án Next.js (TypeScript, App Router) trong thư mục <code>web/</code> hoặc cấu hình monorepo.</li>
+                            <li>• <b>UI Foundation:</b> Cài đặt Tailwind, Shadcn/UI (Button, Card, Dialog, Toast, Form).</li>
+                            <li>• <b>Database:</b> Cài đặt PostgreSQL qua Docker. Setup Drizzle ORM (hoặc Prisma) định nghĩa schema User, Session, MockTest, Flashcard.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 2 -->
+                <div class="relative pl-8 md:pl-10">
+                    <div class="absolute -left-3 md:-left-3.5 top-1 w-6 h-6 bg-surface border-2 border-secondary rounded-full z-10"></div>
+                    <div class="bg-surface p-6 rounded-xl border border-gray-700/50 hover:border-secondary/50 transition-colors">
+                        <span class="text-xs font-semibold text-secondary uppercase tracking-wider">Phase 2: Auth & Layout</span>
+                        <h3 class="text-xl font-bold text-white mt-1 mb-3">Hệ thống Đăng nhập & SaaS Layout</h3>
+                        <ul class="text-gray-400 space-y-2 text-sm">
+                            <li>• Tích hợp <b>NextAuth (Auth.js)</b> / Clerk hỗ trợ đăng nhập Google, Github.</li>
+                            <li>• Xây dựng <b>Dashboard Layout:</b> Sidebar điều hướng (Vocab, Mock Test, Roadmaps, Settings), Topbar thông báo.</li>
+                            <li>• Phân quyền (RBAC): Admin Role (quản lý câu hỏi, prompt LLM), User Role (học viên).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 3 -->
+                <div class="relative pl-8 md:pl-10">
+                    <div class="absolute -left-3 md:-left-3.5 top-1 w-6 h-6 bg-surface border-2 border-green-500 rounded-full z-10"></div>
+                    <div class="bg-surface p-6 rounded-xl border border-gray-700/50 hover:border-green-500/50 transition-colors">
+                        <span class="text-xs font-semibold text-green-400 uppercase tracking-wider">Phase 3: Migration Data & Modules</span>
+                        <h3 class="text-xl font-bold text-white mt-1 mb-3">Chuyển đổi UI Vanilla sang React/Next.js</h3>
+                        <ul class="text-gray-400 space-y-2 text-sm">
+                            <li>• <b>Module Sổ tay Từ Vựng:</b> Chuyển UI thêm/xóa/sửa từ vựng thành Form React. Xây dựng logic Review thẻ (thuật toán SRS / SM-2).</li>
+                            <li>• <b>Module Thi Thử (Mock Test):</b> Chuyển UI làm bài Part 5. Fetch dữ liệu từ Next.js API Routes (Next API gọi tới FastAPI để kích hoạt AI chấm điểm).</li>
+                            <li>• <b>Data Migration:</b> Viết script Python (FastAPI) đọc từ SQLite cũ, map và đẩy lên PostgreSQL mới.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Phase 4 -->
+                <div class="relative pl-8 md:pl-10">
+                    <div class="absolute -left-3 md:-left-3.5 top-1 w-6 h-6 bg-surface border-2 border-purple-500 rounded-full z-10"></div>
+                    <div class="bg-surface p-6 rounded-xl border border-gray-700/50 hover:border-purple-500/50 transition-colors">
+                        <span class="text-xs font-semibold text-purple-400 uppercase tracking-wider">Phase 4: Optimization & Deployment</span>
+                        <h3 class="text-xl font-bold text-white mt-1 mb-3">Tối ưu AI API & Triển khai Production</h3>
+                        <ul class="text-gray-400 space-y-2 text-sm">
+                            <li>• <b>FastAPI Refactor:</b> Chuyển FastAPI thành Service chỉ nhận request từ Next.js (bảo mật mTLS hoặc internal network trên Docker). Bỏ logic Render HTML khỏi Python.</li>
+                            <li>• <b>UI Polish:</b> Sử dụng Framer Motion hoặc GSAP cho các hiệu ứng lật thẻ từ vựng. Tối ưu LCP, SEO/Metadata.</li>
+                            <li>• <b>Docker Compose V2:</b> Gói Next.js (BFF), FastAPI (AI Core), PostgreSQL, Redis vào chung một mạng network deploy lên VPS (đã có nginx reverse proxy).</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+</body>
+</html>

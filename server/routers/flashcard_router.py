@@ -1,223 +1,201 @@
-import json
-import re
-from typing import List, Optional, Dict, Any
-from datetime import datetime
+from collections import Counter
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
+
 from server.database import get_db
-from server.models import Flashcard, UserCardSRS
+from server.deps import current_user_id
+from server.models import Flashcard, SRSReviewLog, UserCardSRS
 from server.schemas import (
-    FlashcardRead, FlashcardCreate, UserCardSRSRead, SRSReviewRequest,
-    AIFillVocabRequest, AIFillVocabResponse
+    AIFillVocabRequest,
+    AIFillVocabResponse,
+    FlashcardCreate,
+    FlashcardRead,
+    FlashcardSummary,
+    SRSReviewRequest,
+    UserCardSRSRead,
 )
+from server.services import activity, ai_agent_service, insights, vocab_service
 from server.services.srs_service import calculate_sm2_review
-from server.services.ai_agent_service import query_llm
+from server.utils.timeutil import utcnow
 
 router = APIRouter(prefix="/api/flashcards", tags=["Flashcards & SRS"])
+
+AI_FILL_PROMPT = """Phân tích từ vựng tiếng Anh sau cho người luyện TOEIC 800-900+.
+Từ vựng: "{word}"
+Ngữ cảnh đề thi (nếu có): "{context}"
+
+Trả về DUY NHẤT một object JSON hợp lệ (không markdown, không văn bản khác) với các khóa:
+{{
+  "word": "{word_lower}",
+  "ipa": "phiên âm IPA chuẩn, không kèm dấu /",
+  "word_type": "verb | noun | adjective | adverb",
+  "category": "General Business | Finance & Banking | Personnel & HR | Contracts & Agreements | Marketing & Sales | Office Operations | Travel & Hospitality",
+  "meaning": "nghĩa tiếng Việt ngắn gọn, sát ngữ cảnh thương mại",
+  "collocations": "2-3 collocation TOEIC, ngăn cách bằng dấu phẩy",
+  "paraphrase_pair": "cặp đồng nghĩa hay gặp, ví dụ: postpone = delay = put off",
+  "example_sentence": "1 câu ví dụ chuẩn đề TOEIC có chứa từ này"
+}}"""
+
 
 @router.get("", response_model=List[FlashcardRead])
 def list_flashcards(
     category: Optional[str] = Query(None),
-    search: Optional[str] = Query(None),
-    limit: int = Query(100),
-    db: Session = Depends(get_db)
+    search: Optional[str] = Query(None, max_length=100),
+    limit: int = Query(200, ge=1, le=1000),
+    db: Session = Depends(get_db),
 ):
     query = db.query(Flashcard)
     if category and category != "all":
         query = query.filter(Flashcard.category == category)
-    if search:
-        s = f"%{search.strip()}%"
+    if search and search.strip():
+        pattern = f"%{search.strip()}%"
         query = query.filter(
             or_(
-                Flashcard.word.ilike(s),
-                Flashcard.meaning.ilike(s),
-                Flashcard.collocations.ilike(s),
-                Flashcard.paraphrase_pair.ilike(s)
+                Flashcard.word.ilike(pattern),
+                Flashcard.meaning.ilike(pattern),
+                Flashcard.collocations.ilike(pattern),
+                Flashcard.paraphrase_pair.ilike(pattern),
             )
         )
-    return query.order_by(Flashcard.id.asc()).limit(limit).all()
+    return query.order_by(Flashcard.id.desc()).limit(limit).all()
 
-@router.get("/summary")
-def get_vocab_summary(user_id: int = 1, db: Session = Depends(get_db)):
-    total_cards = db.query(Flashcard).count()
-    mastered_cards = db.query(UserCardSRS).filter(
-        UserCardSRS.user_id == user_id,
-        UserCardSRS.state == "mastered"
-    ).count()
-    now = datetime.utcnow()
-    due_cards = db.query(UserCardSRS).filter(
-        UserCardSRS.user_id == user_id,
-        UserCardSRS.next_review_at <= now
-    ).count()
-    
-    # Categories breakdown
-    categories_dict: Dict[str, int] = {}
-    cards = db.query(Flashcard.category).all()
-    for (cat,) in cards:
-        categories_dict[cat] = categories_dict.get(cat, 0) + 1
 
+@router.get("/summary", response_model=FlashcardSummary)
+def get_vocab_summary(user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+    insights.ensure_srs_records(db, user_id)
+    counts = insights.srs_counts(db, user_id)
+    categories = Counter(category for (category,) in db.query(Flashcard.category))
+    cat_stats = insights.category_stats(db, user_id)
     return {
-        "total_cards": total_cards,
-        "mastered_cards": mastered_cards,
-        "due_cards": due_cards,
-        "learning_cards": max(0, total_cards - mastered_cards),
-        "categories": categories_dict
+        "total_cards": db.query(Flashcard).count(),
+        "mastered_cards": counts["mastered"],
+        "due_cards": counts["session_size"],
+        "review_due": counts["review_due"],
+        "new_available": counts["new_available"],
+        "new_cards": counts["new_total"],
+        "learning_cards": counts["learning"],
+        "reviewed_today": counts["reviewed_today"],
+        "new_cards_per_day": counts["new_cards_per_day"],
+        "categories": dict(categories),
+        "category_stats": cat_stats,
     }
 
+
 @router.post("", response_model=FlashcardRead, status_code=status.HTTP_201_CREATED)
-def create_flashcard(
-    payload: FlashcardCreate,
-    user_id: int = 1,
-    db: Session = Depends(get_db)
-):
-    clean_word = payload.word.strip().lower()
-    existing = db.query(Flashcard).filter(Flashcard.word == clean_word).first()
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Từ vựng '{clean_word}' đã tồn tại trong Sổ tay!"
-        )
-
-    card = Flashcard(
-        category=payload.category.strip(),
-        word=clean_word,
-        ipa=payload.ipa.strip() if payload.ipa else None,
-        word_type=payload.word_type.strip() if payload.word_type else None,
-        meaning=payload.meaning.strip(),
-        collocations=payload.collocations.strip() if payload.collocations else None,
-        paraphrase_pair=payload.paraphrase_pair.strip() if payload.paraphrase_pair else None,
-        example_sentence=payload.example_sentence.strip(),
-        audio_word_url=f"audio/words/{clean_word}.mp3"
-    )
-    db.add(card)
-    db.commit()
-    db.refresh(card)
-
-    # Automatically add to UserCardSRS with state 'new'
-    srs = UserCardSRS(
-        user_id=user_id,
-        card_id=card.id,
-        state="new",
-        next_review_at=datetime.utcnow()
-    )
-    db.add(srs)
-    db.commit()
-
+def create_flashcard(payload: FlashcardCreate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+    try:
+        card, created = vocab_service.create_card(db, user_id, payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    if not created:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Từ vựng '{card.word}' đã có trong Sổ tay!")
     return card
+
 
 @router.delete("/{card_id}")
 def delete_flashcard(card_id: int, db: Session = Depends(get_db)):
-    card = db.query(Flashcard).filter_by(id=card_id).first()
-    if not card:
+    card = db.get(Flashcard, card_id)
+    if card is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
-    
-    # Delete related SRS
-    db.query(UserCardSRS).filter_by(card_id=card_id).delete()
-    db.delete(card)
-    db.commit()
-    return {"status": "success", "message": f"Đã xóa từ '{card.word}' khỏi Sổ tay!"}
+    word = card.word
+    vocab_service.delete_card(db, card)
+    return {"status": "success", "message": f"Đã xóa từ '{word}' khỏi Sổ tay!"}
+
 
 @router.post("/ai-fill", response_model=AIFillVocabResponse)
-async def ai_fill_vocab(payload: AIFillVocabRequest):
+async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_db)):
     word = payload.word.strip()
-    context = (payload.context or "").strip()
-
-    prompt = f"""Bạn là Senior TOEIC AI Mentor & Lexicographer. Hãy phân tích từ vựng tiếng Anh sau để học viên tự học đạt 800 - 900+ điểm TOEIC:
-Từ vựng: "{word}"
-Ngữ cảnh đề thi (nếu có): "{context}"
-
-Hãy trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm bất kỳ văn bản nào khác, không kèm markdown code fences ```json), theo đúng cấu trúc sau:
-{{
-  "word": "{word.lower()}",
-  "ipa": "/phiên âm quốc tế IPA chuẩn/",
-  "word_type": "[v] hoặc [n] hoặc [adj] hoặc [adv]",
-  "category": "General Business hoặc Finance & Banking hoặc Personnel & HR hoặc Contracts & Agreements hoặc Marketing & Sales hoặc Office Operations hoặc Travel & Hospitality",
-  "meaning": "nghĩa tiếng Việt ngắn gọn, sát ngữ cảnh thương mại TOEIC",
-  "collocations": "2-3 cụm từ TOEIC ăn điểm đi kèm, ngăn cách bằng dấu phẩy",
-  "paraphrase_pair": "cặp từ đồng nghĩa trong bài thi TOEIC (vd: postpone = delay = put off)",
-  "example_sentence": "1 câu ví dụ tiếng Anh chuẩn đề thi TOEIC, thay thế từ vựng bằng '______' để học viên tự điền"
-}}
-"""
+    existing = vocab_service.find_card(db, word)
+    if existing is not None:
+        raise HTTPException(status_code=409, detail=f"Từ '{existing.word}' đã có trong Sổ tay (#{existing.id}).")
+    if ai_agent_service.resolve_provider() is None:
+        raise HTTPException(
+            status_code=503,
+            detail="AI chưa được cấu hình (thiếu GEMINI_API_KEY / DEEPSEEK_API_KEY / OPENAI_API_KEY) — hãy nhập thủ công.",
+        )
+    prompt = AI_FILL_PROMPT.format(word=word, word_lower=word.lower(), context=(payload.context or "").strip())
     try:
-        raw_reply = await query_llm(prompt)
-        # Clean markdown code fences if model returned them
-        clean_json_str = raw_reply.strip()
-        if clean_json_str.startswith("```"):
-            clean_json_str = re.sub(r"^```(?:json)?\s*", "", clean_json_str)
-            clean_json_str = re.sub(r"\s*```$", "", clean_json_str)
-        
-        parsed = json.loads(clean_json_str)
-        return AIFillVocabResponse(
-            word=parsed.get("word", word.lower()),
-            ipa=parsed.get("ipa", f"/{word.lower()}/"),
-            word_type=parsed.get("word_type", "[n]"),
-            category=parsed.get("category", "General Business"),
-            meaning=parsed.get("meaning", "Từ vựng kinh doanh"),
-            collocations=parsed.get("collocations", f"apply {word}"),
-            paraphrase_pair=parsed.get("paraphrase_pair", f"{word} = essential term"),
-            example_sentence=parsed.get("example_sentence", f"The manager requested a ______ before the meeting.")
-        )
-    except Exception:
-        # Fallback dictionary for common TOEIC keywords
-        return AIFillVocabResponse(
-            word=word.lower(),
-            ipa=f"/{word.lower()}/",
-            word_type="[n/v]",
-            category="General Business",
-            meaning="Từ vựng cần ghi nhớ trong đề thi TOEIC",
-            collocations=f"{word.lower()} procedure, effective {word.lower()}",
-            paraphrase_pair=f"{word.lower()} = key business term",
-            example_sentence=f"All employees must understand the ______ outlined in the company handbook."
-        )
+        raw = await ai_agent_service.complete_text(prompt)
+    except ai_agent_service.LLMError as exc:
+        raise HTTPException(status_code=502, detail=f"AI không phản hồi: {exc}")
+    parsed = ai_agent_service.extract_json_object(raw)
+    if not parsed or not parsed.get("meaning"):
+        raise HTTPException(status_code=502, detail="AI trả về dữ liệu không hợp lệ, hãy thử lại.")
+
+    def text(key: str) -> str:
+        value = parsed.get(key)
+        return str(value).strip() if value is not None else ""
+
+    return AIFillVocabResponse(
+        word=text("word") or word.lower(),
+        ipa=vocab_service.normalize_ipa(text("ipa")) or "",
+        word_type=text("word_type"),
+        category=text("category") or "General Business",
+        meaning=text("meaning"),
+        collocations=text("collocations"),
+        paraphrase_pair=text("paraphrase_pair"),
+        example_sentence=text("example_sentence"),
+    )
+
 
 @router.get("/due", response_model=List[UserCardSRSRead])
 def get_due_srs_cards(
-    user_id: int = 1,
-    limit: int = Query(30),
-    db: Session = Depends(get_db)
+    category: Optional[str] = Query(None, description="Lọc theo chủ đề từ vựng"),
+    mode: str = Query("srs", description="'srs': chuẩn SM-2, 'all'/'cram': luyện tập toàn bộ chủ đề, 'new': từ mới"),
+    limit: int = Query(30, ge=1, le=200),
+    user_id: int = Depends(current_user_id),
+    db: Session = Depends(get_db),
 ):
-    now = datetime.utcnow()
-    due_records = db.query(UserCardSRS).filter(
-        UserCardSRS.user_id == user_id,
-        UserCardSRS.next_review_at <= now
-    ).order_by(UserCardSRS.next_review_at.asc()).limit(limit).all()
+    """Only cards that are actually due, or cards in a chosen category / study mode."""
+    insights.ensure_srs_records(db, user_id)
+    return insights.due_queue(db, user_id, limit=limit, category=category, mode=mode)
 
-    if not due_records:
-        due_records = db.query(UserCardSRS).filter(
-            UserCardSRS.user_id == user_id
-        ).order_by(UserCardSRS.last_reviewed_at.asc().nullsfirst()).limit(limit).all()
-
-    return due_records
 
 @router.post("/{card_id}/review", response_model=UserCardSRSRead)
 def submit_srs_review(
     card_id: int,
     payload: SRSReviewRequest,
-    user_id: int = 1,
-    db: Session = Depends(get_db)
+    user_id: int = Depends(current_user_id),
+    db: Session = Depends(get_db),
 ):
+    if db.get(Flashcard, card_id) is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
     srs = db.query(UserCardSRS).filter_by(user_id=user_id, card_id=card_id).first()
-    if not srs:
-        srs = UserCardSRS(user_id=user_id, card_id=card_id)
+    if srs is None:
+        srs = UserCardSRS(user_id=user_id, card_id=card_id, state="new", next_review_at=utcnow())
         db.add(srs)
-        db.commit()
-        db.refresh(srs)
+        db.flush()
 
-    rep, ease, interval, state, next_date = calculate_sm2_review(
+    prev_state = srs.state or "new"
+    repetition, ease, interval, state, next_review = calculate_sm2_review(
         current_repetition=srs.repetition_count,
         current_ease=srs.ease_factor,
         current_interval=srs.interval_days,
-        rating=payload.rating
+        rating=payload.rating,
     )
-
-    srs.repetition_count = rep
+    now = utcnow()
+    srs.repetition_count = repetition
     srs.ease_factor = ease
     srs.interval_days = interval
     srs.state = state
-    srs.next_review_at = next_date.replace(tzinfo=None)
-    srs.last_reviewed_at = datetime.utcnow()
-
+    srs.next_review_at = next_review
+    srs.last_reviewed_at = now
+    db.add(
+        SRSReviewLog(
+            user_id=user_id,
+            card_id=card_id,
+            rating=payload.rating,
+            prev_state=prev_state,
+            new_state=state,
+            interval_days=interval,
+            duration_ms=payload.duration_ms,
+            reviewed_at=now,
+        )
+    )
+    activity.track(db, user_id, "srs", activity.card_seconds(payload.duration_ms), items=1, correct=int(payload.rating >= 3), at=now)
     db.commit()
     db.refresh(srs)
     return srs

@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "name": "TOEIC Master SaaS Architecture",
+  "description": "Next.js Modular Monorepo Architecture for TOEIC SaaS Platform",
+  "diagrams": [
+    {
+      "id": "saas-c4-container",
+      "title": "System Architecture (C4 Container)",
+      "type": "flowchart",
+      "code": "flowchart TD\n  subgraph Users [Users]\n    Learner[Learner]\n    Admin[System Admin]\n  end\n\n  subgraph Vercel [Frontend Cloud - Vercel / Docker]\n    NextApp[Next.js App Router\\nUI & BFF]\n    NextAuth[Auth.js / NextAuth\\nSession & Token]\n    UI[Tailwind & Shadcn UI\\nReact Components]\n    NextApp --> NextAuth\n    NextApp --> UI\n  end\n\n  subgraph VPS [Backend Cloud - VPS Docker]\n    FastAPI[FastAPI AI Service\\nCore Logic & LLM]\n    Celery[Celery / BullMQ\\nBackground Tasks]\n  end\n\n  subgraph DB [Data Layer]\n    Postgres[(PostgreSQL\\nMulti-tenant DB)]\n    Redis[(Redis\\nCache & Rate Limit)]\n    VectorDB[(ChromaDB/Pinecone\\nRAG Vocab)]\n  end\n\n  subgraph Ext [External Services]\n    DeepSeek[DeepSeek/Gemini API]\n    Stripe[Stripe / VNPay]\n    Google[OAuth Providers]\n  end\n\n  Learner -->|HTTPS/WebSockets| NextApp\n  Admin -->|HTTPS| NextApp\n\n  NextAuth -->|OAuth2| Google\n  NextApp -->|REST/gRPC| FastAPI\n  NextApp -->|Prisma/Drizzle| Postgres\n  NextApp -->|Stripe SDK| Stripe\n\n  FastAPI -->|LLM Prompts| DeepSeek\n  FastAPI -->|SQLAlchemy| Postgres\n  FastAPI -->|Cache/Queue| Redis\n  FastAPI -->|Vector Search| VectorDB\n  Celery -.-> Redis\n",
+      "options": {
+        "direction": "TD",
+        "theme": "dark"
+      }
+    }
+  ]
+}

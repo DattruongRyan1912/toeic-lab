@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Bàn Giao: Listening Audio Engine & Dictation/Shadowing Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased p-4 sm:p-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <header class="border-b border-slate-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+          Engineering Delivery Report
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-white">
+          Listening Audio Engine & Dictation / Shadowing Studio
+        </h1>
+        <p class="text-slate-400 text-sm">
+          Triển khai hoàn tất phân hệ luyện nghe Audio thực chiến: Chép chính tả (Dictation) &amp; Nói nhại (Shadowing) chuẩn 4 giọng đọc ETS.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-xs font-bold">
+          GATE STATUS: 100% PASS
+        </span>
+        <span class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 font-mono text-xs">
+          Next.js 16 + FastAPI
+        </span>
+      </div>
+    </header>
+
+    <!-- Metrics Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-semibold uppercase">Tests Passed</div>
+        <div class="text-2xl font-black text-emerald-400 mt-1">86 / 86</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">pytest backend suite</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-semibold uppercase">ESLint &amp; TypeScript</div>
+        <div class="text-2xl font-black text-blue-400 mt-1">0 Errors</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">Strict zero-warning</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-semibold uppercase">ETS Accents</div>
+        <div class="text-2xl font-black text-purple-400 mt-1">4 Giọng</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">US 🇺🇸, UK 🇬🇧, AU 🇦🇺, CA 🇨🇦</div>
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div class="text-xs text-slate-400 font-semibold uppercase">Turbopack Build</div>
+        <div class="text-2xl font-black text-amber-400 mt-1">14/14 Pages</div>
+        <div class="text-[11px] text-slate-500 mt-0.5">/listening static prerendered</div>
+      </div>
+    </div>
+
+    <!-- Architecture Overview -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <span class="p-1.5 rounded-lg bg-blue-600/20 text-blue-400">🏗️</span>
+        Kiến Trúc &amp; Luồng Xử Lý (Listening Engine Architecture)
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-slate-300">
+        <div class="space-y-3">
+          <h3 class="font-semibold text-blue-400">1. Backend Core Services (`server/`)</h3>
+          <ul class="list-disc list-inside space-y-1.5 text-xs text-slate-300">
+            <li><code class="text-emerald-300">listening_service.py</code>: Thuật toán so khớp chuỗi <code class="text-indigo-300">SequenceMatcher</code> phân tách từ <code class="text-slate-400">(correct, misspelled, missing, extra)</code>, tính độ chính xác % và phát hiện biến âm Flap-T, Elision (nuốt âm), Consonant-to-Vowel (nối âm).</li>
+            <li><code class="text-emerald-300">listening_router.py</code>: 3 API chuẩn RESTful:
+              <br>• <code class="text-amber-300">GET /api/listening/exercises</code>: Bộ đề nghe Part 1-3.
+              <br>• <code class="text-amber-300">POST /api/listening/check-dictation</code>: Chấm điểm bài gõ.
+              <br>• <code class="text-amber-300">POST /api/listening/track</code>: Ghi nhận thời gian luyện nghe vào hoạt động ngày.
+            </li>
+            <li><code class="text-emerald-300">planner.py</code>: Tích hợp hành động học tập <code class="text-indigo-300">kind="listening"</code> điều hướng trực tiếp đến <code class="text-blue-400">/listening</code>.</li>
+            <li><code class="text-emerald-300">ai_agent_router.py</code>: Chuẩn hóa auth injection <code class="text-indigo-300">Depends(current_user_id)</code>.</li>
+          </ul>
+        </div>
+        <div class="space-y-3">
+          <h3 class="font-semibold text-blue-400">2. Frontend Studio (`apps/web/`)</h3>
+          <ul class="list-disc list-inside space-y-1.5 text-xs text-slate-300">
+            <li><code class="text-emerald-300">app/(dashboard)/listening/page.tsx</code>: Giao diện Studio 2 chế độ:
+              <br>• <strong>Dictation</strong>: Điều khiển tốc độ (0.8x, 1.0x, 1.2x), phím tắt <code class="text-slate-400">Ctrl+Enter</code>, phân tích token màu theo chuẩn RCA.
+              <br>• <strong>Shadowing</strong>: Ghi âm giọng người học với <code class="text-indigo-300">MediaRecorder</code> API, đếm giờ trực tiếp và so sánh side-by-side với giọng đọc bản xứ.
+            </li>
+            <li><code class="text-emerald-300">components/layout/sidebar.tsx</code>: Đã cập nhật mục <strong>"Luyện Nghe (Audio)"</strong> với icon <code class="text-slate-400">Headphones</code> và badge <em>Dictation</em>.</li>
+            <li><code class="text-emerald-300">types/index.ts</code>: Đầy đủ interfaces đồng bộ 1:1 với Pydantic backend.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detailed Code Changes & Verified Files -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <span class="p-1.5 rounded-lg bg-emerald-600/20 text-emerald-400">📋</span>
+        Danh Sách Files Triển Khai &amp; Đã Kiểm Thử
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-800/60 text-slate-400 uppercase font-semibold">
+            <tr>
+              <th class="p-3">File Path</th>
+              <th class="p-3">Module</th>
+              <th class="p-3">Thay đổi chính</th>
+              <th class="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 font-mono">
+            <tr>
+              <td class="p-3 text-blue-300">server/services/listening_service.py</td>
+              <td class="p-3 text-slate-400">Backend Service</td>
+              <td class="p-3 text-slate-300">Diff engine, connected speech cues, exercise retrieval</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+            <tr>
+              <td class="p-3 text-blue-300">server/routers/listening_router.py</td>
+              <td class="p-3 text-slate-400">FastAPI Router</td>
+              <td class="p-3 text-slate-300">/exercises, /check-dictation, /track endpoints</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+            <tr>
+              <td class="p-3 text-blue-300">server/services/planner.py</td>
+              <td class="p-3 text-slate-400">Adaptive Planner</td>
+              <td class="p-3 text-slate-300">Mapped kind="listening" to /listening route</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+            <tr>
+              <td class="p-3 text-blue-300">server/routers/ai_agent_router.py</td>
+              <td class="p-3 text-slate-400">AI Agent Router</td>
+              <td class="p-3 text-slate-300">Standardized user_id injection via Depends(current_user_id)</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+            <tr>
+              <td class="p-3 text-blue-300">server/tests/test_listening_service.py</td>
+              <td class="p-3 text-slate-400">Pytest Suite</td>
+              <td class="p-3 text-slate-300">Unit &amp; API tests for diffing, phonetics, tracking</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+            <tr>
+              <td class="p-3 text-blue-300">apps/web/types/index.ts</td>
+              <td class="p-3 text-slate-400">Frontend Types</td>
+              <td class="p-3 text-slate-300">ListeningExercise, DictationCheckResponse, DictationDiffToken</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+            <tr>
+              <td class="p-3 text-blue-300">apps/web/app/(dashboard)/listening/page.tsx</td>
+              <td class="p-3 text-slate-400">Next.js Page</td>
+              <td class="p-3 text-slate-300">Full Listening Studio with Dictation &amp; Shadowing</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+            <tr>
+              <td class="p-3 text-blue-300">apps/web/components/layout/sidebar.tsx</td>
+              <td class="p-3 text-slate-400">Sidebar Nav</td>
+              <td class="p-3 text-slate-300">Added Luyện Nghe (Audio) menu item</td>
+              <td class="p-3 text-emerald-400 font-bold">VERIFIED</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Verification Evidence -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <span class="p-1.5 rounded-lg bg-purple-600/20 text-purple-400">🧪</span>
+        Kết Quả Kiểm Thử Thực Tế (`make check`)
+      </h2>
+      <div class="space-y-3 font-mono text-xs">
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300">
+          <div class="text-slate-500 mb-2">// 1. Backend pytest (86 tests)</div>
+          <div class="text-emerald-400 font-semibold">============================== 86 passed in 8.32s ===============================</div>
+        </div>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300">
+          <div class="text-slate-500 mb-2">// 2. Frontend TypeScript &amp; ESLint</div>
+          <div class="text-emerald-400 font-semibold">pnpm exec tsc --noEmit: EXIT 0 (0 type errors)</div>
+          <div class="text-emerald-400 font-semibold">pnpm lint: EXIT 0 (0 lint warnings/errors)</div>
+        </div>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300">
+          <div class="text-slate-500 mb-2">// 3. Production Turbopack Next.js Build</div>
+          <div class="text-emerald-400 font-semibold">✓ Generating static pages using 7 workers (14/14) in 300ms</div>
+          <div class="text-blue-300">Route (app) -> ○ /listening (Prerendered as static content)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- User Operations & Quick Start -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-bold text-white flex items-center gap-2">
+        <span class="p-1.5 rounded-lg bg-amber-600/20 text-amber-400">🚀</span>
+        Hướng Dẫn Vận Hành &amp; Trải Nghiệm Luyện Nghe
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <h4 class="font-bold text-blue-400 uppercase">Khởi động môi trường</h4>
+          <pre class="bg-slate-900 p-2.5 rounded text-slate-300"># 1. Chạy Backend FastAPI (port 8000)
+./.venv/bin/python -m uvicorn server.main:app --port 8000
+
+# 2. Chạy Frontend Next.js (port 3005)
+cd apps/web &amp;&amp; pnpm dev</pre>
+        </div>
+        <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+          <h4 class="font-bold text-emerald-400 uppercase">Trải nghiệm tính năng</h4>
+          <ol class="list-decimal list-inside space-y-1 text-slate-300">
+            <li>Truy cập <code class="text-blue-300">http://localhost:3005/listening</code> trên trình duyệt.</li>
+            <li>Chọn <strong>Chép Chính Tả (Dictation)</strong>: Bấm Play nghe audio và gõ vào ô nhập văn bản, bấm <code class="text-slate-400">Ctrl + Enter</code> để kiểm tra diff màu.</li>
+            <li>Chọn <strong>Nói Nhại (Shadowing)</strong>: Bấm micro thu âm, nhại theo giọng đọc bản xứ và bấm nghe lại để so sánh phát âm.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="pt-6 border-t border-slate-800 text-center text-xs text-slate-500">
+      Bàn giao hoàn tất bởi AI Mentor Copilot &bull; Workspace Tự học TOEIC &bull; Next.js 16 + FastAPI
+    </footer>
+  </div>
+</body>
+</html>

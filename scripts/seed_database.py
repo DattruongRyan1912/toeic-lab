@@ -11,19 +11,47 @@ Includes:
 7. Default Daily Study Reminder
 """
 
+import re
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Optional
 
 # Ensure project root in sys.path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
 from server.database import SessionLocal, init_db
+from server.utils.timeutil import utcnow
 from server.models import (
     User, Roadmap, SprintTask, Flashcard, UserCardSRS,
     KnowledgeLesson, ParaphrasePair, MockTest, TestQuestion, StudyReminder
 )
+
+LESSONS_DIR = BASE_DIR / "lessons"
+
+
+def latex_to_markdown(markdown: str) -> str:
+    """lessons/*.md write formulas as $$\\text{..}$$; the web app renders plain Markdown, so turn them into code spans."""
+
+    def simplify(expr: str) -> str:
+        previous = None
+        while previous != expr:
+            previous = expr
+            expr = re.sub(r"\\(?:text|mathbf|mathrm|textbf)\{([^{}]*)\}", r"\1", expr)
+        return expr.replace("\\,", " ").replace("\\ ", " ").strip()
+
+    markdown = re.sub(r"\$\$(.+?)\$\$", lambda m: f"`{simplify(m.group(1))}`", markdown, flags=re.S)
+    return re.sub(r"\$([^$\n]+?)\$", lambda m: simplify(m.group(1)), markdown)
+
+
+def load_lesson_markdown(number: int) -> Optional[str]:
+    """Full lesson content lives in lessons/bai_NN_*.md (single source for the web app and the DB)."""
+    for path in sorted(LESSONS_DIR.glob(f"bai_{number:02d}_*.md")):
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(r"^\s*#\s+.*\n", "", text, count=1)  # the title is rendered separately
+        return latex_to_markdown(text).strip()
+    return None
+
 
 def seed_all():
     print("=== Initializing Database Schema ===")
@@ -95,7 +123,7 @@ def seed_all():
                     category=cat,
                     title=title,
                     is_completed=done,
-                    completed_at=datetime.utcnow() if done else None
+                    completed_at=utcnow() if done else None
                 )
                 db.add(t)
             db.commit()
@@ -146,6 +174,7 @@ def seed_all():
 
         for num, title, subtitle, formula, summary in LESSONS_DATA:
             lesson = db.query(KnowledgeLesson).filter_by(lesson_number=num).first()
+            content_md = load_lesson_markdown(num)
             if not lesson:
                 lesson = KnowledgeLesson(
                     lesson_number=num,
@@ -154,11 +183,14 @@ def seed_all():
                     syntax_formula=formula,
                     summary=summary,
                     content_html=f"<h3>{title}</h3><p><strong>Công thức cốt lõi:</strong> <code>{formula}</code></p><p>{summary}</p>",
+                    content_md=content_md,
                     is_unlocked=True
                 )
                 db.add(lesson)
+            elif content_md and lesson.content_md != content_md:
+                lesson.content_md = content_md  # keep DB in sync with lessons/*.md
         db.commit()
-        print("  ✓ Seeded 12 core syntax lessons")
+        print("  ✓ Seeded 12 core syntax lessons (full content from lessons/*.md when available)")
 
         # 4. Seed Core Flashcards with Audio URLs
         print("\n--- 4. Seeding Core Vocabulary Flashcards & SRS ---")
@@ -215,7 +247,7 @@ def seed_all():
                     interval_days=1,
                     ease_factor=2.5,
                     repetition_count=0,
-                    next_review_at=datetime.utcnow()
+                    next_review_at=utcnow()
                 )
                 db.add(srs)
             card_count += 1
@@ -355,5 +387,31 @@ def seed_all():
     finally:
         db.close()
 
-if __name__ == "__main__":
+
+def seed_everything():
+    """Base seed + expanded corpus (30 Part 5 questions, 60 flashcards).
+
+    Idempotent, but re-running it re-adds seed flashcards the learner deleted.
+    """
     seed_all()
+    from scripts import expand_corpus_data
+
+    expand_corpus_data.main()
+
+
+def database_is_empty() -> bool:
+    """True when no lesson and no test exist yet (fresh install / new Docker volume)."""
+    init_db()
+    with SessionLocal() as db:
+        return db.query(KnowledgeLesson).count() == 0 and db.query(MockTest).count() == 0
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Tạo/migrate database và nạp nội dung học (idempotent)")
+    parser.add_argument("--if-empty", action="store_true", help="Bỏ qua nếu đã có nội dung (dùng khi container khởi động)")
+    if parser.parse_args().if_empty and not database_is_empty():
+        print("Database đã có nội dung — bỏ qua seed (chạy không kèm --if-empty để đồng bộ lại).")
+    else:
+        seed_everything()

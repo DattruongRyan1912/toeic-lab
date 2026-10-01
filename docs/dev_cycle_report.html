@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOEIC Lab — Báo cáo chu kỳ phát triển</title>
+<style>
+  :root { --bg:#f8fafc; --card:#fff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --ok:#059669; --warn:#d97706; --bad:#dc2626; --accent:#2563eb; --purple:#7c3aed; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1220; --card:#111a2e; --ink:#e2e8f0; --muted:#94a3b8; --line:#1e293b; } }
+  * { box-sizing:border-box } body { margin:0; font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink) }
+  main { max-width:1080px; margin:0 auto; padding:28px 18px 60px }
+  h1 { font-size:26px; margin:0 } h2 { font-size:19px; margin:34px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line) } h3 { font-size:15px; margin:18px 0 6px }
+  .sub { color:var(--muted); margin:4px 0 0 } .grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)) }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 16px }
+  .kpi b { display:block; font-size:26px } .kpi span { color:var(--muted); font-size:12.5px }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:13.5px }
+  th,td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top } th { font-size:12px; text-transform:uppercase; color:var(--muted); letter-spacing:.03em }
+  tr:last-child td { border-bottom:0 } .pill { display:inline-block; padding:1px 8px; border-radius:99px; font-size:12px; font-weight:600; white-space:nowrap }
+  .ok { background:#d1fae5; color:#065f46 } .warn { background:#fef3c7; color:#92400e } .todo { background:#e0e7ff; color:#3730a3 } .bad { background:#fee2e2; color:#991b1b }
+  ul { margin:6px 0 0; padding-left:20px } li { margin:3px 0 } code { font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace; background:rgba(100,116,139,.14); padding:1px 5px; border-radius:5px }
+  pre { position:relative; background:#0f172a; color:#e2e8f0; padding:12px 14px; border-radius:10px; overflow:auto; font:12.5px/1.55 ui-monospace,Menlo,monospace }
+  pre button { position:absolute; top:8px; right:8px; border:1px solid #334155; background:#1e293b; color:#e2e8f0; border-radius:6px; font-size:11px; padding:3px 8px; cursor:pointer }
+  .flow { display:flex; flex-wrap:wrap; gap:6px; align-items:center; font-size:13px } .flow span { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:4px 9px } .flow i { color:var(--muted); font-style:normal }
+  .muted { color:var(--muted) } nav a { color:var(--accent); margin-right:12px; font-size:13px; text-decoration:none }
+</style>
+</head>
+<body>
+<main>
+  <h1>🎯 TOEIC Lab — Báo cáo chu kỳ phát triển liên tục</h1>
+  <p class="sub">Phiên 01/10/2026 → 07:00 02/10/2026 (UTC+7) • Vai luân phiên PM / QA / User / Dev • Cập nhật lần cuối: 01/10 15:20 (vòng 3)</p>
+  <nav><a href="#goal">Mục tiêu</a><a href="#kpi">Số liệu</a><a href="#qa">QA</a><a href="#user">Phản hồi User</a><a href="#changelog">Changelog</a><a href="#backlog">Backlog</a><a href="#limits">Chưa kiểm chứng</a><a href="#verify">Tự kiểm</a></nav>
+
+  <h2 id="goal">1. Mục tiêu & cách hệ thống đáp ứng</h2>
+  <table>
+    <tr><th>Ưu tiên của bạn</th><th>Đã có</th></tr>
+    <tr><td><b>Cá nhân hoá dữ liệu học viên</b></td><td>Onboarding 3 bước (mục tiêu, ngày thi, điểm đầu vào, ngày học, thẻ mới/ngày, Part ưu tiên, phong cách giải thích) • mô hình kỹ năng theo từng câu (Beta posterior có trọng số thời gian, prior từ điểm đầu vào) cho 12 chuyên đề, 7 Part, L/R • dự đoán điểm kèm khoảng tin cậy • trí nhớ AI về học viên.</td></tr>
+    <tr><td><b>Theo dõi quá trình → lộ trình thích ứng</b></td><td>Ghi từng câu trả lời + thời gian, phút học thật (heartbeat chỉ khi tab mở & có tương tác), lượt đọc bài, ôn thẻ • kế hoạch 7 ngày theo ngân sách phút, mastery, câu sai đến hạn (1→3→7 ngày), SRS, ngày thi • nhiệm vụ tự tick • mốc lộ trình co giãn theo ngày thi • tự giảm tải khi tuần trước hoàn thành &lt; 50%.</td></tr>
+    <tr><td><b>AI agent can thiệp hầu hết dữ liệu</b></td><td>28 công cụ (7 đọc, 21 ghi): hồ sơ, trí nhớ, thẻ từ & lịch SRS, Sổ lỗi, kế hoạch, lộ trình, câu luyện AI, ghi chú bài học, paraphrase, lịch nhắc • prompt hệ thống cá nhân hoá • mọi thay đổi có nhật ký + hoàn tác (chat, gợi ý 1 chạm, Cài đặt).</td></tr>
+  </table>
+  <h3>Luồng dữ liệu chính</h3>
+  <div class="flow"><span>Làm bài / ôn thẻ / đọc bài / nghe</span><i>→</i><span>question_attempts · study_sessions · lesson_progress</span><i>→</i><span>skills (mastery, pace, dự đoán)</span><i>→</i><span>planner (7 ngày) + coach</span><i>→</i><span>Dashboard · Lộ trình · Mentor</span><i>→</i><span>AI tools (audit + undo)</span><i>↺</i></div>
+
+  <h2 id="kpi">2. Số liệu</h2>
+  <div class="grid">
+    <div class="card kpi"><b>83</b><span>test pytest pass (DB tạm, không gọi mạng)</span></div>
+    <div class="card kpi"><b>27/27</b><span>bước QA hành trình học viên qua HTTP (instance cô lập)</span></div>
+    <div class="card kpi"><b>29</b><span>công cụ AI agent (8 đọc, 21 ghi — ghi đều hoàn tác được)</span></div>
+    <div class="card kpi"><b>16/16</b><span>route giao diện trả 200 (dev :3005)</span></div>
+    <div class="card kpi"><b>✓</b><span><code>make check</code>: pytest + tsc + eslint + next build</span></div>
+  </div>
+
+  <h2 id="qa">3. Kết quả QA</h2>
+  <table>
+    <tr><th>Bộ kiểm thử</th><th>Nội dung</th><th>Kết quả</th></tr>
+    <tr><td><code>test_personalization.py</code></td><td>Theo dõi thời gian/attempt, lịch ôn câu sai du hành thời gian, mastery + prior, onboarding co giãn lộ trình, kế hoạch tự tick, chế độ gần ngày thi, coach, tự giảm tải, nhiệm vụ AI chỉ khi online</td><td><span class="pill ok">PASS</span></td></tr>
+    <tr><td>Báo cáo tuần + nhắc học (vòng 3)</td><td>Du hành thời gian: tuần 1 sai → tuần 2 đúng ⇒ độ chính xác +100 điểm, Bài 01/02 tiến bộ, 1 câu sai nắm chắc; tool AI đọc được; ngày tương lai → 422 • nhắc hằng ngày liệt kê nhiệm vụ còn lại (tự lập kế hoạch nếu chưa mở app) • nhắc “Báo cáo tuần” chỉ đến hạn Chủ nhật • đổi trạng thái thủ công giữ lịch ôn 1-3-7</td><td><span class="pill ok">PASS</span></td></tr>
+    <tr><td><code>test_learner_journey.py</code></td><td>Kịch bản 2 tuần du hành thời gian: kế hoạch đổi theo dữ liệu học thật</td><td><span class="pill ok">PASS</span></td></tr>
+    <tr><td><code>test_agent_tools.py</code></td><td>Mọi tool ghi có audit + hoàn tác; mọi tool đọc (kể cả <code>get_weekly_report</code>) trả kết quả JSON-safe (hồi quy lỗi datetime phát hiện khi test live DeepSeek)</td><td><span class="pill ok">PASS</span></td></tr>
+    <tr><td><code>test_frontend_contract.py</code></td><td>Mọi field mà các trang mới đọc đều có trong API (chặn lỗi “widget trống” ở client)</td><td><span class="pill ok">PASS</span></td></tr>
+    <tr><td><code>test_api_flows / domain / ai_mentor / scripts</code></td><td>Luồng cũ: SRS, thi thử → Sổ lỗi → lỗ hổng, Mentor offline/function calling (mock), CLI</td><td><span class="pill ok">PASS</span></td></tr>
+    <tr><td>Hành trình HTTP (bản sao DB, cổng 8100, AI offline)</td><td>Onboarding → kế hoạch 45' → luyện thông minh 15 câu → 7 lỗi có lịch ôn → đọc bài 12' tự tick → SRS → Mentor “Ghi nhớ” + hoàn tác (lần 2 → 409) → insights dựa trên dữ liệu; dời/bỏ qua/thêm nhiệm vụ rồi lập lại kế hoạch vẫn giữ quyết định</td><td><span class="pill ok">27/27</span></td></tr>
+    <tr><td>Live DeepSeek (vòng 1)</td><td>Chuỗi tool đọc → trả lời cá nhân hoá; ghi nhớ + hoàn tác; dữ liệu test đã dọn khỏi DB thật</td><td><span class="pill ok">PASS</span></td></tr>
+  </table>
+
+  <h2 id="user">4. Phản hồi vai User → hành động</h2>
+  <table>
+    <tr><th>#</th><th>Quan sát khi dùng thử</th><th>Hành động</th><th>Trạng thái</th></tr>
+    <tr><td>1</td><td>“Ôn 15 thẻ = 4 phút” — thẻ mới mất nhiều thời gian hơn nhiều</td><td>Tách ước lượng: thẻ ôn ~12 s, thẻ mới ~45 s; tiêu đề nêu rõ “Ôn N + học M thẻ mới”</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>2</td><td>Công tắc “tự điều chỉnh” không có tác dụng thật</td><td>Tuần trước hoàn thành &lt; 50% (≥ 3 nhiệm vụ) → kế hoạch mới nhẹ hơn 25%, hiện lý do + link tắt</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>3</td><td>Chế độ offline vẫn gợi ý “Nhờ AI tạo câu luyện” (không làm được)</td><td>Chỉ đề xuất khi AI online, tối đa 1 lần/chuyên đề/kế hoạch</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>4</td><td>Mentor offline lặp banner dài, kế hoạch không bấm được</td><td>Banner 1 dòng; kế hoạch có ✅/⬜, tiến độ, “Làm ngay”, link chuyên đề; điểm yếu có “Ôn bài • Luyện”</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>5</td><td>Điểm yếu “75% sau 1 câu” dễ gây hiểu nhầm</td><td>Gắn nhãn “(ít dữ liệu)” khi &lt; 3 lượt; tool trả <code>mastery_pct = null</code> khi chưa làm</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>6</td><td>Dời nhiệm vụ sang mai bị gắn nhãn “Bạn thêm”</td><td>Hiển thị “Bạn dời”</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>7</td><td>Bấm giờ listening (nghe ở app khác) không tính khi không chạm màn hình</td><td>Heartbeat chế độ <code>explicit</code> cho đồng hồ do học viên bấm</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>8</td><td>Link “Nhờ AI” từ kế hoạch có thể gửi trước khi lịch sử chat tải xong</td><td>Dùng chung 1 promise nạp lịch sử; <code>?prompt=</code> gửi đúng 1 lần</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>10</td><td>Học viên mới mở báo cáo tuần bị nhắc “đạt 0% mục tiêu” dù chưa bắt đầu; ngày hôm nay chưa kết thúc cũng bị tính là thiếu</td><td>Không chấm ngày đang diễn ra; học viên mới nhận lời chào + CTA “Làm 15 câu đo năng lực”</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>11</td><td>Nhắc Telegram chỉ nêu số thẻ, không nói hôm nay cần làm gì</td><td>Nhắc kèm tối đa 4 nhiệm vụ còn lại + câu sai đến hạn ôn</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>12</td><td>Đánh dấu “Đã nắm chắc” thủ công trong Sổ lỗi nhưng câu vẫn nằm trong hàng đợi ôn</td><td>Router dùng chung <code>apply_status</code> (đồng bộ bậc ôn, ngày ôn, mốc thời gian)</td><td><span class="pill ok">Đã sửa</span></td></tr>
+    <tr><td>9</td><td>Dự đoán điểm khoảng rộng (230-860) khi mới làm 15 câu</td><td>Đúng về thống kê; UI đã kèm độ tin cậy + CTA luyện thêm. Cân nhắc hiện “cần thêm ~N câu để thu hẹp”</td><td><span class="pill warn">Theo dõi</span></td></tr>
+  </table>
+
+  <h2 id="changelog">5. Changelog theo vòng</h2>
+  <h3>Vòng 1 — Backend cá nhân hoá</h3>
+  <ul>
+    <li>Bảng mới: <code>question_attempts</code>, <code>study_sessions</code>, <code>lesson_progress</code>, <code>lesson_notes</code>, <code>learner_memories</code>, <code>study_plan_items</code>, <code>ai_action_logs</code>; cột hồ sơ (ngày thi, điểm đầu vào, ngày học, thẻ mới/ngày, phong cách, Part ưu tiên…). Migration bổ sung, có backfill.</li>
+    <li><code>/api/practice/submit</code> đa đề, 5 chế độ, thời gian từng câu; lịch ôn câu sai 1→3→7 ngày; review queue + smart set.</li>
+    <li><code>services/skills.py</code> (mastery, trend, pace, dự đoán, retention SRS, thẻ hay quên) • <code>services/planner.py</code> (kế hoạch 7 ngày, co giãn lộ trình) • <code>services/coach.py</code> • <code>services/agent_tools.py</code> (28 tool, audit, undo) • prompt cá nhân hoá.</li>
+    <li>Sửa lỗi phát hiện khi test live: datetime trong kết quả tool làm HTTP 500.</li>
+  </ul>
+  <h3>Vòng 2 — Giao diện + vòng QA/User</h3>
+  <ul>
+    <li>Onboarding; Dashboard (điểm dự đoán, phút học, kế hoạch hôm nay, gợi ý coach); Phòng thi 4 chế độ (thông minh, ôn câu sai, thi thật bấm giờ, theo đề/chuyên đề) + đo giờ từng câu; Kế hoạch 7 ngày trên trang Lộ trình (lập lại, thêm, bỏ qua, dời, đồng hồ listening); Phân tích quá trình học; Mentor (chip hành động, hoàn tác, gợi ý, nhật ký); Cài đặt (cá nhân hoá, trí nhớ AI, quyền AI); Bài học (thời gian đọc, hoàn thành, ghi chú); Sổ lỗi (bậc ôn, đến hạn); Paraphrase Vault; Topbar đếm ngày thi.</li>
+    <li>Backend: tự giảm tải (<code>auto_adjust</code>), ước lượng SRS thực tế, nhiệm vụ AI chỉ khi online, Mentor offline có link hành động, <code>get_study_plan</code> trả <code>href</code>/tiến độ cho LLM.</li>
+  </ul>
+
+  <h3>Vòng 3 — Báo cáo tuần & nhắc học cá nhân hoá</h3>
+  <ul>
+    <li><code>services/weekly_report.py</code> + <code>GET /api/learner/weekly-report?end=</code>: phút học vs mục tiêu, độ chính xác vs tuần trước, thay đổi mastery từng chuyên đề (so 2 snapshot <code>skills.compute(now=…)</code>), câu sai mới/nắm chắc, SRS, hoàn thành kế hoạch, điểm dự đoán, trọng tâm tuần tới, bản markdown.</li>
+    <li>Tool AI đọc <code>get_weekly_report</code> (29 tool); thẻ “Báo cáo tuần” trên Phân tích (xem tuần trước, “AI phân tích tuần”).</li>
+    <li>Nhắc học loại <code>weekly_report</code> (Chủ nhật, Telegram); nhắc hằng ngày kèm kế hoạch hôm nay.</li>
+    <li>Sửa: đổi trạng thái Sổ lỗi thủ công đi qua <code>apply_status</code>; <code>last_reviewed_at</code> ghi cả khi ôn thủ công.</li>
+  </ul>
+
+  <h2 id="backlog">6. Backlog tiếp theo (ưu tiên)</h2>
+  <table>
+    <tr><th>Ưu tiên</th><th>Hạng mục</th><th>Giá trị</th></tr>
+    <tr><td><span class="pill ok">Xong</span></td><td>Báo cáo tuần tự động (Phân tích + Telegram Chủ nhật) — vòng 3</td><td>Vòng phản hồi rõ ràng cho học viên</td></tr>
+    <tr><td><span class="pill todo">P1</span></td><td>Ngân hàng câu Part 6/7 và Listening (hiện chủ yếu Part 5) → dự đoán Listening dựa trên dữ liệu thật</td><td>Cá nhân hoá đủ 7 Part</td></tr>
+    <tr><td><span class="pill todo">P2</span></td><td>Độ khó thích ứng: chọn câu theo mastery (câu khó hơn khi &gt; 80%)</td><td>Hiệu quả luyện tập</td></tr>
+    <tr><td><span class="pill todo">P2</span></td><td>AI sinh <code>content_md</code> cho Bài 02-12 (duyệt trước khi lưu)</td><td>Nội dung bài học đầy đủ</td></tr>
+    <tr><td><span class="pill todo">P2</span></td><td>Hiển thị “cần thêm ~N câu để thu hẹp dự đoán”</td><td>Giải thích độ tin cậy</td></tr>
+    <tr><td><span class="pill warn">Mở</span></td><td>Xác thực khi deploy (hiện 1 học viên, <code>user_id = 1</code>)</td><td>Bảo mật — cần quyết định của bạn</td></tr>
+  </table>
+
+  <h2 id="limits">7. Chưa kiểm chứng / cần bạn quyết định</h2>
+  <ul>
+    <li>Chưa chạy E2E trên trình duyệt (tôn trọng lần bạn huỷ headless Chrome) — giao diện được kiểm bằng tsc/eslint/build, smoke HTTP 16 route và test hợp đồng API; tương tác click thực tế chưa được tự động hoá.</li>
+    <li>Live DeepSeek chỉ kiểm ở vòng 1; thay đổi vòng 2 ở phía AI được kiểm bằng mock + chế độ offline.</li>
+    <li>Docker image chưa build lại (Docker daemon đang tắt). Chưa commit/push — chờ bạn yêu cầu.</li>
+    <li>DB thật đã được migrate (bảng/cột mới), dữ liệu học không thay đổi; backup tại <code>server/data/backups/toeic_lab.20261001-133513.db</code>.</li>
+  </ul>
+
+  <h2 id="verify">8. Tự kiểm tra</h2>
+  <pre><button type="button">Copy</button>make check                       # pytest + tsc + eslint + next build
+make dev-api                     # http://127.0.0.1:8000/docs
+make dev-web                     # http://localhost:3005 → /onboarding để cá nhân hoá</pre>
+  <pre><button type="button">Copy</button>curl -s http://127.0.0.1:8000/api/plan/week | python3 -m json.tool | head -40
+curl -s http://127.0.0.1:8000/api/learner/insights | python3 -m json.tool | head -40
+curl -s http://127.0.0.1:8000/api/ai/actions | python3 -m json.tool</pre>
+  <p class="muted">Nguồn: kết quả lệnh trong phiên làm việc (pytest, make check, curl smoke, kịch bản HTTP trên instance cô lập).</p>
+</main>
+<script>
+  document.querySelectorAll("pre button").forEach((btn) => btn.addEventListener("click", async () => {
+    const text = btn.parentElement.textContent.replace(/^Copy/, "").trim();
+    try { await navigator.clipboard.writeText(text); btn.textContent = "Đã copy"; } catch { btn.textContent = "Lỗi copy"; }
+    setTimeout(() => (btn.textContent = "Copy"), 1500);
+  }));
+</script>
+</body>
+</html>
