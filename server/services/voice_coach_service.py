@@ -185,21 +185,78 @@ TRẢ VỀ DUY NHẤT 1 ĐỐI TƯỢNG JSON (không kèm chữ nào khác ngoà
 }}
 """
 
+VOCAB_PRONOUNCE_TEXT_PROMPT_TEMPLATE = """Bạn là Chuyên gia Ngữ âm và Huấn luyện viên Phát âm TOEIC.
+Nhiệm vụ: Đánh giá độ chính xác khi học viên phát âm từ vựng tiếng Anh dựa trên văn bản nhận diện được từ giọng nói (Speech-to-Text).
 
-def _offline_vocab_pronunciation(word: str, expected_ipa: Optional[str]) -> dict:
+Từ mục tiêu: "{word}"
+Phiên âm IPA chuẩn kỳ vọng: "{expected_ipa}"
+Âm thực tế học viên đọc được hệ thống ghi nhận: "{recognized_text}"
+
+Hãy phân tích đối chiếu chuyên sâu:
+1. So sánh âm học viên đọc ("{recognized_text}") với từ mục tiêu ("{word}"):
+   - Nếu học viên đọc đúng hoàn toàn: Phân tích các âm vị chuẩn, âm đuôi và độ tự nhiên. Cho điểm cao (85-98 tùy độ phức tạp của từ).
+   - Nếu học viên đọc lệch, thiếu âm đuôi, nuốt âm (ví dụ: mất ending sound /t/, /d/, /s/, /z/, /n/), nhầm nguyên âm, hoặc nói từ khác: Phân tích cụ thể âm nào bị thiếu hoặc sai lệch. Cho điểm tương ứng (20-75).
+   - Nếu không ghi nhận được âm đọc rõ ràng: Cho điểm dưới 40 và yêu cầu đọc to, rõ ràng hơn.
+2. Xác định phiên âm IPA học viên thực sự phát âm (recognized_ipa).
+3. Đánh giá chi tiết 4 tiêu chí: Nguyên âm (vowels), Phụ âm & Âm đuôi (consonants), Trọng âm (stress), và Lời khuyên cụ thể (tips).
+
+TRẢ VỀ DUY NHẤT 1 ĐỐI TƯỢNG JSON (không kèm chữ nào khác ngoài ```json ... ```):
+{{
+  "word": "{word}",
+  "score": <0-100>,
+  "recognized_text": "{recognized_text}",
+  "recognized_ipa": "<Phiên âm IPA thực tế học viên đọc>",
+  "expected_ipa": "{expected_ipa}",
+  "is_accurate": <true nếu score >= 75 ngược lại false>,
+  "feedback": {{
+    "vowels": "<Nhận xét về nguyên âm>",
+    "consonants": "<Nhận xét về phụ âm và âm đuôi>",
+    "stress": "<Nhận xét về trọng âm>",
+    "tips": "<Mẹo cụ thể sửa lỗi>"
+  }}
+}}
+"""
+
+
+def _offline_vocab_pronunciation(word: str, expected_ipa: Optional[str], recognized_text: Optional[str] = None) -> dict:
     target_ipa = expected_ipa or f"/{word}/"
+    if recognized_text is None:
+        rec = word
+    else:
+        rec = recognized_text.strip()
+
+    if not rec or rec == "[Không bắt được âm thanh rõ ràng]":
+        return {
+            "word": word,
+            "score": 35,
+            "recognized_text": "[Âm thanh không rõ]",
+            "recognized_ipa": target_ipa,
+            "expected_ipa": target_ipa,
+            "is_accurate": False,
+            "feedback": {
+                "vowels": "Âm lượng thu vào quá nhỏ hoặc ngắt quãng, chưa nhận diện rõ nguyên âm.",
+                "consonants": "Chưa ghi nhận được các phụ âm và âm đuôi cần thiết.",
+                "stress": "Chưa đủ dữ liệu sóng âm để xác định trọng âm.",
+                "tips": "Hãy kiểm tra micro, đưa gần miệng hơn và nói to, dứt khoát từng âm tiết.",
+            },
+            "provider": "offline",
+            "model": "offline-phonetic-coach",
+        }
+
+    is_match = rec.lower() == word.lower()
+    score = 90 if is_match else 60
     return {
         "word": word,
-        "score": 88,
-        "recognized_text": word,
-        "recognized_ipa": target_ipa,
+        "score": score,
+        "recognized_text": rec,
+        "recognized_ipa": target_ipa if is_match else f"/{rec}/",
         "expected_ipa": target_ipa,
-        "is_accurate": True,
+        "is_accurate": is_match,
         "feedback": {
-            "vowels": "Nguyên âm phát âm rõ ràng, trường độ chuẩn.",
-            "consonants": "Bật âm phụ âm đầu và âm đuôi đầy đủ, không bị nuốt âm.",
-            "stress": "Trọng âm nhấn đúng vào âm tiết chính.",
-            "tips": "Duy trì độ mở vòm họng và giữ âm đuôi dứt khoát khi ghép từ vào câu nói.",
+            "vowels": "Nguyên âm phát âm rõ ràng, trường độ tốt." if is_match else "Nguyên âm có phần bị lệch khẩu hình so với âm chuẩn.",
+            "consonants": "Bật âm phụ âm đầu và âm đuôi đầy đủ." if is_match else f"Chú ý âm đuôi và các phụ âm nối trong từ '{word}'.",
+            "stress": "Trọng âm nhấn đúng vào âm tiết chính." if is_match else "Cần nhấn dứt khoát hơn vào âm tiết mang trọng âm chính.",
+            "tips": "Duy trì luyện tập đều đặn để tạo phản xạ tự nhiên." if is_match else f"Luyện nghe lại phát âm mẫu của '{word}' và tập nhại theo âm đuôi.",
         },
         "provider": "offline",
         "model": "offline-phonetic-coach",
@@ -210,47 +267,83 @@ async def evaluate_vocab_pronunciation(
     word: str,
     expected_ipa: Optional[str],
     audio_base64: str,
+    user_transcript: Optional[str] = None,
 ) -> dict:
     clean_word = word.strip()
     target_ipa = (expected_ipa or "").strip() or f"/{clean_word}/"
 
     status = agent.provider_status()
-    if status.get("offline") or not audio_base64:
-        return _offline_vocab_pronunciation(clean_word, target_ipa)
 
-    prompt = VOCAB_PRONOUNCE_PROMPT_TEMPLATE.format(word=clean_word, expected_ipa=target_ipa)
+    # Case 1: Multimodal Gemini is configured -> analyze raw audio directly
+    if status.get("provider") == "gemini" and not status.get("offline") and audio_base64:
+        prompt = VOCAB_PRONOUNCE_PROMPT_TEMPLATE.format(word=clean_word, expected_ipa=target_ipa)
+        try:
+            raw_reply = await agent.complete_with_audio(
+                prompt=prompt,
+                audio_base64=audio_base64,
+                system_prompt="Bạn là giám khảo ngữ âm TOEIC. Luôn trả về định dạng JSON hợp lệ.",
+            )
+            parsed = agent.extract_json_object(raw_reply)
+            if parsed and "score" in parsed:
+                fb = parsed.get("feedback") or {}
+                score = max(0, min(100, int(parsed.get("score", 85))))
+                return {
+                    "word": clean_word,
+                    "score": score,
+                    "recognized_text": str(parsed.get("recognized_text", clean_word)),
+                    "recognized_ipa": str(parsed.get("recognized_ipa", target_ipa)),
+                    "expected_ipa": str(parsed.get("expected_ipa", target_ipa)),
+                    "is_accurate": bool(parsed.get("is_accurate", score >= 75)),
+                    "feedback": {
+                        "vowels": str(fb.get("vowels", "Nguyên âm rõ ràng.")),
+                        "consonants": str(fb.get("consonants", "Phụ âm rõ ràng.")),
+                        "stress": str(fb.get("stress", "Trọng âm chuẩn.")),
+                        "tips": str(fb.get("tips", "Duy trì luyện tập đều đặn.")),
+                    },
+                    "provider": "gemini",
+                    "model": status.get("model", "gemini-2.5-flash"),
+                }
+        except Exception as exc:
+            logger.warning("Gemini audio analysis failed, falling back to text analysis: %s", exc)
 
-    try:
-        raw_reply = await agent.complete_with_audio(
-            prompt=prompt,
-            audio_base64=audio_base64,
-            system_prompt="Bạn là giám khảo ngữ âm TOEIC. Luôn trả về định dạng JSON hợp lệ.",
+    # Case 2: DeepSeek or Text Provider (with recognized STT transcript from browser)
+    recognized = (user_transcript or "").strip()
+    if not status.get("offline"):
+        text_prompt = VOCAB_PRONOUNCE_TEXT_PROMPT_TEMPLATE.format(
+            word=clean_word,
+            expected_ipa=target_ipa,
+            recognized_text=recognized or "[Không bắt được âm thanh rõ ràng]",
         )
-        parsed = agent.extract_json_object(raw_reply)
-        if not parsed or "score" not in parsed:
-            raise ValueError("Không trích xuất được JSON đánh giá phát âm")
+        try:
+            raw_reply = await agent.complete_text(
+                text_prompt,
+                system_prompt="Bạn là giám khảo ngữ âm TOEIC. Luôn trả về duy nhất 1 JSON hợp lệ.",
+            )
+            parsed = agent.extract_json_object(raw_reply)
+            if parsed and "score" in parsed:
+                fb = parsed.get("feedback") or {}
+                score = max(0, min(100, int(parsed.get("score", 70 if recognized else 35))))
+                return {
+                    "word": clean_word,
+                    "score": score,
+                    "recognized_text": str(parsed.get("recognized_text", recognized or clean_word)),
+                    "recognized_ipa": str(parsed.get("recognized_ipa", target_ipa)),
+                    "expected_ipa": str(parsed.get("expected_ipa", target_ipa)),
+                    "is_accurate": bool(parsed.get("is_accurate", score >= 75)),
+                    "feedback": {
+                        "vowels": str(fb.get("vowels", "Nguyên âm cần luyện tập thêm.")),
+                        "consonants": str(fb.get("consonants", "Chú ý bật rõ âm đuôi.")),
+                        "stress": str(fb.get("stress", "Chú ý trọng âm chính của từ.")),
+                        "tips": str(fb.get("tips", "Luyện nghe lại phát âm mẫu và nhại theo từng âm tiết.")),
+                    },
+                    "provider": status.get("provider", "deepseek"),
+                    "model": status.get("model", "deepseek-flash"),
+                }
+        except Exception as exc:
+            logger.warning("Text-based pronunciation analysis failed: %s", exc)
 
-        fb = parsed.get("feedback") or {}
-        score = max(0, min(100, int(parsed.get("score", 85))))
-        return {
-            "word": clean_word,
-            "score": score,
-            "recognized_text": str(parsed.get("recognized_text", clean_word)),
-            "recognized_ipa": str(parsed.get("recognized_ipa", target_ipa)),
-            "expected_ipa": str(parsed.get("expected_ipa", target_ipa)),
-            "is_accurate": bool(parsed.get("is_accurate", score >= 75)),
-            "feedback": {
-                "vowels": str(fb.get("vowels", "Nguyên âm rõ ràng.")),
-                "consonants": str(fb.get("consonants", "Phụ âm rõ ràng.")),
-                "stress": str(fb.get("stress", "Trọng âm chuẩn.")),
-                "tips": str(fb.get("tips", "Duy trì luyện tập đều đặn.")),
-            },
-            "provider": status.get("provider", "gemini"),
-            "model": status.get("model", "gemini-2.5-flash"),
-        }
-    except Exception as exc:
-        logger.warning("Vocab pronunciation AI analysis failed, falling back to offline: %s", exc)
-        return _offline_vocab_pronunciation(clean_word, target_ipa)
+    # Case 3: Offline fallback
+    return _offline_vocab_pronunciation(clean_word, target_ipa, user_transcript)
 
 
 async def process_voice_turn(

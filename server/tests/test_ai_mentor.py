@@ -170,6 +170,41 @@ def test_vocab_pronunciation_assessment(client, seeded):
     assert "stress" in data["feedback"]
 
 
+def test_vocab_pronunciation_variations(client, seeded):
+    fake_audio_base64 = "data:audio/webm;base64,GkXfo59ChoEBQveBAULygQ8UA8G7UxEkEVO"
+
+    # Correct pronunciation
+    res_correct = client.post(
+        "/api/ai/pronounce-vocab",
+        json={
+            "word": "postpone",
+            "expected_ipa": "/pəʊstˈpəʊn/",
+            "audio_base64": fake_audio_base64,
+            "user_transcript": "postpone",
+        },
+    )
+    assert res_correct.status_code == 200
+    data_correct = res_correct.json()
+    assert data_correct["score"] >= 85
+    assert data_correct["is_accurate"] is True
+
+    # Mispronounced / partial pronunciation
+    res_wrong = client.post(
+        "/api/ai/pronounce-vocab",
+        json={
+            "word": "postpone",
+            "expected_ipa": "/pəʊstˈpəʊn/",
+            "audio_base64": fake_audio_base64,
+            "user_transcript": "post",
+        },
+    )
+    assert res_wrong.status_code == 200
+    data_wrong = res_wrong.json()
+    assert data_wrong["score"] < data_correct["score"]
+    assert data_wrong["is_accurate"] is False
+    assert data_wrong["recognized_text"] == "post"
+
+
 def test_voice_coach_audio_turn_multimodal(client, seeded):
     fake_audio_base64 = "data:audio/webm;base64,GkXfo59ChoEBQveBAULygQ8UA8G7UxEkEVO"
     res = client.post(

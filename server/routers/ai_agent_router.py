@@ -213,4 +213,5 @@ async def pronounce_vocab(
         word=payload.word,
         expected_ipa=payload.expected_ipa,
         audio_base64=payload.audio_base64,
+        user_transcript=payload.user_transcript,
     )

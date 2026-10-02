@@ -50,6 +50,8 @@ export function PronounceDialog({
 
   const recorderRef = useRef<AudioRecorder | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const recognitionRef = useRef<{ stop: () => void; abort: () => void } | null>(null);
+  const recognizedTextRef = useRef<string>("");
   const isRecordingRef = useRef(false);
   const isStoppingRef = useRef(false);
   const stopRecordingRef = useRef<() => Promise<void>>(async () => {});
@@ -61,6 +63,14 @@ export function PronounceDialog({
       recorderRef.current.cancel();
     }
     recorderRef.current = null;
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.abort();
+      } catch {
+        // ignore
+      }
+      recognitionRef.current = null;
+    }
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -71,6 +81,15 @@ export function PronounceDialog({
     if (!isRecordingRef.current || isStoppingRef.current) return;
     isStoppingRef.current = true;
     isRecordingRef.current = false;
+
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      recognitionRef.current = null;
+    }
 
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -91,6 +110,7 @@ export function PronounceDialog({
             word: word.trim(),
             expected_ipa: expectedIpa || undefined,
             audio_base64: base64,
+            user_transcript: recognizedTextRef.current || undefined,
           },
         });
         setResult(res);
@@ -132,9 +152,60 @@ export function PronounceDialog({
     setResult(null);
     setSpeechDetected(false);
     setVolume(0);
+    recognizedTextRef.current = "";
     cleanup();
 
     try {
+      if (typeof window !== "undefined") {
+        const win = window as unknown as {
+          SpeechRecognition?: new () => {
+            lang: string;
+            continuous: boolean;
+            interimResults: boolean;
+            maxAlternatives: number;
+            onresult: (e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void;
+            onerror: () => void;
+            start: () => void;
+            stop: () => void;
+            abort: () => void;
+          };
+          webkitSpeechRecognition?: new () => {
+            lang: string;
+            continuous: boolean;
+            interimResults: boolean;
+            maxAlternatives: number;
+            onresult: (e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void;
+            onerror: () => void;
+            start: () => void;
+            stop: () => void;
+            abort: () => void;
+          };
+        };
+
+        const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition;
+        if (SpeechRec) {
+          try {
+            const recognition = new SpeechRec();
+            recognition.lang = "en-US";
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 3;
+
+            recognition.onresult = (e) => {
+              const text = e.results[0]?.[0]?.transcript;
+              if (text) {
+                recognizedTextRef.current = text.trim();
+              }
+            };
+            recognition.onerror = () => {};
+            recognition.start();
+            recognitionRef.current = recognition;
+          } catch {
+            // ignore STT errors
+          }
+        }
+      }
+
       const recorder = new AudioRecorder({
         autoStopOnSilence: true,
         speechThreshold: 0.06,

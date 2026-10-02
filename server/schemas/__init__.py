@@ -680,6 +680,7 @@ class VocabPronounceRequest(BaseModel):
     word: str = Field(..., min_length=1, max_length=100)
     expected_ipa: Optional[str] = Field(None, max_length=100)
     audio_base64: str = Field(..., min_length=10, max_length=15_000_000)
+    user_transcript: Optional[str] = Field(None, max_length=500)
 
 
 class VocabPronounceResponse(BaseModel):
