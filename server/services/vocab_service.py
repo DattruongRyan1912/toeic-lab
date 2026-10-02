@@ -50,6 +50,7 @@ def create_card(db: Session, user_id: int, data: dict) -> tuple:
         collocations=_clean(data.get("collocations")),
         paraphrase_pair=_clean(data.get("paraphrase_pair")),
         example_sentence=_clean(data.get("example_sentence")) or "Example sentence pending.",
+        example_translation=_clean(data.get("example_translation")),
     )
     db.add(card)
     db.flush()

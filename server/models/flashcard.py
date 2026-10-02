@@ -17,6 +17,7 @@ class Flashcard(Base):
     collocations = Column(Text, nullable=True)
     paraphrase_pair = Column(Text, nullable=True)
     example_sentence = Column(Text, nullable=False)
+    example_translation = Column(Text, nullable=True)
     audio_word_url = Column(String(255), nullable=True)
     audio_sentence_url = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=utcnow)

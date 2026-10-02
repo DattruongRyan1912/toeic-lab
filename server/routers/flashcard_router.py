@@ -15,6 +15,8 @@ from server.schemas import (
     FlashcardRead,
     FlashcardSummary,
     SRSReviewRequest,
+    TranslateSentenceRequest,
+    TranslateSentenceResponse,
     UserCardSRSRead,
 )
 from server.services import activity, ai_agent_service, insights, vocab_service
@@ -36,8 +38,35 @@ Trả về DUY NHẤT một object JSON hợp lệ (không markdown, không văn
   "meaning": "nghĩa tiếng Việt ngắn gọn, sát ngữ cảnh thương mại",
   "collocations": "2-3 collocation TOEIC, ngăn cách bằng dấu phẩy",
   "paraphrase_pair": "cặp đồng nghĩa hay gặp, ví dụ: postpone = delay = put off",
-  "example_sentence": "1 câu ví dụ chuẩn đề TOEIC có chứa từ này"
+  "example_sentence": "1 câu ví dụ chuẩn đề TOEIC có chứa từ này",
+  "example_translation": "dịch nghĩa tiếng Việt tự nhiên, chính xác của câu ví dụ trên"
 }}"""
+
+
+async def translate_sentence_to_vi(sentence: str, keyword: Optional[str] = None) -> str:
+    """Dịch câu ví dụ tiếng Anh sang tiếng Việt tự nhiên theo chuẩn đề thi TOEIC."""
+    if ai_agent_service.resolve_provider() is not None:
+        prompt = (
+            "Dịch câu ví dụ tiếng Anh luyện thi TOEIC sau sang tiếng Việt tự nhiên, chính xác, sát ngữ cảnh thương mại.\n"
+            f"Câu gốc: \"{sentence}\"\n"
+        )
+        if keyword:
+            prompt += f"Từ vựng trọng tâm cần lưu ý: \"{keyword}\"\n"
+        prompt += (
+            "Chỉ trả về DUY NHẤT một chuỗi câu tiếng Việt hoàn chỉnh, không kèm giải thích, không kèm ngoặc kép hay markdown."
+        )
+        try:
+            res = await ai_agent_service.complete_text(prompt)
+            clean = res.strip().strip('"').strip("'")
+            if clean.startswith("{") and "translation" in clean:
+                parsed = ai_agent_service.extract_json_object(clean)
+                if parsed and parsed.get("translation"):
+                    clean = str(parsed["translation"]).strip()
+            if clean:
+                return clean
+        except Exception:
+            pass
+    return "Bản dịch tự động tạm thời chưa khả dụng."
 
 
 @router.get("", response_model=List[FlashcardRead])
@@ -138,7 +167,36 @@ async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_d
         collocations=text("collocations"),
         paraphrase_pair=text("paraphrase_pair"),
         example_sentence=text("example_sentence"),
+        example_translation=text("example_translation") or None,
     )
+
+
+@router.post("/translate-sentence", response_model=TranslateSentenceResponse)
+async def translate_sentence_endpoint(payload: TranslateSentenceRequest):
+    sentence = payload.sentence.strip()
+    if not sentence:
+        raise HTTPException(status_code=400, detail="Câu không được để trống.")
+    trans = await translate_sentence_to_vi(sentence)
+    return TranslateSentenceResponse(sentence=sentence, translation=trans)
+
+
+@router.post("/{card_id}/translate-example", response_model=FlashcardRead)
+async def translate_flashcard_example(card_id: int, db: Session = Depends(get_db)):
+    card = db.get(Flashcard, card_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
+
+    if card.example_translation:
+        return card
+
+    if not card.example_sentence or card.example_sentence.strip() in ("", "Example sentence pending."):
+        raise HTTPException(status_code=400, detail="Thẻ này chưa có câu ví dụ để dịch.")
+
+    trans = await translate_sentence_to_vi(card.example_sentence, keyword=card.word)
+    card.example_translation = trans
+    db.commit()
+    db.refresh(card)
+    return card
 
 
 @router.get("/due", response_model=List[UserCardSRSRead])

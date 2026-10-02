@@ -126,6 +126,19 @@ export function WordListTable({ words, onDeleted, onStudyCategory }: WordListTab
                     )}
                   </div>
                 )}
+                {item.example_sentence && (
+                  <div className="mt-1.5 rounded-lg border border-slate-100 bg-slate-50/80 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/40">
+                    <p className="font-medium text-slate-700 italic dark:text-slate-300">
+                      &ldquo;{item.example_sentence}&rdquo;
+                    </p>
+                    {item.example_translation && (
+                      <p className="mt-1 border-t border-slate-200/60 pt-1 text-slate-500 dark:border-slate-700/50 dark:text-slate-400">
+                        <span className="font-semibold text-blue-600 dark:text-blue-400 mr-1">Dịch:</span>
+                        {item.example_translation}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex shrink-0 items-center gap-2 self-end md:self-center">
                 <Button size="sm" variant="outline" onClick={() => void speak(item.word)} className="h-8 cursor-pointer px-2.5" aria-label={`Nghe phát âm ${item.word}`} title="Nghe phát âm mẫu">

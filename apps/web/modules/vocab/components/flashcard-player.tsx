@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import confetti from "canvas-confetti";
-import { ArrowRight, BookOpen, CheckCircle, Loader2, Mic, RotateCcw, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle, Languages, Loader2, Mic, RotateCcw, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { api, errorMessage } from "@/lib/api";
@@ -48,6 +48,8 @@ export function FlashcardPlayer({
   const [playing, setPlaying] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [pronouncingWord, setPronouncingWord] = useState<FlashcardItem | null>(null);
+  const [translations, setTranslations] = useState<Record<number, string>>({});
+  const [translatingId, setTranslatingId] = useState<number | null>(null);
 
   const card = queue[index];
   const finished = queue.length > 0 && index >= queue.length;
@@ -66,6 +68,22 @@ export function FlashcardPlayer({
       setPlaying(false);
     }
   }, []);
+
+  const handleTranslateExample = useCallback(async (cardId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (translatingId) return;
+    setTranslatingId(cardId);
+    try {
+      const updated = await api<FlashcardItem>(`/flashcards/${cardId}/translate-example`, { method: "POST" });
+      if (updated.example_translation) {
+        setTranslations((prev) => ({ ...prev, [cardId]: updated.example_translation! }));
+      }
+    } catch (err) {
+      toast.add({ title: "Không thể dịch câu ví dụ", description: errorMessage(err), type: "error" });
+    } finally {
+      setTranslatingId(null);
+    }
+  }, [translatingId]);
 
   const rate = useCallback(
     async (rating: number) => {
@@ -251,27 +269,57 @@ export function FlashcardPlayer({
                   <p className="mt-0.5 text-sm font-medium text-slate-700 dark:text-slate-300">{word.paraphrase_pair}</p>
                 </div>
               )}
-              {word.example_sentence && (
-                <div>
-                  <span className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                    Ví dụ chuẩn đề thi
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void play(word.example_sentence);
-                      }}
-                      className="cursor-pointer text-blue-600 dark:text-blue-400"
-                      aria-label="Nghe câu ví dụ"
-                    >
-                      <Volume2 className="h-3.5 w-3.5" />
-                    </button>
-                  </span>
-                  <p className="mt-1 rounded border border-slate-200 bg-white p-2 text-xs text-slate-700 italic dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300">
-                    &ldquo;{word.example_sentence}&rdquo;
-                  </p>
-                </div>
-              )}
+              {word.example_sentence && (() => {
+                const exampleTrans = translations[word.id] || word.example_translation;
+                return (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                      <span className="flex items-center gap-1.5">
+                        Ví dụ chuẩn đề thi
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void play(word.example_sentence);
+                          }}
+                          className="cursor-pointer text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                          aria-label="Nghe câu ví dụ"
+                          title="Nghe phát âm cả câu"
+                        >
+                          <Volume2 className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                      {!exampleTrans && (
+                        <button
+                          type="button"
+                          onClick={(e) => void handleTranslateExample(word.id, e)}
+                          disabled={translatingId === word.id}
+                          className="flex cursor-pointer items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+                          title="Dịch nghĩa câu ví dụ với AI"
+                        >
+                          {translatingId === word.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Languages className="h-3 w-3" />
+                          )}
+                          Dịch nghĩa
+                        </button>
+                      )}
+                    </div>
+                    <div className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
+                      <p className="text-xs font-medium text-slate-800 italic dark:text-slate-200">
+                        &ldquo;{word.example_sentence}&rdquo;
+                      </p>
+                      {exampleTrans && (
+                        <p className="mt-1.5 border-t border-slate-100 pt-1.5 text-xs text-slate-600 dark:border-slate-800/80 dark:text-slate-400">
+                          <span className="font-semibold text-blue-600 dark:text-blue-400 mr-1.5">Dịch nghĩa:</span>
+                          {exampleTrans}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <div className="pt-2 text-center text-xs text-slate-500">Chạm để lật lại • phím 1-4 để đánh giá</div>
           </div>

@@ -393,6 +393,7 @@ class FlashcardCreate(BaseModel):
     collocations: Optional[str] = None
     paraphrase_pair: Optional[str] = None
     example_sentence: str = Field(..., min_length=1)
+    example_translation: Optional[str] = None
 
 
 class AIFillVocabRequest(BaseModel):
@@ -409,6 +410,7 @@ class AIFillVocabResponse(BaseModel):
     collocations: str
     paraphrase_pair: str
     example_sentence: str
+    example_translation: Optional[str] = None
 
 
 class FlashcardRead(ORMModel):
@@ -421,8 +423,18 @@ class FlashcardRead(ORMModel):
     collocations: Optional[str] = None
     paraphrase_pair: Optional[str] = None
     example_sentence: str
+    example_translation: Optional[str] = None
     audio_word_url: Optional[str] = None
     audio_sentence_url: Optional[str] = None
+
+
+class TranslateSentenceRequest(BaseModel):
+    sentence: str = Field(..., min_length=1, max_length=1000)
+
+
+class TranslateSentenceResponse(BaseModel):
+    sentence: str
+    translation: str
 
 
 class CategoryStat(BaseModel):

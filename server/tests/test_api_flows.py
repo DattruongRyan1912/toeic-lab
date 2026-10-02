@@ -110,6 +110,18 @@ def test_flashcard_create_dedupe_delete_and_ai_fill_offline(client, seeded):
     assert client.post("/api/flashcards/ai-fill", json={"word": "postpone"}).status_code == 409
 
     card_id = created.json()["id"]
+    assert created.json()["example_translation"] is None
+
+    # Test sentence translate endpoint (offline fallback when no keys in test environment)
+    trans_resp = client.post("/api/flashcards/translate-sentence", json={"sentence": "We leverage data."})
+    assert trans_resp.status_code == 200
+    assert "translation" in trans_resp.json()
+
+    # Test card translate-example
+    trans_card = client.post(f"/api/flashcards/{card_id}/translate-example")
+    assert trans_card.status_code == 200
+    assert trans_card.json()["example_translation"] is not None
+
     assert client.delete(f"/api/flashcards/{card_id}").status_code == 200
     assert client.get("/api/flashcards/summary").json()["new_cards"] == 5
 

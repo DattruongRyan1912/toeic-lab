@@ -43,6 +43,8 @@ def card_row(card) -> tuple:
         back = sentence[: match.start()] + HIGHLIGHT.format(match.group(0)) + sentence[match.end():]
     else:
         front, back = f"{sentence} ({BLANK})", sentence
+    if getattr(card, "example_translation", None):
+        back += f"<br><span style='color:#64748b;font-size:0.85em;font-style:italic;'>Dịch: {_esc(card.example_translation)}</span>"
     return (
         front,
         _esc(card.category),

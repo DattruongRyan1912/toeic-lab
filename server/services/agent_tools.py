@@ -572,6 +572,7 @@ def _forget(ctx: ToolContext, args: dict) -> Outcome:
 # --------------------------------------------------------------------------- write tools: vocabulary & SRS
 CARD_FIELDS = {
     "word": S("Từ vựng tiếng Anh"), "meaning": S("Nghĩa tiếng Việt ngắn gọn"), "example_sentence": S("Câu ví dụ chuẩn đề TOEIC"),
+    "example_translation": S("Bản dịch tiếng Việt của câu ví dụ"),
     "category": S("Chủ đề"), "collocations": S("Collocation, ngăn cách bằng dấu phẩy"), "paraphrase_pair": S("Cặp đồng nghĩa"),
     "ipa": S("Phiên âm IPA"), "word_type": S("verb / noun / adjective / adverb"),
 }
@@ -621,7 +622,7 @@ def _create_flashcards_bulk(ctx: ToolContext, args: dict) -> Outcome:
 def _update_flashcard(ctx: ToolContext, args: dict) -> Outcome:
     card = _card(ctx, {k: v for k, v in args.items() if k in ("card_id", "word")})
     fields = {}
-    for key in ("meaning", "example_sentence", "category", "collocations", "paraphrase_pair", "word_type"):
+    for key in ("meaning", "example_sentence", "example_translation", "category", "collocations", "paraphrase_pair", "word_type"):
         if args.get(key) not in (None, ""):
             fields[key] = str(args[key]).strip()
     if args.get("ipa"):

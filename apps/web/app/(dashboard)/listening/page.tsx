@@ -71,7 +71,7 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
   const [isPlayingUserAudio, setIsPlayingUserAudio] = useState(false);
-  const [shadowingTranscriptVisible, setShadowingTranscriptVisible] = useState(true);
+  const [shadowingTranscriptVisible, setShadowingTranscriptVisible] = useState(false);
 
   // Activity tracking
   const sessionStartTime = useRef<number | null>(null);
@@ -658,25 +658,19 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                   ) : (
                     <Eye className="h-3.5 w-3.5 mr-1" />
                   )}
-                  {shadowingTranscriptVisible ? "Ẩn lời thoại (Tăng độ khó)" : "Hiện lời thoại"}
+                  {shadowingTranscriptVisible ? "Làm mờ lời thoại (Tăng độ khó)" : "Hiện lời thoại"}
                 </Button>
               </div>
 
               <div
                 className={cn(
-                  "rounded-xl bg-white p-4 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 transition-all space-y-2.5",
-                  !shadowingTranscriptVisible && "blur-xs select-none filter opacity-40",
+                  "rounded-xl bg-white p-4 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 transition-all",
+                  !shadowingTranscriptVisible && "blur-md select-none filter opacity-40",
                 )}
               >
                 <div className="font-mono text-base leading-relaxed text-slate-900 dark:text-slate-100">
                   {exercise.sentence}
                 </div>
-                {exercise.explanation && (
-                  <div className="flex items-start gap-2 pt-2.5 border-t border-slate-100 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
-                    <span className="shrink-0 font-semibold text-blue-600 dark:text-blue-400">Dịch nghĩa:</span>
-                    <span className="leading-relaxed">{exercise.explanation}</span>
-                  </div>
-                )}
               </div>
 
               {exercise.phonetic_cues && exercise.phonetic_cues.length > 0 && (
@@ -1034,7 +1028,7 @@ export default function ListeningStudioPage() {
       {/* Main Studio Area */}
       {currentExercise ? (
         <div className="space-y-6">
-          <ExerciseStudio key={currentExercise.id} exercise={currentExercise} mode={mode} />
+          <ExerciseStudio key={`${currentExercise.id}-${mode}`} exercise={currentExercise} mode={mode} />
 
           {/* Bottom Action Bar */}
           <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">

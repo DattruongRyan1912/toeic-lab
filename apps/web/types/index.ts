@@ -247,6 +247,7 @@ export interface FlashcardItem {
   collocations?: string | null;
   paraphrase_pair?: string | null;
   example_sentence: string;
+  example_translation?: string | null;
   audio_word_url?: string | null;
   audio_sentence_url?: string | null;
 }

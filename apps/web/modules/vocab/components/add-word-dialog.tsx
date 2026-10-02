@@ -16,7 +16,7 @@ interface AddWordDialogProps {
   onWordAdded: (word: FlashcardItem) => void;
 }
 
-const EMPTY = { word: "", ipa: "", wordType: "", category: "General Business", meaning: "", collocations: "", paraphrase: "", example: "" };
+const EMPTY = { word: "", ipa: "", wordType: "", category: "General Business", meaning: "", collocations: "", paraphrase: "", example: "", exampleTranslation: "" };
 
 export function AddWordDialog({ onWordAdded }: AddWordDialogProps) {
   const aiOffline = useLearnerStore((state) => state.aiStatus?.offline ?? false);
@@ -43,6 +43,7 @@ export function AddWordDialog({ onWordAdded }: AddWordDialogProps) {
         collocations: string;
         paraphrase_pair: string;
         example_sentence: string;
+        example_translation?: string | null;
       }>("/flashcards/ai-fill", { method: "POST", json: { word: form.word.trim() } });
       setForm({
         word: data.word || form.word,
@@ -53,6 +54,7 @@ export function AddWordDialog({ onWordAdded }: AddWordDialogProps) {
         collocations: data.collocations,
         paraphrase: data.paraphrase_pair,
         example: data.example_sentence,
+        exampleTranslation: data.example_translation || "",
       });
     } catch (err) {
       setError(errorMessage(err));
@@ -80,6 +82,7 @@ export function AddWordDialog({ onWordAdded }: AddWordDialogProps) {
           collocations: form.collocations.trim() || null,
           paraphrase_pair: form.paraphrase.trim() || null,
           example_sentence: form.example.trim(),
+          example_translation: form.exampleTranslation.trim() || null,
         },
       });
       onWordAdded(created);
@@ -167,6 +170,10 @@ export function AddWordDialog({ onWordAdded }: AddWordDialogProps) {
           <div className="space-y-1">
             <Label htmlFor="example">Câu ví dụ chuẩn đề thi *</Label>
             <Textarea id="example" rows={2} placeholder="The board decided to postpone the meeting until next week." value={form.example} onChange={update("example")} required />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="exampleTranslation">Dịch nghĩa câu ví dụ</Label>
+            <Input id="exampleTranslation" placeholder="Hội đồng quản trị quyết định hoãn cuộc họp cho đến tuần sau." value={form.exampleTranslation} onChange={update("exampleTranslation")} />
           </div>
 
           <div className="flex justify-end gap-3 border-t border-slate-200 pt-3 dark:border-slate-800">
