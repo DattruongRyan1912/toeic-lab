@@ -11,6 +11,7 @@ import {
   Sparkles,
   Square,
   Volume2,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -348,24 +349,46 @@ export function PronounceDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md p-6">
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-          <DialogTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
-            <Sparkles className="h-4 w-4 text-blue-500" />
-            Luyện Phát Âm AI (Multimodal Audio)
-          </DialogTitle>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setMicTestOpen(true)}
-            className="h-7 cursor-pointer gap-1 px-2 text-xs text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40"
-            title="Kiểm tra Micro & Cấp quyền"
-          >
-            <Sliders className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Test Mic</span>
-          </Button>
-        </DialogHeader>
+      <DialogContent
+        showCloseButton={false}
+        className="max-w-md p-0 overflow-hidden max-h-[92dvh] sm:max-h-[85dvh] flex flex-col z-50 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl"
+      >
+        {/* Sticky Header with Always-Visible Close & Test Mic Buttons */}
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 sm:px-5 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xs z-10">
+          <DialogHeader className="flex flex-row items-center gap-2 space-y-0">
+            <DialogTitle className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
+              <Sparkles className="h-4 w-4 text-blue-500" />
+              Luyện Phát Âm AI
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex items-center gap-1.5">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setMicTestOpen(true)}
+              className="h-8 cursor-pointer gap-1 px-2.5 text-xs text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40"
+              title="Kiểm tra Micro & Cấp quyền"
+            >
+              <Sliders className="h-3.5 w-3.5" />
+              <span className="text-xs">Test Mic</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => handleOpenChange(false)}
+              className="h-8 w-8 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 cursor-pointer"
+              aria-label="Đóng cửa sổ"
+              title="Đóng"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 overscroll-contain">
 
         {/* Word card header */}
         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-center dark:border-slate-800 dark:bg-slate-900/60">
@@ -577,26 +600,37 @@ export function PronounceDialog({
             </div>
 
             {/* Action Bar */}
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => void speak(word)}
-                className="h-8 cursor-pointer text-xs"
+                onClick={() => handleOpenChange(false)}
+                className="h-8 cursor-pointer text-xs text-slate-600 dark:text-slate-300"
               >
-                <Volume2 className="h-3.5 w-3.5 mr-1" /> Nghe lại mẫu
+                Đóng
               </Button>
-              <Button
-                size="sm"
-                variant="default"
-                onClick={() => void startRecording()}
-                className="h-8 cursor-pointer text-xs"
-              >
-                <RotateCcw className="h-3.5 w-3.5 mr-1" /> Thử lại
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => void speak(word)}
+                  className="h-8 cursor-pointer text-xs"
+                >
+                  <Volume2 className="h-3.5 w-3.5 mr-1" /> Nghe lại mẫu
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => void startRecording()}
+                  className="h-8 cursor-pointer text-xs"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" /> Thử lại
+                </Button>
+              </div>
             </div>
           </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
     <MicTestDialog open={micTestOpen} onOpenChange={setMicTestOpen} />
