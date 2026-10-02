@@ -120,14 +120,32 @@ function VocabContent() {
         <AddWordDialog onWordAdded={onAdded} />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+      <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Metric title="Tổng số từ" value={s?.total_cards ?? "…"} hint={`${Object.keys(s?.categories ?? {}).length} chủ đề thương mại`} icon={BookOpen} tone="text-blue-600 dark:text-blue-400" />
         <Metric title="Cần học hôm nay" value={s?.due_cards ?? "…"} hint={s ? `${s.review_due} đến hạn + ${s.new_available} mới` : ""} icon={Clock} tone="text-amber-600 dark:text-amber-400" />
         <Metric title="Đã ôn hôm nay" value={s?.reviewed_today ?? "…"} hint={s ? `${s.learning_cards} thẻ đang trong chu kỳ` : ""} icon={Layers} tone="text-purple-600 dark:text-purple-400" />
         <Metric title="Đã thuộc lòng" value={s?.mastered_cards ?? "…"} hint="≥ 4 lần nhớ hoặc giãn cách ≥ 21 ngày" icon={CheckCircle} tone="text-emerald-600 dark:text-emerald-400" />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
+      {/* Mobile Compact Stats Bar */}
+      <div className="flex sm:hidden items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs dark:border-slate-800 dark:bg-slate-900/60 shadow-xs">
+        <div className="flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 text-amber-500" />
+          <span className="text-[11px] text-slate-500">Cần học: <strong className="text-amber-600 dark:text-amber-400 font-bold">{s?.due_cards ?? "…"}</strong></span>
+        </div>
+        <div className="h-3 w-px bg-slate-200 dark:bg-slate-700" />
+        <div className="flex items-center gap-1.5">
+          <Layers className="h-3.5 w-3.5 text-purple-500" />
+          <span className="text-[11px] text-slate-500">Đã ôn: <strong className="text-purple-600 dark:text-purple-400 font-bold">{s?.reviewed_today ?? 0}</strong></span>
+        </div>
+        <div className="h-3 w-px bg-slate-200 dark:bg-slate-700" />
+        <div className="flex items-center gap-1.5">
+          <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+          <span className="text-[11px] text-slate-500">Thuộc: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{s?.mastered_cards ?? 0}</strong></span>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4 sm:space-y-6">
         <div className="overflow-x-auto no-scrollbar">
           <TabsList className="h-auto w-max sm:w-auto border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900 flex">
             <TabsTrigger value="review" className={TAB}>

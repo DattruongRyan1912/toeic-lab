@@ -13,10 +13,10 @@ import type { FlashcardItem, SrsCard } from "@/types";
 import { PronounceDialog } from "./pronounce-dialog";
 
 const RATINGS = [
-  { value: 1, label: "Again", hint: "Quên — ôn lại ngày mai", style: "bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 dark:border-red-500/30" },
-  { value: 2, label: "Hard", hint: "Nhớ nhưng khó", style: "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30" },
-  { value: 3, label: "Good", hint: "Nhớ tốt", style: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30" },
-  { value: 4, label: "Easy", hint: "Rất dễ — giãn cách dài", style: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30" },
+  { value: 1, label: "Again", shortHint: "Quên", hint: "Quên — ôn lại ngày mai", style: "bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 dark:border-red-500/30" },
+  { value: 2, label: "Hard", shortHint: "Khó", hint: "Nhớ nhưng khó", style: "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30" },
+  { value: 3, label: "Good", shortHint: "Nhớ", hint: "Nhớ tốt", style: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30" },
+  { value: 4, label: "Easy", shortHint: "Rất dễ", hint: "Rất dễ — giãn cách dài", style: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30" },
 ];
 
 const STATE_LABEL: Record<SrsCard["state"], string> = { new: "Thẻ mới", learning: "Đang học", review: "Ôn tập", mastered: "Đã thuộc" };
@@ -205,7 +205,7 @@ export function FlashcardPlayer({
         aria-label={flipped ? "Lật về mặt trước" : "Lật thẻ xem nghĩa"}
         onClick={() => setFlipped((f) => !f)}
         onKeyDown={(event) => event.key === "Enter" && setFlipped((f) => !f)}
-        className="min-h-[380px] sm:h-80 w-full cursor-pointer rounded-2xl select-none [perspective:1000px]"
+        className="h-[430px] sm:h-[400px] w-full cursor-pointer rounded-2xl select-none [perspective:1000px]"
       >
         <div className={cn("relative h-full w-full rounded-2xl shadow-xl transition-transform duration-500 [transform-style:preserve-3d]", flipped && "[transform:rotateY(180deg)]")}>
           <div className="absolute inset-0 flex h-full w-full flex-col justify-between rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 sm:p-8 [backface-visibility:hidden] dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
@@ -327,7 +327,7 @@ export function FlashcardPlayer({
       </div>
 
       {flipped ? (
-        <div className="space-y-2">
+        <div className="space-y-2 pb-8 sm:pb-0">
           <p className="text-center text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">Đánh giá mức độ ghi nhớ (SM-2)</p>
           <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {RATINGS.map((item) => (
@@ -336,20 +336,23 @@ export function FlashcardPlayer({
                 onClick={() => void rate(item.value)}
                 disabled={saving}
                 variant="outline"
-                className={cn("flex h-13 sm:h-14 cursor-pointer flex-col px-1 sm:px-2 py-1", item.style)}
+                className={cn("flex h-14 cursor-pointer flex-col justify-center px-1 sm:px-2 py-1 text-center", item.style)}
               >
-                <span className="text-xs sm:text-sm font-bold">
+                <span className="text-xs sm:text-sm font-bold whitespace-nowrap">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : `${item.value}. ${item.label}`}
                 </span>
-                <span className="text-[9px] sm:text-[10px] leading-tight text-slate-500 dark:text-slate-400 line-clamp-1">{item.hint}</span>
+                <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 sm:hidden">{item.shortHint}</span>
+                <span className="hidden sm:inline text-[10px] text-slate-500 dark:text-slate-400 truncate">{item.hint}</span>
               </Button>
             ))}
           </div>
         </div>
       ) : (
-        <Button onClick={() => setFlipped(true)} variant="outline" className="w-full cursor-pointer py-6 text-base font-semibold">
-          Lật thẻ xem đáp án
-        </Button>
+        <div className="pb-8 sm:pb-0">
+          <Button onClick={() => setFlipped(true)} variant="outline" className="w-full cursor-pointer py-6 text-base font-semibold">
+            Lật thẻ xem đáp án
+          </Button>
+        </div>
       )}
 
       {pronouncingWord && (

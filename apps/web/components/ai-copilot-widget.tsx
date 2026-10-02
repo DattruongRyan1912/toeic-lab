@@ -40,12 +40,12 @@ export function AiCopilotWidget() {
       <button
         type="button"
         onClick={() => setWidgetOpen(true)}
-        className="group fixed right-4 bottom-20 md:right-6 md:bottom-6 z-40 flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white shadow-xl shadow-blue-500/25 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95 sm:px-4 sm:py-3"
+        className="group fixed right-3 bottom-20 md:right-6 md:bottom-6 z-30 flex h-10 w-10 sm:h-auto sm:w-auto cursor-pointer items-center justify-center gap-2.5 rounded-full border border-white/20 bg-gradient-to-r from-blue-600 to-indigo-600 p-2 sm:px-4 sm:py-3 text-white shadow-xl shadow-blue-500/25 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95"
         aria-label="Mở trợ lý AI Mentor"
       >
-        <span className="relative">
-          <Bot className="h-5 w-5" aria-hidden="true" />
-          <span className={cn("absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-slate-900", aiStatus?.offline ? "bg-amber-400" : "bg-emerald-400")} />
+        <span className="relative flex items-center justify-center">
+          <Bot className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+          <span className={cn("absolute -top-1 -right-1 h-2 w-2 rounded-full border border-slate-900", aiStatus?.offline ? "bg-amber-400" : "bg-emerald-400")} />
         </span>
         <span className="hidden text-xs font-bold tracking-wide sm:inline">AI Mentor Copilot</span>
       </button>

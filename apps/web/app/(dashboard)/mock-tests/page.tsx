@@ -190,7 +190,7 @@ function MockTestsContent() {
                       aria-checked={name === part}
                       onClick={() => setPart(name)}
                       className={cn(
-                        "cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold",
+                        "cursor-pointer rounded-lg border px-3 py-1 text-xs font-semibold shrink-0",
                         name === part ? "border-blue-500 bg-blue-600 text-white" : "border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
                       )}
                     >
@@ -253,9 +253,11 @@ function MockTestsContent() {
                       </ul>
                     </div>
                   )}
-                  <Button size="lg" onClick={() => setSession(1)} className="flex cursor-pointer items-center gap-2 bg-blue-600 px-8 font-semibold text-white hover:bg-blue-500">
-                    <Play className="h-4 w-4 fill-white" aria-hidden="true" /> Bắt đầu
-                  </Button>
+                  <div className="pt-2 pb-4 sm:pb-0">
+                    <Button size="lg" onClick={() => setSession(1)} className="flex cursor-pointer items-center justify-center gap-2 bg-blue-600 px-8 w-full sm:w-auto font-semibold text-white hover:bg-blue-500">
+                      <Play className="h-4 w-4 fill-white" aria-hidden="true" /> Bắt đầu bài luyện
+                    </Button>
+                  </div>
                 </>
               )}
             </CardContent>

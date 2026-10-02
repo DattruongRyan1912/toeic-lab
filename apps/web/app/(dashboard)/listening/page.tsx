@@ -333,11 +333,12 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
               {exercise.test_id} • {exercise.part}
               {exercise.question_no ? ` Q${exercise.question_no}` : ""}
             </Badge>
-            <Badge className={cn("text-xs font-medium border", accentInfo.tone)}>
+            <Badge className={cn("text-xs font-medium border shrink-0", accentInfo.tone)}>
               <span className="mr-1">{accentInfo.flag}</span>
-              {accentInfo.label}
+              <span className="hidden sm:inline">{accentInfo.label}</span>
+              <span className="sm:hidden">{exercise.accent}</span>
             </Badge>
-            <Badge variant="secondary" className="capitalize text-xs">
+            <Badge variant="secondary" className="capitalize text-xs shrink-0">
               Độ khó: {exercise.difficulty}
             </Badge>
           </div>
@@ -430,21 +431,22 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                className="text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 self-start p-0 sm:px-2"
                 onClick={() => setShowFullTranscript(!showFullTranscript)}
               >
                 {showFullTranscript ? <EyeOff className="h-3.5 w-3.5 mr-1" /> : <Eye className="h-3.5 w-3.5 mr-1" />}
-                {showFullTranscript ? "Ẩn đáp án gốc" : "Xem trước đáp án gốc (Peek)"}
+                {showFullTranscript ? "Ẩn đáp án gốc" : "Xem trước đáp án gốc"}
               </Button>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="sm"
+                  className="flex-1 sm:flex-none"
                   onClick={() => {
                     setLearnerInput("");
                     setDiffResult(null);
@@ -457,9 +459,9 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                   onClick={handleCheckDictation}
                   disabled={checking || !learnerInput.trim()}
                   size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                  className="flex-2 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                 >
-                  {checking ? "Đang so khớp..." : "Kiểm Tra Chính Tả (Diff)"}
+                  {checking ? "Đang so khớp..." : "Kiểm Tra Chính Tả"}
                 </Button>
               </div>
             </div>
@@ -994,7 +996,7 @@ export default function ListeningStudioPage() {
               key={p}
               variant={selectedPart === p ? "default" : "outline"}
               size="sm"
-              className={cn("h-7 px-3 text-xs font-medium", selectedPart === p ? "bg-blue-600 text-white" : "")}
+              className={cn("h-7 px-3 text-xs font-medium shrink-0", selectedPart === p ? "bg-blue-600 text-white" : "")}
               onClick={() => {
                 setSelectedPart(p);
                 setCurrentIndex(0);
