@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -42,34 +42,84 @@ export function PronounceDialog({
 }: PronounceDialogProps) {
   const [recording, setRecording] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(0);
+  const [speechDetected, setSpeechDetected] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<VocabPronounceResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const recorderRef = useRef<AudioRecorder | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isRecordingRef = useRef(false);
+  const isStoppingRef = useRef(false);
+  const stopRecordingRef = useRef<() => Promise<void>>(async () => {});
 
-  const cleanup = () => {
+  const cleanup = useCallback(() => {
+    isRecordingRef.current = false;
+    isStoppingRef.current = false;
     if (recorderRef.current?.isRecording()) {
       recorderRef.current.cancel();
     }
+    recorderRef.current = null;
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-  };
+  }, []);
+
+  const stopRecording = useCallback(async () => {
+    if (!isRecordingRef.current || isStoppingRef.current) return;
+    isStoppingRef.current = true;
+    isRecordingRef.current = false;
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    setRecording(false);
+    setAnalyzing(true);
+    setError(null);
+    setVolume(0);
+
+    try {
+      if (recorderRef.current) {
+        const { base64 } = await recorderRef.current.stop();
+        const res = await api<VocabPronounceResponse>("/ai/pronounce-vocab", {
+          method: "POST",
+          json: {
+            word: word.trim(),
+            expected_ipa: expectedIpa || undefined,
+            audio_base64: base64,
+          },
+        });
+        setResult(res);
+      }
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setAnalyzing(false);
+      isStoppingRef.current = false;
+    }
+  }, [word, expectedIpa]);
+
+  useEffect(() => {
+    stopRecordingRef.current = stopRecording;
+  }, [stopRecording]);
 
   useEffect(() => {
     return () => {
       cleanup();
     };
-  }, []);
+  }, [cleanup]);
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       cleanup();
       setRecording(false);
       setDuration(0);
+      setVolume(0);
+      setSpeechDetected(false);
       setAnalyzing(false);
       setResult(null);
       setError(null);
@@ -77,56 +127,50 @@ export function PronounceDialog({
     onOpenChange(nextOpen);
   };
 
-  const stopRecording = async () => {
-    if (!recorderRef.current || !recording) return;
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setRecording(false);
-    setAnalyzing(true);
-    setError(null);
-
-    try {
-      const { base64 } = await recorderRef.current.stop();
-      const res = await api<VocabPronounceResponse>("/ai/pronounce-vocab", {
-        method: "POST",
-        json: {
-          word: word.trim(),
-          expected_ipa: expectedIpa || undefined,
-          audio_base64: base64,
-        },
-      });
-      setResult(res);
-    } catch (err) {
-      setError(errorMessage(err));
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
   const startRecording = async () => {
     setError(null);
     setResult(null);
+    setSpeechDetected(false);
+    setVolume(0);
+    cleanup();
+
     try {
-      const recorder = new AudioRecorder();
+      const recorder = new AudioRecorder({
+        autoStopOnSilence: true,
+        speechThreshold: 0.06,
+        silenceThreshold: 0.035,
+        silenceDurationMs: 900,
+        onSpeechDetected: () => {
+          setSpeechDetected(true);
+        },
+        onSilence: () => {
+          void stopRecordingRef.current();
+        },
+        onVolumeChange: (vol) => {
+          setVolume(vol);
+        },
+      });
+
       recorderRef.current = recorder;
       await recorder.start();
+
+      isRecordingRef.current = true;
+      isStoppingRef.current = false;
       setRecording(true);
       setDuration(0);
 
+      const startTime = Date.now();
       timerRef.current = setInterval(() => {
-        setDuration((prev) => {
-          if (prev >= 4) {
-            void stopRecording();
-            return 5;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setDuration(elapsed);
+        if (elapsed >= 5) {
+          void stopRecordingRef.current();
+        }
+      }, 150);
     } catch (err) {
       setError(errorMessage(err));
       setRecording(false);
+      isRecordingRef.current = false;
     }
   };
 
@@ -187,30 +231,61 @@ export function PronounceDialog({
             <div className="flex flex-col items-center gap-2 py-4 text-center">
               <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
               <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                Gemini đang phân tích sóng âm thanh của bạn...
+                AI đang phân tích sóng âm thanh của bạn...
+              </p>
+              <p className="text-xs text-slate-400">
+                Chấm điểm nguyên âm, âm đuôi và so sánh phổ tần số IPA
               </p>
             </div>
           ) : recording ? (
             <div className="flex flex-col items-center gap-3 py-2">
               <div className="relative flex items-center justify-center">
-                <span className="absolute h-16 w-16 animate-ping rounded-full bg-red-500/40" />
+                {/* Volume-reactive pulse ring */}
+                <span
+                  className="absolute rounded-full bg-red-500/30 transition-all duration-75"
+                  style={{
+                    width: `${Math.max(64, 64 + volume * 80)}px`,
+                    height: `${Math.max(64, 64 + volume * 80)}px`,
+                    opacity: volume > 0.05 ? 0.6 : 0.2,
+                  }}
+                />
                 <Button
                   size="lg"
                   variant="destructive"
-                  onClick={() => void stopRecording()}
-                  className="h-16 w-16 cursor-pointer rounded-full p-0 shadow-lg shadow-red-500/30"
-                  aria-label="Dừng thu âm"
+                  onClick={() => void stopRecordingRef.current()}
+                  className="relative z-10 h-16 w-16 cursor-pointer rounded-full p-0 shadow-lg shadow-red-500/30 transition-transform active:scale-95"
+                  aria-label="Dừng thu âm và nhận xét"
+                  title="Nhấn để dừng và nhận kết quả ngay"
                 >
                   <Square className="h-6 w-6" />
                 </Button>
               </div>
-              <div className="text-center">
-                <p className="text-xs font-semibold text-red-500 animate-pulse">
-                  Đang thu âm... {duration}s / 5s
+
+              {/* Realtime audio wave bar visualizer */}
+              <div className="flex items-center gap-1 h-6">
+                {[0.2, 0.4, 0.7, 1.0, 0.7, 0.4, 0.2].map((factor, i) => (
+                  <span
+                    key={i}
+                    className="w-1 rounded-full bg-red-500 transition-all duration-75"
+                    style={{
+                      height: `${Math.max(4, volume * factor * 24)}px`,
+                      opacity: volume > 0.05 ? 0.9 : 0.3,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <div className="text-center space-y-1">
+                <p className="text-xs font-semibold text-red-500">
+                  {speechDetected
+                    ? "✨ Đã nhận diện giọng nói — tự dừng khi dứt lời..."
+                    : "Đang lắng nghe... Hãy phát âm từ trên"}
                 </p>
-                <p className="text-[11px] text-slate-400">
-                  Hãy nói to rõ ràng từ trên vào micro
-                </p>
+                <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
+                  <span>{duration}s / 5s</span>
+                  <span>•</span>
+                  <span>Bấm nút đỏ để dừng ngay</span>
+                </div>
               </div>
             </div>
           ) : (
@@ -218,13 +293,13 @@ export function PronounceDialog({
               <Button
                 size="lg"
                 onClick={() => void startRecording()}
-                className="h-14 cursor-pointer gap-2 rounded-full px-6 shadow-md hover:shadow-lg transition"
+                className="h-14 cursor-pointer gap-2 rounded-full px-6 shadow-md hover:shadow-lg transition active:scale-95"
               >
                 <Mic className="h-5 w-5 text-white" />
                 <span>{result ? "Thu âm lại" : "Nhấn để phát âm"}</span>
               </Button>
               <p className="text-[11px] text-slate-400">
-                AI sẽ trực tiếp nghe sóng âm để chấm điểm phát âm & âm đuôi
+                Tự động nhận diện dứt lời hoặc tự dừng sau 5s
               </p>
             </div>
           )}

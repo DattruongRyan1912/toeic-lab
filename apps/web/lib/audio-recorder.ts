@@ -34,10 +34,37 @@ export function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
+export interface AudioRecorderOptions {
+  autoStopOnSilence?: boolean;
+  silenceThreshold?: number; // 0 to 1, default 0.04
+  speechThreshold?: number; // 0 to 1, default 0.07
+  silenceDurationMs?: number; // default 1000ms
+  onSilence?: () => void;
+  onVolumeChange?: (volume: number) => void;
+  onSpeechDetected?: () => void;
+}
+
 export class AudioRecorder {
   private mediaRecorder: MediaRecorder | null = null;
   private stream: MediaStream | null = null;
   private chunks: Blob[] = [];
+  private audioContext: AudioContext | null = null;
+  private analyser: AnalyserNode | null = null;
+  private animFrameId: number | null = null;
+  private options: AudioRecorderOptions;
+  private hasSpoken = false;
+  private silenceStart: number | null = null;
+  private isStopped = false;
+
+  constructor(options: AudioRecorderOptions = {}) {
+    this.options = {
+      autoStopOnSilence: false,
+      silenceThreshold: 0.04,
+      speechThreshold: 0.07,
+      silenceDurationMs: 1000,
+      ...options,
+    };
+  }
 
   async start(): Promise<void> {
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
@@ -45,6 +72,10 @@ export class AudioRecorder {
     }
 
     this.chunks = [];
+    this.hasSpoken = false;
+    this.silenceStart = null;
+    this.isStopped = false;
+
     this.stream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: true,
@@ -65,6 +96,71 @@ export class AudioRecorder {
     };
 
     this.mediaRecorder.start(100); // 100ms timeslice for steady chunk streaming
+    this.startVolumeMonitoring();
+  }
+
+  private startVolumeMonitoring(): void {
+    if (!this.stream || typeof window === "undefined") return;
+
+    try {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) return;
+
+      this.audioContext = new AudioCtx();
+      const source = this.audioContext.createMediaStreamSource(this.stream);
+      this.analyser = this.audioContext.createAnalyser();
+      this.analyser.fftSize = 256;
+      this.analyser.smoothingTimeConstant = 0.5;
+      source.connect(this.analyser);
+
+      const bufferLength = this.analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      const checkVolume = () => {
+        if (!this.analyser || this.isStopped) return;
+
+        this.analyser.getByteFrequencyData(dataArray);
+        let sum = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          sum += dataArray[i];
+        }
+        const avg = sum / bufferLength;
+        const normalized = Math.min(1, avg / 128); // 0 to 1
+
+        this.options.onVolumeChange?.(normalized);
+
+        // Speech & Silence detection
+        if (this.options.autoStopOnSilence) {
+          const speechThresh = this.options.speechThreshold ?? 0.07;
+          const silenceThresh = this.options.silenceThreshold ?? 0.04;
+          const silenceMs = this.options.silenceDurationMs ?? 1000;
+
+          if (normalized >= speechThresh) {
+            if (!this.hasSpoken) {
+              this.hasSpoken = true;
+              this.options.onSpeechDetected?.();
+            }
+            this.silenceStart = null;
+          } else if (this.hasSpoken && normalized < silenceThresh) {
+            if (this.silenceStart === null) {
+              this.silenceStart = Date.now();
+            } else if (Date.now() - this.silenceStart >= silenceMs) {
+              // User spoke and then was silent for silenceMs
+              this.options.onSilence?.();
+              return;
+            }
+          }
+        }
+
+        this.animFrameId = requestAnimationFrame(checkVolume);
+      };
+
+      this.animFrameId = requestAnimationFrame(checkVolume);
+    } catch (e) {
+      console.warn("Volume monitoring initialization failed:", e);
+    }
   }
 
   isRecording(): boolean {
@@ -74,16 +170,19 @@ export class AudioRecorder {
   async stop(): Promise<{ blob: Blob; base64: string }> {
     return new Promise((resolve, reject) => {
       if (!this.mediaRecorder) {
+        this.cleanup();
         reject(new Error("Micro chưa được khởi động"));
         return;
       }
 
-      this.mediaRecorder.onstop = async () => {
-        try {
-          const mimeType = this.mediaRecorder?.mimeType || "audio/webm";
-          const blob = new Blob(this.chunks, { type: mimeType });
-          const base64 = await blobToBase64(blob);
+      const recorder = this.mediaRecorder;
+      const chunks = this.chunks;
+      const mimeType = recorder.mimeType || "audio/webm";
 
+      recorder.onstop = async () => {
+        try {
+          const blob = new Blob(chunks, { type: mimeType });
+          const base64 = await blobToBase64(blob);
           this.cleanup();
           resolve({ blob, base64 });
         } catch (err) {
@@ -93,11 +192,19 @@ export class AudioRecorder {
       };
 
       try {
-        if (this.mediaRecorder.state === "recording") {
-          this.mediaRecorder.stop();
+        if (recorder.state === "recording") {
+          recorder.stop();
         } else {
-          this.cleanup();
-          reject(new Error("Micro không ở trạng thái thu âm"));
+          const blob = new Blob(chunks, { type: mimeType });
+          blobToBase64(blob)
+            .then((base64) => {
+              this.cleanup();
+              resolve({ blob, base64 });
+            })
+            .catch((err) => {
+              this.cleanup();
+              reject(err);
+            });
         }
       } catch (err) {
         this.cleanup();
@@ -118,6 +225,17 @@ export class AudioRecorder {
   }
 
   private cleanup(): void {
+    this.isStopped = true;
+    if (this.animFrameId !== null) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+    if (this.audioContext && this.audioContext.state !== "closed") {
+      void this.audioContext.close().catch(() => {});
+      this.audioContext = null;
+    }
+    this.analyser = null;
+
     if (this.stream) {
       this.stream.getTracks().forEach((track) => track.stop());
       this.stream = null;

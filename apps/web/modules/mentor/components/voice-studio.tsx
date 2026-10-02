@@ -114,7 +114,6 @@ export function VoiceStudio() {
   const [manualText, setManualText] = useState("");
   const [expandedFeedbackId, setExpandedFeedbackId] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<"native" | "speech">("native");
-  const [nativeRecording, setNativeRecording] = useState(false);
   const [nativeDuration, setNativeDuration] = useState(0);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
@@ -358,25 +357,43 @@ export function VoiceStudio() {
     }
   };
 
+  const submitAudioTurnRef = useRef<(b64: string) => Promise<void>>(async () => {});
+  useEffect(() => {
+    submitAudioTurnRef.current = submitAudioTurn;
+  });
+
+  const isNativeRecordingRef = useRef(false);
+  const stopNativeRecordingRef = useRef<() => Promise<void>>(async () => {});
+
+  const stopNativeRecording = useCallback(async () => {
+    if (!isNativeRecordingRef.current) return;
+    isNativeRecordingRef.current = false;
+
+    if (nativeTimerRef.current) {
+      clearInterval(nativeTimerRef.current);
+      nativeTimerRef.current = null;
+    }
+    setState("thinking");
+
+    try {
+      if (nativeRecorderRef.current) {
+        const { base64 } = await nativeRecorderRef.current.stop();
+        void submitAudioTurnRef.current(base64);
+      }
+    } catch (err) {
+      toast.add({ title: "Lỗi lưu âm thanh", description: errorMessage(err), type: "error" });
+      setState("idle");
+    }
+  }, []);
+
+  useEffect(() => {
+    stopNativeRecordingRef.current = stopNativeRecording;
+  }, [stopNativeRecording]);
+
   // Native Microphone Recording (MediaRecorder -> Raw Audio)
   const toggleNativeRecording = async () => {
-    if (nativeRecording) {
-      if (nativeTimerRef.current) {
-        clearInterval(nativeTimerRef.current);
-        nativeTimerRef.current = null;
-      }
-      setNativeRecording(false);
-      setState("thinking");
-
-      try {
-        if (nativeRecorderRef.current) {
-          const { base64 } = await nativeRecorderRef.current.stop();
-          void submitAudioTurn(base64);
-        }
-      } catch (err) {
-        toast.add({ title: "Lỗi lưu âm thanh", description: errorMessage(err), type: "error" });
-        setState("idle");
-      }
+    if (isNativeRecordingRef.current) {
+      await stopNativeRecording();
       return;
     }
 
@@ -389,23 +406,22 @@ export function VoiceStudio() {
       const recorder = new AudioRecorder();
       nativeRecorderRef.current = recorder;
       await recorder.start();
-      setNativeRecording(true);
+      isNativeRecordingRef.current = true;
       setState("listening");
       setNativeDuration(0);
 
+      const startTime = Date.now();
       nativeTimerRef.current = setInterval(() => {
-        setNativeDuration((prev) => {
-          if (prev >= 29) {
-            void toggleNativeRecording();
-            return 30;
-          }
-          return prev + 1;
-        });
-      }, 1000);
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setNativeDuration(elapsed);
+        if (elapsed >= 30) {
+          void stopNativeRecordingRef.current();
+        }
+      }, 500);
     } catch (err) {
       toast.add({ title: "Không thể kích hoạt Micro", description: errorMessage(err), type: "error" });
       setState("idle");
-      setNativeRecording(false);
+      isNativeRecordingRef.current = false;
     }
   };
 
