@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="toeic-tile-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Vibrant T & Arrow Gradient -->
+    <linearGradient id="toeic-arrow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1d4ed8" />
+      <stop offset="35%" stop-color="#2563eb" />
+      <stop offset="70%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#60a5fa" />
+    </linearGradient>
+
+    <!-- Stem Gradient -->
+    <linearGradient id="toeic-stem" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+
+    <!-- Equalizer Gradient -->
+    <linearGradient id="toeic-eq" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Dark Mode Squircle Base -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#toeic-tile-bg)" stroke="#334155" stroke-width="1.5" />
+
+  <!-- Monogram & Arrow -->
+  <!-- Left Crossbar -->
+  <path
+    d="M14 24C14 21.79 15.79 20 18 20H27.5L25 24H18C16.9 24 16 24.9 16 26C16 27.1 16.9 28 18 28H23V42L17 46V28H18C15.79 28 14 26.21 14 24Z"
+    fill="url(#toeic-stem)"
+  />
+
+  <!-- Vertical T Stem with Tech Angled Cut -->
+  <path
+    d="M23 20H29V39L23 43V20Z"
+    fill="url(#toeic-stem)"
+  />
+
+  <!-- Dynamic Growth Arrow to 990 Score -->
+  <path
+    d="M24 22C29 21.5 37 18 43 13.5L40 21.5L49 11L38 9.5L41.5 12C34.5 16.5 28 19.5 24 22Z"
+    fill="url(#toeic-arrow)"
+  />
+
+  <!-- Equalizer Audio / Analytics Bars (5 rising levels) -->
+  <rect x="30" y="32" width="2.4" height="9" rx="1.2" fill="url(#toeic-eq)" />
+  <rect x="34" y="28" width="2.4" height="13" rx="1.2" fill="url(#toeic-eq)" />
+  <rect x="38" y="24" width="2.4" height="17" rx="1.2" fill="url(#toeic-eq)" />
+  <rect x="42" y="20" width="2.4" height="21" rx="1.2" fill="url(#toeic-eq)" />
+  <rect x="46" y="17" width="2.4" height="13" rx="1.2" fill="url(#toeic-eq)" />
+</svg>

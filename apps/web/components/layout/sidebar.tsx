@@ -14,9 +14,9 @@ import {
   Layers,
   LayoutDashboard,
   Settings,
-  Sparkles,
   type LucideIcon,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand/logo";
 import { api } from "@/lib/api";
 import { PROVIDER_LABELS, useLearnerStore } from "@/lib/learner-store";
 import { cn } from "@/lib/utils";
@@ -118,14 +118,8 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-colors duration-200 select-none dark:border-slate-800/80 dark:bg-[#0d162a]">
       <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800/80">
-        <Link href="/" className="group flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20 transition-transform group-hover:scale-105">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
-          </div>
-          <div>
-            <span className="block text-sm leading-none font-bold tracking-tight text-slate-900 dark:text-slate-100">TOEIC MASTER</span>
-            <span className="font-mono text-[10px] font-semibold tracking-wider text-blue-600 dark:text-blue-400">SELF-STUDY LAB</span>
-          </div>
+        <Link href="/" className="transition-opacity hover:opacity-95" aria-label="TOEIC Master Home">
+          <BrandLogo size={34} subtitle="SELF-STUDY LAB" />
         </Link>
         <span className="rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500 dark:border-slate-700/60 dark:bg-slate-800/70 dark:text-slate-400">
           v{health?.data?.version ?? "2"}

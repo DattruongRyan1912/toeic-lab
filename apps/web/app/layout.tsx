@@ -17,8 +17,22 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://toeic.truongquocdat.id.vn"),
   title: "TOEIC Master SaaS • AI Self-Study Platform",
   description: "Nền tảng tự học TOEIC 800 - 900+ cho kỹ sư phần mềm",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "TOEIC Master SaaS • AI Self-Study Platform",
+    description: "Nền tảng tự học TOEIC 800 - 900+ cho kỹ sư phần mềm với AI Mentor, SRS và nhận diện ngữ âm.",
+    images: [{ url: "/logo.png", width: 1024, height: 1024, alt: "TOEIC Master Logo" }],
+  },
 };
 
 export default function RootLayout({
