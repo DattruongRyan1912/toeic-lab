@@ -7,6 +7,7 @@ import {
   Loader2,
   Mic,
   RotateCcw,
+  Sliders,
   Sparkles,
   Square,
   Volume2,
@@ -18,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MicTestDialog } from "@/components/mic-test-dialog";
 import { api, errorMessage } from "@/lib/api";
 import { AudioRecorder } from "@/lib/audio-recorder";
 import { speak } from "@/lib/audio";
@@ -48,6 +50,7 @@ export function PronounceDialog({
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<VocabPronounceResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [micTestOpen, setMicTestOpen] = useState(false);
 
   const recorderRef = useRef<AudioRecorder | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -269,13 +272,25 @@ export function PronounceDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md p-6">
-        <DialogHeader>
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
           <DialogTitle className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-white">
             <Sparkles className="h-4 w-4 text-blue-500" />
             Luyện Phát Âm AI (Multimodal Audio)
           </DialogTitle>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setMicTestOpen(true)}
+            className="h-7 cursor-pointer gap-1 px-2 text-xs text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40"
+            title="Kiểm tra Micro & Cấp quyền"
+          >
+            <Sliders className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Test Mic</span>
+          </Button>
         </DialogHeader>
 
         {/* Word card header */}
@@ -309,9 +324,20 @@ export function PronounceDialog({
         {/* Recording / Action Section */}
         <div className="flex flex-col items-center justify-center gap-4 py-3">
           {error && (
-            <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-600 dark:text-red-400">
-              <AlertCircle className="h-4 w-4 shrink-0" />
-              <span>{error}</span>
+            <div className="flex flex-col gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-600 dark:text-red-400 w-full">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setMicTestOpen(true)}
+                className="self-start h-7 cursor-pointer text-xs border-red-300 bg-white/80 hover:bg-white text-red-700 dark:border-red-800 dark:bg-slate-900 dark:text-red-300 gap-1.5"
+              >
+                <Sliders className="h-3 w-3" /> Kiểm tra Micro & Cấp quyền
+              </Button>
             </div>
           )}
 
@@ -390,9 +416,19 @@ export function PronounceDialog({
                 <Mic className="h-5 w-5 text-white" />
                 <span>{result ? "Thu âm lại" : "Nhấn để phát âm"}</span>
               </Button>
-              <p className="text-[11px] text-slate-400">
-                Tự động nhận diện dứt lời hoặc tự dừng sau 5s
-              </p>
+              <div className="flex flex-col items-center gap-1 text-center">
+                <p className="text-[11px] text-slate-400">
+                  Tự động nhận diện dứt lời hoặc tự dừng sau 5s
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMicTestOpen(true)}
+                  className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 dark:text-blue-400 hover:underline cursor-pointer"
+                >
+                  <Sliders className="h-3 w-3" />
+                  <span>Micro không nhận tiếng? Bấm kiểm tra</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -487,5 +523,7 @@ export function PronounceDialog({
         )}
       </DialogContent>
     </Dialog>
+    <MicTestDialog open={micTestOpen} onOpenChange={setMicTestOpen} />
+    </>
   );
 }

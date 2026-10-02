@@ -17,12 +17,14 @@ import {
   Pause,
   Play,
   RotateCcw,
+  Sliders,
   Sparkles,
   Volume2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { MicTestDialog } from "@/components/mic-test-dialog";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,6 +75,7 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
   const recognitionRef = useRef<any>(null);
   const [isPlayingUserAudio, setIsPlayingUserAudio] = useState(false);
   const [shadowingTranscriptVisible, setShadowingTranscriptVisible] = useState(false);
+  const [micTestOpen, setMicTestOpen] = useState(false);
 
   // Activity tracking
   const sessionStartTime = useRef<number | null>(null);
@@ -270,7 +273,12 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
     } catch {
-      alert("Không thể truy cập microphone. Vui lòng cấp quyền micro trên trình duyệt của bạn.");
+      setMicTestOpen(true);
+      toast.add({
+        title: "Không thể truy cập microphone",
+        description: "Vui lòng cấp quyền truy cập microphone trên thiết bị theo bảng chẩn đoán.",
+        type: "error",
+      });
     }
   };
 
@@ -345,7 +353,8 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
   const accentInfo = ACCENT_META[exercise.accent] ?? ACCENT_META.US;
 
   return (
-    <Card className="border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+    <>
+      <Card className="border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -731,6 +740,19 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                     {isRecording ? "Nói nhại đồng thời theo băng hoặc ngay sau băng" : "Yêu cầu quyền truy cập micro từ trình duyệt"}
                   </p>
                 </div>
+
+                {!isRecording && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setMicTestOpen(true)}
+                    className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40 gap-1.5 cursor-pointer"
+                  >
+                    <Sliders className="h-3.5 w-3.5" />
+                    <span>Kiểm tra Micro & Quyền thiết bị</span>
+                  </Button>
+                )}
               </div>
 
               {recordedAudioUrl && (
@@ -933,6 +955,8 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
         )}
       </CardContent>
     </Card>
+    <MicTestDialog open={micTestOpen} onOpenChange={setMicTestOpen} />
+    </>
   );
 }
 

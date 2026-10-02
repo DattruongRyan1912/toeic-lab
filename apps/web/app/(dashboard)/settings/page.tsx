@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Check, KeyRound, Loader2, Settings, Trash2, UserRound, Volume2 } from "lucide-react";
+import { Bell, Check, KeyRound, Loader2, Mic, Settings, Sliders, Trash2, UserRound, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
 import { ErrorState, LoadingState } from "@/components/states";
+import { MicTestDialog } from "@/components/mic-test-dialog";
 import { AiAgentCard } from "@/components/settings/ai-agent-card";
 import { MemoriesCard } from "@/components/settings/memories-card";
 import { PersonalizationCard } from "@/components/settings/personalization-card";
@@ -202,6 +203,63 @@ function VoiceCard() {
   );
 }
 
+function MicrophoneCard() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Card className={CARD}>
+        <CardHeader className="border-b border-slate-100 pb-3 dark:border-slate-700/60">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base font-bold text-slate-900 dark:text-white">
+            <span className="flex items-center gap-2">
+              <Mic className="h-5 w-5 text-blue-500" aria-hidden="true" /> Microphone & Nhận diện giọng nói (Speech-to-Text)
+            </span>
+            <Button
+              size="sm"
+              onClick={() => setOpen(true)}
+              className="flex h-8 cursor-pointer items-center gap-1.5 bg-blue-600 px-3 text-xs text-white hover:bg-blue-500"
+            >
+              <Sliders className="h-3.5 w-3.5" aria-hidden="true" /> Kiểm tra & Chẩn đoán Mic
+            </Button>
+          </CardTitle>
+          <p className="text-[11px] text-slate-500">
+            Dùng cho Luyện phát âm từ vựng (Vocab) và Nói nhại (Shadowing Listening). Hỗ trợ kiểm tra quyền, mức âm lượng và nhận diện tiếng Anh thực tế trên thiết bị.
+          </p>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="grid gap-3 sm:grid-cols-3 text-xs">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+              <span className="font-semibold text-slate-800 dark:text-slate-200 block mb-1">
+                🎤 Thu âm Web Audio
+              </span>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Đo biên độ âm thanh trực tiếp và tự động ngắt khi dứt lời mà không cần bấm dừng.
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+              <span className="font-semibold text-slate-800 dark:text-slate-200 block mb-1">
+                🗣️ Speech-to-Text
+              </span>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Trợ lý nhận diện transcript tiếng Anh theo thời gian thực (hỗ trợ Chrome, Safari, Edge).
+              </p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-700 dark:bg-slate-800/60">
+              <span className="font-semibold text-slate-800 dark:text-slate-200 block mb-1">
+                📱 Tương thích Mobile
+              </span>
+              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
+                Tự động đánh thức AudioContext khi chạm màn hình và kèm bảng hướng dẫn cấp quyền Safari/iOS/Android.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <MicTestDialog open={open} onOpenChange={setOpen} />
+    </>
+  );
+}
+
 function AiStatusCard({ health }: { health: HealthStatus | undefined }) {
   const aiStatus = useLearnerStore((state) => state.aiStatus);
   return (
@@ -367,6 +425,7 @@ export default function SettingsPage() {
       <MemoriesCard />
       <AiAgentCard />
       <VoiceCard />
+      <MicrophoneCard />
       <div className="grid gap-6 md:grid-cols-2">
         <AiStatusCard health={health.data} />
         <RemindersCard telegram={health.data?.telegram_configured} />
