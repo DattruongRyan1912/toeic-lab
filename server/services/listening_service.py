@@ -172,8 +172,8 @@ def list_exercises(
         voice_map = {
             "US": "en-US-JennyNeural",
             "UK": "en-GB-RyanNeural",
-            "AU": "en-AU-WilliamNeural",
-            "CA": "en-CA-LiamNeural",
+            "AU": "en-AU-NatashaNeural",
+            "CA": "en-CA-ClaraNeural",
         }
         voice = voice_map.get(accent, "en-US-JennyNeural")
         

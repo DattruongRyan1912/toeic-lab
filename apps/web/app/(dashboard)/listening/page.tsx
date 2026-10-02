@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "@/components/ui/toast";
 import {
   ArrowLeft,
   ArrowRight,
@@ -76,6 +77,22 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
   // Activity tracking
   const sessionStartTime = useRef<number | null>(null);
 
+  // Clean up native and user audio instances on unmount / exercise change
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+        audioRef.current = null;
+      }
+      if (userAudioRef.current) {
+        userAudioRef.current.pause();
+        userAudioRef.current.src = "";
+        userAudioRef.current = null;
+      }
+    };
+  }, []);
+
   const getAudioUrl = useCallback((sentence: string, voice: string, speed: number) => {
     const ttsRate = speed === 0.8 ? "-20%" : speed === 1.2 ? "+20%" : "+0%";
     return `/api/tts?text=${encodeURIComponent(sentence)}&voice=${encodeURIComponent(voice)}&rate=${encodeURIComponent(ttsRate)}`;
@@ -101,7 +118,10 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
     audioRef.current = audio;
     audio.playbackRate = playbackSpeed;
     audio.onended = () => setIsPlaying(false);
-    audio.onerror = () => setIsPlaying(false);
+    audio.onerror = () => {
+      setIsPlaying(false);
+      toast.add({ title: "Không phát được âm thanh", description: "Lỗi kết nối tới giọng đọc bản xứ", type: "error" });
+    };
     audio.play().then(
       () => setIsPlaying(true),
       () => setIsPlaying(false),

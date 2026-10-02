@@ -56,6 +56,11 @@ ETS_VOICES = [
      "description": "Canadian English - Crisp North American Accent"},
 ]
 VOICE_IDS = {voice["id"] for voice in ETS_VOICES}
+VOICE_ALIASES = {
+    "en-AU-WilliamNeural": "en-AU-NatashaNeural",
+    "en-AU-WilliamMultilingualNeural": "en-AU-NatashaNeural",
+    "en-CA-LiamNeural": "en-CA-ClaraNeural",
+}
 RATE_RE = re.compile(r"^[+-](?:[0-9]|[1-4][0-9]|50)%$")
 
 
@@ -154,6 +159,7 @@ async def text_to_speech(
     clean_text = text.strip()
     if not clean_text:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
+    voice = VOICE_ALIASES.get(voice, voice)
     if voice not in VOICE_IDS:
         raise HTTPException(status_code=422, detail=f"Unknown voice '{voice}'. See /api/voices")
 

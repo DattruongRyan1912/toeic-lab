@@ -46,8 +46,10 @@ export function Topbar() {
           </span>
         )}
         {stats && !stats.onboarded ? (
-          <Link href="/onboarding" className="flex items-center gap-1.5 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white hover:bg-blue-500">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Cá nhân hoá lộ trình
+          <Link href="/onboarding" className="flex items-center gap-1.5 rounded-full bg-blue-600 px-2.5 sm:px-3 py-1 text-xs font-semibold text-white hover:bg-blue-500 shrink-0">
+            <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            <span className="hidden sm:inline">Cá nhân hoá lộ trình</span>
+            <span className="sm:hidden">Cá nhân hoá</span>
           </Link>
         ) : stats ? (
           <Link
