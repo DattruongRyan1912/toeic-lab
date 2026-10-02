@@ -26,6 +26,7 @@ LISTENING_QUESTIONS = [
         "explanation": "Người phụ nữ đang thao tác gõ bàn phím trên máy tính xách tay tại bàn làm việc.",
         "distractor_analysis": "[Bẫy Hành Động Sai] A (closing notebook), C (rearranging files), D (handing document) là các hành động không xuất hiện trong hình ảnh.",
         "paraphrase_pair": "typing on a laptop = inputting data into a computer",
+        "image_url": "/part1/ets2024_01_q1.jpg",
     },
     {
         "test_id": "ETS2024_01",
@@ -40,6 +41,7 @@ LISTENING_QUESTIONS = [
         "explanation": "Các công nhân đang đội mũ bảo hộ lao động tại công trường.",
         "distractor_analysis": "[Bẫy Động Từ & Địa Điểm] Bẫy hành động (painting, packing, boarding) không khớp với bối cảnh bức ảnh.",
         "paraphrase_pair": "wearing hard hats = putting on safety protective headgear",
+        "image_url": "/part1/ets2024_01_q2.jpg",
     },
     {
         "test_id": "ETS2024_01",
@@ -54,6 +56,7 @@ LISTENING_QUESTIONS = [
         "explanation": "Hàng hóa được trưng bày gọn gàng trên các kệ gỗ trong cửa hàng.",
         "distractor_analysis": "[Bẫy Trạng Thái Bị Động 'being'] C (are being loaded) sai vì không có người đang bốc xếp hàng.",
         "paraphrase_pair": "displayed on shelves = arranged on store racks",
+        "image_url": "/part1/ets2024_01_q3.jpg",
     },
     {
         "test_id": "ETS2024_01",
@@ -68,6 +71,7 @@ LISTENING_QUESTIONS = [
         "explanation": "Diễn giả đang chỉ tay về phía màn hình chiếu trong cuộc họp.",
         "distractor_analysis": "[Bẫy Chi Tiết Giả] A, C, D mô tả hành động rời phòng, rút mic và ký tên không có thật.",
         "paraphrase_pair": "gesturing toward a screen = pointing at a display presentation",
+        "image_url": "/part1/ets2024_01_q4.jpg",
     },
     {
         "test_id": "ETS2024_01",
@@ -82,6 +86,7 @@ LISTENING_QUESTIONS = [
         "explanation": "Xe đạp được dựng trong giá đỗ ngoài trời cạnh tòa nhà văn phòng.",
         "distractor_analysis": "[Bẫy Từ Đồng Âm/Liên Tưởng] A (riding bicycles) và C (repairing) dùng từ 'bicycle' nhưng sai hoàn toàn về hành động trong tranh tĩnh.",
         "paraphrase_pair": "parked in a rack = stationed in a designated bike stand",
+        "image_url": "/part1/ets2024_01_q5.jpg",
     },
 
     # --- Part 2: Question - Response ---
@@ -221,6 +226,7 @@ def seed_listening_questions():
             db.commit()
 
         added = 0
+        updated = 0
         for item in LISTENING_QUESTIONS:
             exists = db.query(TestQuestion).filter_by(
                 test_id=item["test_id"],
@@ -241,13 +247,18 @@ def seed_listening_questions():
                     explanation=item["explanation"],
                     distractor_analysis=item["distractor_analysis"],
                     paraphrase_pair=item["paraphrase_pair"],
+                    image_url=item.get("image_url"),
                     source="seed",
                     created_at=utcnow(),
                 )
                 db.add(q)
                 added += 1
+            else:
+                if "image_url" in item:
+                    exists.image_url = item["image_url"]
+                    updated += 1
         db.commit()
-        print(f"  ✓ Ingested {added} Listening benchmark questions into ETS2024_01!")
+        print(f"  ✓ Ingested {added} and updated {updated} Listening benchmark questions into ETS2024_01!")
     finally:
         db.close()
 

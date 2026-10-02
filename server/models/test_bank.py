@@ -39,6 +39,7 @@ class TestQuestion(Base):
     distractor_analysis = Column(Text, nullable=True)  # starts with a "[Bẫy ...]" tag
     paraphrase_pair = Column(Text, nullable=True)
     lesson_number = Column(Integer, nullable=True)  # explicit lesson; otherwise derived from the trap tag
+    image_url = Column(String(255), nullable=True)  # For Part 1 photographs
     source = Column(String(20), nullable=True)  # seed | ai_mentor | user
     created_by_user_id = Column(Integer, nullable=True)
     created_at = Column(DateTime, nullable=True, default=utcnow)

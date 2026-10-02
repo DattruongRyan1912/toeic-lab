@@ -153,6 +153,7 @@ class QuestionRead(BaseModel):
     trap_tag: Optional[str] = None
     error_type: str
     lesson_number: Optional[int] = None
+    image_url: Optional[str] = None
     source: Optional[str] = None
 
 

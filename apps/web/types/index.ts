@@ -305,6 +305,7 @@ export interface TestQuestionItem {
   error_type: ErrorType;
   lesson_number?: number | null;
   source?: string | null;
+  image_url?: string | null;
 }
 
 export interface MockTestItem {
