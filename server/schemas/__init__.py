@@ -890,3 +890,33 @@ class ListeningExercise(BaseModel):
 class ListeningTrackRequest(BaseModel):
     seconds: int = Field(..., ge=1, le=7200)
 
+
+class ShadowingWordFeedback(BaseModel):
+    word: str
+    status: Literal["perfect", "good", "needs_work", "missed"]
+    ipa: Optional[str] = None
+    note: Optional[str] = None
+
+
+class ShadowingEvaluateRequest(BaseModel):
+    exercise_id: Optional[int] = None
+    target_sentence: str = Field(..., max_length=2000)
+    audio_base64: Optional[str] = None
+    user_transcript: Optional[str] = Field(None, max_length=2000)
+    phonetic_cues: Optional[List[str]] = None
+    accent: Optional[str] = "US"
+
+
+class ShadowingEvaluateResponse(BaseModel):
+    overall_score: int = Field(..., ge=0, le=100)
+    accuracy_score: int = Field(..., ge=0, le=100)
+    fluency_score: int = Field(..., ge=0, le=100)
+    recognized_transcript: str
+    is_passing: bool
+    verdict: str
+    words: List[ShadowingWordFeedback]
+    connected_speech_feedback: Optional[str] = None
+    coaching_tips: List[str]
+    provider: str
+    model: str
+

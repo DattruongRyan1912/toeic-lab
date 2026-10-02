@@ -4,7 +4,9 @@ and native audio generation via Edge-TTS.
 """
 from __future__ import annotations
 
+import difflib
 import logging
+import re
 import urllib.parse
 from typing import Dict, List, Optional
 
@@ -344,6 +346,296 @@ async def evaluate_vocab_pronunciation(
 
     # Case 3: Offline fallback
     return _offline_vocab_pronunciation(clean_word, target_ipa, user_transcript)
+
+
+SHADOWING_PROMPT_TEMPLATE = """Bạn là Senior TOEIC Speaking & Pronunciation Examiner.
+ĐỐI TƯỢNG HỌC VIÊN: Kỹ sư phần mềm đang luyện tập Shadowing (nói nhại theo người bản xứ) để đạt TOEIC 850-990.
+
+CÂU GỐC MẪU (TARGET SENTENCE):
+"{target_sentence}"
+
+LƯU Ý NGỮ ÂM TRỌNG TÂM:
+{cues_text}
+
+VĂN BẢN HỌC VIÊN PHÁT ÂM (STT Transcript từ microphone):
+"{recognized_text}"
+
+NHIỆM VỤ CỦA BẠN:
+Đóng vai trò là GIÁM KHẢO CHẤM ĐIỂM VÀ HUẤN LUYỆN VIÊN ĐỘC LẬP:
+1. So sánh âm thanh / phiên âm phát âm thực tế của học viên với câu gốc.
+2. Chấm điểm khách quan, chuẩn xác theo thang điểm:
+   - overall_score (0-100): Điểm tổng thể.
+   - accuracy_score (0-100): Độ chính xác của từng từ, âm đuôi (-s, -ed, -t) và nguyên âm.
+   - fluency_score (0-100): Độ trôi chảy, nhịp điệu ngắt nghỉ, không bị ngắc ngứ.
+3. Đánh giá chi tiết từng từ trong câu gốc:
+   - word: Từ trong câu gốc.
+   - status: "perfect" (phát âm chuẩn), "good" (chấp nhận được), "needs_work" (phát âm lệch/thiếu âm), "missed" (bị nuốt mất từ).
+   - note: Ghi chú ngắn gọn nếu cần sửa.
+4. Đánh giá các hiện tượng ngữ âm tự nhiên (Connected speech: nối âm, Flap-T, nuốt âm elision).
+5. Đưa ra 2-3 lời khuyên ngắn gọn, hành động được (coaching_tips bằng tiếng Việt) để học viên đọc lại tốt hơn ngay ở lượt sau.
+
+TRẢ VỀ DUY NHẤT 1 ĐỐI TƯỢNG JSON (không kèm chữ nào khác ngoài ```json ... ```):
+{{
+  "overall_score": <0-100>,
+  "accuracy_score": <0-100>,
+  "fluency_score": <0-100>,
+  "recognized_transcript": "{recognized_text}",
+  "verdict": "<Xuất sắc / Tốt / Cần luyện thêm>",
+  "words": [
+    {{"word": "word1", "status": "perfect", "note": "Phát âm rõ ràng"}},
+    ...
+  ],
+  "connected_speech_feedback": "<Nhận xét về nối âm và biến âm>",
+  "coaching_tips": [
+    "<Lời khuyên 1>",
+    "<Lời khuyên 2>"
+  ]
+}}
+"""
+
+
+def _normalize_shadowing_response(
+    parsed: dict,
+    target_sentence: str,
+    user_transcript: str,
+    provider: str,
+    model: str,
+) -> dict:
+    overall = max(0, min(100, int(parsed.get("overall_score", 75))))
+    acc = max(0, min(100, int(parsed.get("accuracy_score", overall))))
+    flu = max(0, min(100, int(parsed.get("fluency_score", overall))))
+    rec = str(parsed.get("recognized_transcript") or user_transcript or target_sentence).strip()
+    verdict = str(
+        parsed.get("verdict")
+        or (
+            "Xuất sắc (Native-like)"
+            if overall >= 85
+            else "Khá tốt (Clear)"
+            if overall >= 70
+            else "Cần cải thiện (Needs Review)"
+        )
+    )
+
+    raw_words = parsed.get("words") or []
+    words = []
+    target_words = [w.strip() for w in target_sentence.split() if w.strip()]
+    if isinstance(raw_words, list) and raw_words:
+        for item in raw_words:
+            if isinstance(item, dict) and "word" in item:
+                st = item.get("status", "good")
+                if st not in ("perfect", "good", "needs_work", "missed"):
+                    st = "good" if overall >= 70 else "needs_work"
+                words.append({
+                    "word": str(item["word"]),
+                    "status": st,
+                    "ipa": item.get("ipa"),
+                    "note": str(item.get("note") or ""),
+                })
+    if not words:
+        words = [
+            {"word": w, "status": "perfect" if overall >= 80 else "good", "ipa": None, "note": "Phát âm tốt"}
+            for w in target_words
+        ]
+
+    tips = parsed.get("coaching_tips")
+    if not isinstance(tips, list) or not tips:
+        tips = [
+            "Luyện nghe lại câu gốc 1-2 lần để cảm nhận rõ điểm rơi ngữ điệu và trọng âm.",
+            "Tập nói nhại với tốc độ chậm (0.8x) trước khi tăng lên tốc độ chuẩn 1.0x.",
+        ]
+    else:
+        tips = [str(t) for t in tips[:4]]
+
+    connected_fb = parsed.get("connected_speech_feedback")
+    if not connected_fb:
+        connected_fb = "Chú ý nối âm tự nhiên giữa phụ âm cuối và nguyên âm đầu tiếp theo."
+
+    return {
+        "overall_score": overall,
+        "accuracy_score": acc,
+        "fluency_score": flu,
+        "recognized_transcript": rec,
+        "is_passing": overall >= 75,
+        "verdict": verdict,
+        "words": words,
+        "connected_speech_feedback": str(connected_fb),
+        "coaching_tips": tips,
+        "provider": provider,
+        "model": model,
+    }
+
+
+def _offline_shadowing_evaluation(
+    target_sentence: str,
+    user_transcript: Optional[str] = None,
+    phonetic_cues: Optional[List[str]] = None,
+) -> dict:
+    clean_target = target_sentence.strip()
+    clean_user = (user_transcript or "").strip()
+
+    target_words = [w.strip() for w in clean_target.split() if w.strip()]
+    if not clean_user or clean_user == "[Không bắt được âm thanh rõ ràng]":
+        words = [
+            {"word": w, "status": "missed", "ipa": None, "note": "Chưa ghi nhận được âm thanh của từ này"}
+            for w in target_words
+        ]
+        return {
+            "overall_score": 30,
+            "accuracy_score": 25,
+            "fluency_score": 35,
+            "recognized_transcript": "[Chưa nhận diện được giọng nói]",
+            "is_passing": False,
+            "verdict": "Chưa đạt (Cần phát âm to và rõ hơn)",
+            "words": words,
+            "connected_speech_feedback": "Âm lượng micro quá nhỏ hoặc bị ngắt tiếng, chưa phân tích được hiện tượng nối âm.",
+            "coaching_tips": [
+                "Hãy kiểm tra lại quyền truy cập microphone trên trình duyệt.",
+                "Đưa micro gần miệng hơn, nói to và rõ ràng theo nhịp điệu của câu.",
+            ],
+            "provider": "offline",
+            "model": "offline-shadowing-evaluator",
+        }
+
+    user_words = [w.strip() for w in clean_user.split() if w.strip()]
+    norm_target = [re.sub(r"[^\w]", "", w.lower()) for w in target_words]
+    norm_user = [re.sub(r"[^\w]", "", w.lower()) for w in user_words]
+
+    matcher = difflib.SequenceMatcher(None, norm_target, norm_user)
+    words = []
+    correct_count = 0
+
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            for idx in range(i1, i2):
+                words.append({
+                    "word": target_words[idx],
+                    "status": "perfect",
+                    "ipa": None,
+                    "note": "Phát âm rõ ràng, chuẩn âm",
+                })
+                correct_count += 1
+        elif tag == "replace":
+            for idx in range(i1, i2):
+                learner_w = user_words[j1 + (idx - i1)] if (j1 + (idx - i1)) < len(user_words) else ""
+                words.append({
+                    "word": target_words[idx],
+                    "status": "needs_work",
+                    "ipa": None,
+                    "note": f"Bạn phát âm nghe giống '{learner_w}'" if learner_w else "Cần sửa khẩu hình",
+                })
+        elif tag == "delete":
+            for idx in range(i1, i2):
+                words.append({
+                    "word": target_words[idx],
+                    "status": "missed",
+                    "ipa": None,
+                    "note": "Từ này bị nuốt hoặc chưa phát âm",
+                })
+        elif tag == "insert":
+            pass
+
+    total = max(1, len(target_words))
+    acc_score = max(0, min(100, round((correct_count / total) * 100)))
+    flu_score = max(35, min(100, round(acc_score * 0.9 + 10)))
+    overall = max(0, min(100, round(acc_score * 0.6 + flu_score * 0.4)))
+
+    cues_str = " ".join(phonetic_cues) if phonetic_cues else "Chú ý nối âm tự nhiên và nhấn đúng trọng âm câu."
+    tips = [
+        "Luyện tập ngắt nghỉ hơi tự nhiên theo các cụm danh từ và cụm giới từ trong câu.",
+        "Nghe lại giọng bản ngữ 1-2 lần rồi bấm thu âm nói nhại lại ngay lập tức.",
+    ]
+    if phonetic_cues:
+        tips.insert(0, f"Trọng tâm ngữ âm: {phonetic_cues[0]}")
+
+    verdict = (
+        "Xuất sắc (Native-like)"
+        if overall >= 85
+        else "Khá tốt (Clear & Confident)"
+        if overall >= 70
+        else "Cần cải thiện (Needs Review)"
+    )
+
+    return {
+        "overall_score": overall,
+        "accuracy_score": acc_score,
+        "fluency_score": flu_score,
+        "recognized_transcript": clean_user,
+        "is_passing": overall >= 75,
+        "verdict": verdict,
+        "words": words,
+        "connected_speech_feedback": cues_str,
+        "coaching_tips": tips,
+        "provider": "offline",
+        "model": "offline-shadowing-evaluator",
+    }
+
+
+async def evaluate_shadowing_speech(
+    target_sentence: str,
+    user_transcript: Optional[str] = None,
+    audio_base64: Optional[str] = None,
+    phonetic_cues: Optional[List[str]] = None,
+    accent: Optional[str] = "US",
+) -> dict:
+    clean_target = target_sentence.strip()
+    recognized = (user_transcript or "").strip()
+    cues_text = "\n- ".join(phonetic_cues) if phonetic_cues else "- Chú ý trọng âm câu, nối âm và ngữ điệu tự nhiên."
+    status = agent.provider_status()
+
+    # Case 1: Multimodal Gemini (if raw audio is provided and provider is gemini)
+    if status.get("provider") == "gemini" and not status.get("offline") and audio_base64:
+        prompt = (
+            f"BẠN LÀ GIÁM KHẢO CHẤM ĐIỂM VÀ HUẤN LUYỆN VIÊN PHÁT ÂM TOEIC (SHADOWING COACH).\n\n"
+            f"CÂU GỐC MẪU (TARGET SENTENCE):\n\"{clean_target}\"\n\n"
+            f"LƯU Ý NGỮ ÂM TRỌNG TÂM:\n{cues_text}\n\n"
+            f"NHIỆM VỤ:\n"
+            f"1. Lắng nghe trực tiếp file âm thanh của học viên, đối chiếu từng âm vị với câu gốc.\n"
+            f"2. Chấm điểm chính xác theo 3 thang điểm (0-100): overall_score, accuracy_score, fluency_score.\n"
+            f"3. Đánh giá chi tiết từng từ trong câu: word, status (perfect | good | needs_work | missed), note.\n"
+            f"4. Đánh giá hiện tượng nối âm / biến âm (connected_speech_feedback).\n"
+            f"5. Đưa ra 2-3 lời khuyên ngắn gọn bằng tiếng Việt (coaching_tips) để học viên đọc tiến bộ hơn.\n\n"
+            f"Trả về DUY NHẤT một JSON hợp lệ."
+        )
+        try:
+            raw_reply = await agent.complete_with_audio(
+                prompt=prompt,
+                audio_base64=audio_base64,
+                system_prompt="Bạn là giám khảo ngữ âm TOEIC. Luôn trả về DUY NHẤT một JSON hợp lệ.",
+            )
+            parsed = agent.extract_json_object(raw_reply)
+            if parsed and "overall_score" in parsed:
+                return _normalize_shadowing_response(
+                    parsed, clean_target, recognized, "gemini", status.get("model", "gemini-2.5-flash")
+                )
+        except Exception as exc:
+            logger.warning("Gemini shadowing audio analysis failed: %s", exc)
+
+    # Case 2: DeepSeek or Text Provider (with recognized STT transcript from browser)
+    if not status.get("offline"):
+        text_prompt = SHADOWING_PROMPT_TEMPLATE.format(
+            target_sentence=clean_target,
+            cues_text=cues_text,
+            recognized_text=recognized or "[Không bắt được âm thanh rõ ràng]",
+        )
+        try:
+            raw_reply = await agent.complete_text(
+                text_prompt,
+                system_prompt="Bạn là giám khảo ngữ âm TOEIC độc lập. Luôn trả về DUY NHẤT một JSON hợp lệ.",
+            )
+            parsed = agent.extract_json_object(raw_reply)
+            if parsed and "overall_score" in parsed:
+                return _normalize_shadowing_response(
+                    parsed,
+                    clean_target,
+                    recognized,
+                    status.get("provider", "deepseek"),
+                    status.get("model", "deepseek-flash"),
+                )
+        except Exception as exc:
+            logger.warning("Text-based shadowing analysis failed: %s", exc)
+
+    # Case 3: Offline fallback
+    return _offline_shadowing_evaluation(clean_target, user_transcript, phonetic_cues)
 
 
 async def process_voice_turn(

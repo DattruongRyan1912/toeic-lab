@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
+  Bot,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -29,7 +30,7 @@ import { api, errorMessage } from "@/lib/api";
 import { refreshLearner } from "@/lib/learner-store";
 import { useApi } from "@/lib/use-api";
 import { cn } from "@/lib/utils";
-import type { DictationCheckResponse, ListeningExercise } from "@/types";
+import type { DictationCheckResponse, ListeningExercise, ShadowingEvaluateResponse } from "@/types";
 
 const ACCENT_META: Record<string, { label: string; flag: string; tone: string }> = {
   US: { label: "Mỹ (General American)", flag: "🇺🇸", tone: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800" },
@@ -59,10 +60,16 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordedAudioUrl, setRecordedAudioUrl] = useState<string | null>(null);
+  const [recordedAudioBase64, setRecordedAudioBase64] = useState<string | null>(null);
+  const [userTranscript, setUserTranscript] = useState<string>("");
+  const [evaluatingAi, setEvaluatingAi] = useState(false);
+  const [aiEvaluation, setAiEvaluation] = useState<ShadowingEvaluateResponse | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<number | null>(null);
   const userAudioRef = useRef<HTMLAudioElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
   const [isPlayingUserAudio, setIsPlayingUserAudio] = useState(false);
   const [shadowingTranscriptVisible, setShadowingTranscriptVisible] = useState(true);
 
@@ -155,6 +162,10 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
+      setRecordedAudioUrl(null);
+      setRecordedAudioBase64(null);
+      setUserTranscript("");
+      setAiEvaluation(null);
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -167,7 +178,70 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
         const url = URL.createObjectURL(audioBlob);
         setRecordedAudioUrl(url);
         stream.getTracks().forEach((track) => track.stop());
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result as string;
+          if (res) {
+            const b64 = res.split(",")[1] ?? res;
+            setRecordedAudioBase64(b64);
+          }
+        };
+        reader.readAsDataURL(audioBlob);
       };
+
+      if (typeof window !== "undefined") {
+        const win = window as unknown as {
+          SpeechRecognition?: new () => {
+            lang: string;
+            continuous: boolean;
+            interimResults: boolean;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onresult: (e: any) => void;
+            onerror: () => void;
+            start: () => void;
+            stop: () => void;
+          };
+          webkitSpeechRecognition?: new () => {
+            lang: string;
+            continuous: boolean;
+            interimResults: boolean;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onresult: (e: any) => void;
+            onerror: () => void;
+            start: () => void;
+            stop: () => void;
+          };
+        };
+        const SpeechRec = win.SpeechRecognition || win.webkitSpeechRecognition;
+        if (SpeechRec) {
+          try {
+            const recognition = new SpeechRec();
+            recognition.lang = "en-US";
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            let finalStr = "";
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            recognition.onresult = (e: any) => {
+              let interimStr = "";
+              for (let i = 0; i < e.results.length; ++i) {
+                if (e.results[i].isFinal) {
+                  finalStr += e.results[i][0].transcript + " ";
+                } else {
+                  interimStr += e.results[i][0].transcript;
+                }
+              }
+              const total = (finalStr + " " + interimStr).trim();
+              if (total) setUserTranscript(total);
+            };
+            recognition.onerror = () => {};
+            recognition.start();
+            recognitionRef.current = recognition;
+          } catch {
+            // ignore speech recognition error
+          }
+        }
+      }
 
       mediaRecorder.start();
       setIsRecording(true);
@@ -187,10 +261,40 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
       if (recordingTimerRef.current) {
         window.clearInterval(recordingTimerRef.current);
       }
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // ignore
+        }
+      }
       void api("/listening/track", {
         method: "POST",
         json: { mode: "shadowing", seconds: Math.max(5, recordingSeconds), items: 1 },
       }).then(() => refreshLearner());
+    }
+  };
+
+  const handleEvaluateShadowing = async () => {
+    setEvaluatingAi(true);
+    try {
+      const res = await api<ShadowingEvaluateResponse>("/listening/evaluate-shadowing", {
+        method: "POST",
+        json: {
+          exercise_id: exercise.id,
+          target_sentence: exercise.sentence,
+          user_transcript: userTranscript || undefined,
+          audio_base64: recordedAudioBase64 || undefined,
+          phonetic_cues: exercise.phonetic_cues,
+          accent: exercise.accent,
+        },
+      });
+      setAiEvaluation(res);
+      void refreshLearner();
+    } catch (err) {
+      alert(errorMessage(err));
+    } finally {
+      setEvaluatingAi(false);
     }
   };
 
@@ -531,9 +635,9 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                 </p>
               </div>
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-3 dark:border-emerald-900/40 dark:bg-emerald-950/20">
-                <span className="font-bold text-emerald-800 dark:text-emerald-300 block mb-1">Bước 3: Đối chiếu</span>
+                <span className="font-bold text-emerald-800 dark:text-emerald-300 block mb-1">Bước 3: AI Chấm điểm & Đối chiếu</span>
                 <p className="text-slate-600 dark:text-slate-400 leading-normal">
-                  Nghe lại bản thu của chính bạn và so sánh độ trôi chảy với giọng bản ngữ.
+                  Nghe lại bản thu và để AI đóng vai trò giám khảo khách quan chấm điểm & chỉ ra lỗi phát âm.
                 </p>
               </div>
             </div>
@@ -560,11 +664,19 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
 
               <div
                 className={cn(
-                  "rounded-xl bg-white p-4 font-mono text-base leading-relaxed border border-slate-200 dark:bg-slate-950 dark:border-slate-800 transition-all",
+                  "rounded-xl bg-white p-4 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 transition-all space-y-2.5",
                   !shadowingTranscriptVisible && "blur-xs select-none filter opacity-40",
                 )}
               >
-                {exercise.sentence}
+                <div className="font-mono text-base leading-relaxed text-slate-900 dark:text-slate-100">
+                  {exercise.sentence}
+                </div>
+                {exercise.explanation && (
+                  <div className="flex items-start gap-2 pt-2.5 border-t border-slate-100 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
+                    <span className="shrink-0 font-semibold text-blue-600 dark:text-blue-400">Dịch nghĩa:</span>
+                    <span className="leading-relaxed">{exercise.explanation}</span>
+                  </div>
+                )}
               </div>
 
               {exercise.phonetic_cues && exercise.phonetic_cues.length > 0 && (
@@ -606,27 +718,201 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
               </div>
 
               {recordedAudioUrl && (
-                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center gap-4">
-                  <Button
-                    onClick={togglePlayUserAudio}
-                    variant="outline"
-                    className="flex items-center gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300"
-                  >
-                    {isPlayingUserAudio ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                    <span>{isPlayingUserAudio ? "Dừng bản thu" : "Nghe lại giọng của bạn"}</span>
-                  </Button>
+                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button
+                      onClick={togglePlayUserAudio}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300"
+                    >
+                      {isPlayingUserAudio ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                      <span>{isPlayingUserAudio ? "Dừng bản thu" : "Nghe lại giọng của bạn"}</span>
+                    </Button>
 
-                  <Button
-                    onClick={playNativeAudio}
-                    variant="outline"
-                    className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300"
-                  >
-                    <Volume2 className="h-4 w-4" />
-                    <span>Nghe lại giọng bản xứ</span>
-                  </Button>
+                    <Button
+                      onClick={playNativeAudio}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300"
+                    >
+                      <Volume2 className="h-4 w-4" />
+                      <span>Nghe lại giọng bản xứ</span>
+                    </Button>
+
+                    <Button
+                      onClick={handleEvaluateShadowing}
+                      disabled={evaluatingAi}
+                      size="sm"
+                      className="flex items-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white font-bold shadow-md shadow-blue-500/25 hover:opacity-95"
+                    >
+                      <Bot className="h-4 w-4" />
+                      <span>{evaluatingAi ? "Giám khảo AI đang chấm điểm..." : "Chấm Điểm & Hướng Dẫn AI"}</span>
+                    </Button>
+                  </div>
+
+                  {userTranscript && !aiEvaluation && (
+                    <div className="text-center font-mono text-xs text-slate-500 dark:text-slate-400">
+                      <span>Thu âm được: </span>
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">&ldquo;{userTranscript}&rdquo;</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
+
+            {/* AI EVALUATION SCORECARD */}
+            {aiEvaluation && (
+              <div className="rounded-2xl border border-blue-200 bg-gradient-to-b from-blue-50/40 via-white to-slate-50 p-6 space-y-6 shadow-sm dark:border-blue-900/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950">
+                {/* Header with Scores */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5 dark:border-slate-800">
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={cn(
+                        "flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl font-black text-2xl shadow-lg",
+                        aiEvaluation.overall_score >= 85
+                          ? "bg-emerald-600 text-white shadow-emerald-500/30"
+                          : aiEvaluation.overall_score >= 70
+                            ? "bg-blue-600 text-white shadow-blue-500/30"
+                            : "bg-amber-600 text-white shadow-amber-500/30",
+                      )}
+                    >
+                      {aiEvaluation.overall_score}%
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={cn(
+                            "text-xs font-bold",
+                            aiEvaluation.overall_score >= 85
+                              ? "bg-emerald-600 text-white"
+                              : aiEvaluation.overall_score >= 70
+                                ? "bg-blue-600 text-white"
+                                : "bg-amber-600 text-white",
+                          )}
+                        >
+                          {aiEvaluation.verdict}
+                        </Badge>
+                        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                          AI Examiner • {aiEvaluation.provider}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
+                        Đánh giá dựa trên đối soát âm vị, độ ngắt nghỉ và hiện tượng nối âm thực chiến.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Sub Scores */}
+                  <div className="grid grid-cols-2 gap-3 min-w-[220px]">
+                    <div className="rounded-xl border border-slate-200 bg-white/80 p-2.5 text-center dark:border-slate-800 dark:bg-slate-850">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
+                        Độ chuẩn từ (Accuracy)
+                      </span>
+                      <span className="font-black text-lg text-slate-800 dark:text-slate-100">
+                        {aiEvaluation.accuracy_score}%
+                      </span>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white/80 p-2.5 text-center dark:border-slate-800 dark:bg-slate-850">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
+                        Độ trôi chảy (Fluency)
+                      </span>
+                      <span className="font-black text-lg text-slate-800 dark:text-slate-100">
+                        {aiEvaluation.fluency_score}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recognized Speech */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span className="font-semibold uppercase tracking-wider">AI nghe được từ giọng đọc của bạn:</span>
+                    <span className="font-mono text-[11px] text-blue-600 dark:text-blue-400">Speech Recognition</span>
+                  </div>
+                  <div className="rounded-xl bg-slate-100/80 p-3 font-mono text-sm text-slate-800 italic border border-slate-200 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200">
+                    &ldquo;{aiEvaluation.recognized_transcript || "(Chưa bắt được âm thanh rõ ràng)"}&rdquo;
+                  </div>
+                </div>
+
+                {/* Word by Word Breakdown */}
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Chi tiết phát âm từng từ (Word Breakdown):
+                  </span>
+                  <div className="flex flex-wrap gap-2 p-3 bg-white rounded-xl border border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+                    {aiEvaluation.words.map((w, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(
+                          "group relative px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border cursor-help",
+                          w.status === "perfect" &&
+                            "bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800",
+                          w.status === "good" &&
+                            "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800",
+                          w.status === "needs_work" &&
+                            "bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800",
+                          w.status === "missed" &&
+                            "bg-slate-100 text-slate-500 border-slate-200 line-through dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700",
+                        )}
+                        title={w.note || w.status}
+                      >
+                        <span>{w.word}</span>
+                        {w.note && (
+                          <span className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1 bg-slate-900 text-white text-[10px] rounded-md shadow-lg whitespace-nowrap z-30">
+                            {w.note}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-4 text-[11px] text-slate-500 pt-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" /> Chuẩn âm
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-blue-500" /> Rõ ràng
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" /> Cần chỉnh âm
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-slate-400" /> Nuốt/thiếu từ
+                    </span>
+                  </div>
+                </div>
+
+                {/* Connected Speech Feedback */}
+                {aiEvaluation.connected_speech_feedback && (
+                  <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 dark:border-indigo-900/50 dark:bg-indigo-950/20 space-y-1">
+                    <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300 uppercase tracking-wider flex items-center gap-2">
+                      <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+                      Nhận xét hiện tượng ngữ âm tự nhiên:
+                    </span>
+                    <p className="text-xs text-indigo-950 dark:text-indigo-200 leading-relaxed">
+                      {aiEvaluation.connected_speech_feedback}
+                    </p>
+                  </div>
+                )}
+
+                {/* Actionable Coaching Tips */}
+                {aiEvaluation.coaching_tips && aiEvaluation.coaching_tips.length > 0 && (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 dark:border-amber-900/40 dark:bg-amber-950/20 space-y-2">
+                    <span className="text-xs font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                      💡 Lời khuyên & Hướng dẫn cải thiện từ Giám khảo AI:
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-amber-950 dark:text-amber-200">
+                      {aiEvaluation.coaching_tips.map((tip, tIdx) => (
+                        <li key={tIdx} className="flex items-start gap-2">
+                          <span className="text-amber-500 font-bold">•</span>
+                          <span className="leading-relaxed">{tip}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </CardContent>

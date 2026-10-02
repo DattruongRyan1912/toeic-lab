@@ -10,6 +10,8 @@ from server.schemas import (
     DictationCheckResponse,
     ListeningExercise,
     ListeningTrackRequest,
+    ShadowingEvaluateRequest,
+    ShadowingEvaluateResponse,
 )
 from server.services import listening_service
 
@@ -57,3 +59,22 @@ def track_listening(
 ):
     """Track listening activity time (adds to daily study minutes for 'listening')."""
     return listening_service.track_listening_activity(db, user_id, payload.seconds)
+
+
+@router.post("/evaluate-shadowing", response_model=ShadowingEvaluateResponse)
+async def evaluate_shadowing(
+    payload: ShadowingEvaluateRequest,
+    user_id: int = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    """Evaluate learner's spoken shadowing audio/transcript with AI scoring, word analysis, and coaching tips."""
+    from server.services import voice_coach_service
+    res = await voice_coach_service.evaluate_shadowing_speech(
+        target_sentence=payload.target_sentence,
+        user_transcript=payload.user_transcript,
+        audio_base64=payload.audio_base64,
+        phonetic_cues=payload.phonetic_cues,
+        accent=payload.accent,
+    )
+    listening_service.track_listening_activity(db, user_id, 15)
+    return res

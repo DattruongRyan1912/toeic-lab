@@ -783,5 +783,35 @@ export interface VocabPronounceResponse {
   model?: string | null;
 }
 
+export interface ShadowingWordFeedback {
+  word: string;
+  status: "perfect" | "good" | "needs_work" | "missed";
+  ipa?: string | null;
+  note?: string | null;
+}
+
+export interface ShadowingEvaluateRequest {
+  exercise_id?: number | null;
+  target_sentence: string;
+  audio_base64?: string | null;
+  user_transcript?: string | null;
+  phonetic_cues?: string[] | null;
+  accent?: string | null;
+}
+
+export interface ShadowingEvaluateResponse {
+  overall_score: number;
+  accuracy_score: number;
+  fluency_score: number;
+  recognized_transcript: string;
+  is_passing: boolean;
+  verdict: string;
+  words: ShadowingWordFeedback[];
+  connected_speech_feedback?: string | null;
+  coaching_tips: string[];
+  provider: string;
+  model: string;
+}
+
 
 

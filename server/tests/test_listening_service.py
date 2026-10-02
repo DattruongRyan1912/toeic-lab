@@ -65,3 +65,36 @@ def test_listening_api_endpoints(client, seeded):
     resp_track = client.post("/api/listening/track", json=track_payload)
     assert resp_track.status_code == 200
     assert resp_track.json()["status"] == "tracked"
+
+
+def test_evaluate_shadowing_api(client, seeded):
+    # Good pronunciation attempt
+    payload = {
+        "target_sentence": "A woman is typing on a laptop computer at an office workstation.",
+        "user_transcript": "a woman is typing on a laptop computer at an office workstation",
+        "phonetic_cues": ["Biến âm Flap-T trong 'computer'"],
+        "accent": "US",
+    }
+    resp = client.post("/api/listening/evaluate-shadowing", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "overall_score" in data
+    assert "accuracy_score" in data
+    assert "fluency_score" in data
+    assert data["overall_score"] >= 70
+    assert data["is_passing"] is True
+    assert isinstance(data["words"], list)
+    assert len(data["words"]) > 0
+    assert isinstance(data["coaching_tips"], list)
+    assert len(data["coaching_tips"]) > 0
+
+    # Incomplete / flawed attempt
+    payload_bad = {
+        "target_sentence": "A woman is typing on a laptop computer at an office workstation.",
+        "user_transcript": "a woman is typing laptop",
+    }
+    resp_bad = client.post("/api/listening/evaluate-shadowing", json=payload_bad)
+    assert resp_bad.status_code == 200
+    data_bad = resp_bad.json()
+    assert data_bad["overall_score"] < data["overall_score"]
+    assert any(w["status"] in ("needs_work", "missed") for w in data_bad["words"])
