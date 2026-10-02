@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Loader2,
   Mic,
@@ -556,6 +557,19 @@ export function PronounceDialog({
                 {result.score}%
               </div>
             </div>
+
+            {/* Opera / Fallback STT notice */}
+            {result.is_guidance_fallback && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-200 space-y-1 animate-in fade-in">
+                <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>Chế độ Hướng dẫn Ngữ âm mẫu (Không có STT)</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                  Trình duyệt này (Opera/PWA) không hỗ trợ dịch giọng nói (Google STT) nên AI chưa trích xuất được âm thanh thực tế. Điểm <strong>78%</strong> là mức tham chiếu. Để AI nghe và chấm điểm trực tiếp theo giọng thật (lên tới 100%), bạn hãy mở qua <strong>Chrome PWA</strong> hoặc <strong>Safari</strong> nhé!
+                </p>
+              </div>
+            )}
 
             {/* IPA Comparison */}
             <div className="grid grid-cols-2 gap-2 text-center text-xs">

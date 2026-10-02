@@ -705,6 +705,7 @@ class VocabPronounceResponse(BaseModel):
     feedback: VocabPronounceFeedback
     provider: str
     model: Optional[str] = None
+    is_guidance_fallback: bool = False
 
 
 class AIMessageRead(BaseModel):

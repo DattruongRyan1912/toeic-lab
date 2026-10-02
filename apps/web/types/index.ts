@@ -782,6 +782,7 @@ export interface VocabPronounceResponse {
   feedback: VocabPronounceFeedback;
   provider: string;
   model?: string | null;
+  is_guidance_fallback?: boolean;
 }
 
 export interface ShadowingWordFeedback {

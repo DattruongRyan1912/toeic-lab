@@ -196,7 +196,7 @@ Phiên âm IPA chuẩn kỳ vọng: "{expected_ipa}"
 
 Hãy phân tích đối chiếu chuyên sâu:
 1. So sánh âm học viên đọc ("{recognized_text}") với từ mục tiêu ("{word}"):
-   - Nếu học viên đọc đúng hoàn toàn: Phân tích các âm vị chuẩn, âm đuôi và độ tự nhiên. Cho điểm cao (85-98 tùy độ phức tạp của từ).
+   - Nếu học viên đọc đúng hoàn toàn hoặc phát âm chuẩn xác như audio mẫu: Phân tích các âm vị chuẩn, âm đuôi và độ tự nhiên. Cho điểm xuất sắc từ 90 đến 100 điểm (nếu đọc chuẩn tuyệt đối như người bản xứ hoặc máy phát âm mẫu, hãy tự tin cho 100 điểm).
    - Nếu học viên đọc lệch, thiếu âm đuôi, nuốt âm (ví dụ: mất ending sound /t/, /d/, /s/, /z/, /n/), nhầm nguyên âm, hoặc nói từ khác: Phân tích cụ thể âm nào bị thiếu hoặc sai lệch. Cho điểm tương ứng (20-75).
    - Nếu không ghi nhận được âm đọc rõ ràng: Cho điểm dưới 40 và yêu cầu đọc to, rõ ràng hơn.
 2. Xác định phiên âm IPA học viên thực sự phát âm (recognized_ipa).
@@ -329,14 +329,16 @@ async def evaluate_vocab_pronunciation(
                     },
                     "provider": "gemini",
                     "model": status.get("model", "gemini-2.5-flash"),
+                    "is_guidance_fallback": False,
                 }
         except Exception as exc:
             logger.warning("Gemini audio analysis failed, falling back to text analysis: %s", exc)
 
     # Case 2: DeepSeek or Text Provider
     recognized = (user_transcript or "").strip()
+    is_guidance = not recognized or recognized == "[Không bắt được âm thanh rõ ràng]"
     if not status.get("offline"):
-        if recognized and recognized != "[Không bắt được âm thanh rõ ràng]":
+        if not is_guidance:
             text_prompt = VOCAB_PRONOUNCE_TEXT_PROMPT_TEMPLATE.format(
                 word=clean_word,
                 expected_ipa=target_ipa,
@@ -355,7 +357,7 @@ async def evaluate_vocab_pronunciation(
             parsed = agent.extract_json_object(raw_reply)
             if parsed and "score" in parsed:
                 fb = parsed.get("feedback") or {}
-                default_score = 78 if not recognized else 70
+                default_score = 78 if is_guidance else 70
                 score = max(0, min(100, int(parsed.get("score", default_score))))
                 rec_text = str(parsed.get("recognized_text", recognized or clean_word)).strip()
                 if not rec_text or rec_text.startswith("[Không xác định") or rec_text.startswith("[Không bắt"):
@@ -378,6 +380,7 @@ async def evaluate_vocab_pronunciation(
                     },
                     "provider": status.get("provider", "deepseek"),
                     "model": status.get("model", "deepseek-flash"),
+                    "is_guidance_fallback": is_guidance,
                 }
         except Exception as exc:
             logger.warning("Text-based pronunciation analysis failed: %s", exc)
