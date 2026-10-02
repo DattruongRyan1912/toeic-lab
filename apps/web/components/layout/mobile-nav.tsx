@@ -147,7 +147,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Điều hướng nhanh thanh dưới cùng"
-      className="fixed bottom-0 inset-x-0 z-40 flex h-16 items-center justify-around border-t border-slate-200/90 bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] backdrop-blur-md transition-colors duration-200 select-none md:hidden dark:border-slate-800/90 dark:bg-[#0d162a]/95"
+      className="fixed bottom-0 inset-x-0 z-40 flex h-[calc(4rem+env(safe-area-inset-bottom,0px))] items-center justify-around border-t border-slate-200/90 bg-white/95 px-1 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-md transition-colors duration-200 select-none md:hidden dark:border-slate-800/90 dark:bg-[#0d162a]/95"
     >
       {tabs.map((tab) => {
         const Icon = tab.icon;

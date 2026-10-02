@@ -7,6 +7,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
     { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
@@ -38,6 +39,11 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "TOEIC Master",
+  },
   openGraph: {
     title: "TOEIC Master SaaS • AI Self-Study Platform",
     description: "Nền tảng tự học TOEIC 800 - 900+ cho kỹ sư phần mềm với AI Mentor, SRS và nhận diện ngữ âm.",
