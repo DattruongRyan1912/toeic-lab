@@ -44,6 +44,7 @@ export function PronounceDialog({
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(0);
   const [speechDetected, setSpeechDetected] = useState(false);
+  const [liveTranscript, setLiveTranscript] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<VocabPronounceResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,6 +141,7 @@ export function PronounceDialog({
       setDuration(0);
       setVolume(0);
       setSpeechDetected(false);
+      setLiveTranscript("");
       setAnalyzing(false);
       setResult(null);
       setError(null);
@@ -151,6 +153,7 @@ export function PronounceDialog({
     setError(null);
     setResult(null);
     setSpeechDetected(false);
+    setLiveTranscript("");
     setVolume(0);
     recognizedTextRef.current = "";
     cleanup();
@@ -163,8 +166,9 @@ export function PronounceDialog({
             continuous: boolean;
             interimResults: boolean;
             maxAlternatives: number;
-            onresult: (e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void;
-            onerror: () => void;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onresult: (e: any) => void;
+            onerror: (e: unknown) => void;
             start: () => void;
             stop: () => void;
             abort: () => void;
@@ -174,8 +178,9 @@ export function PronounceDialog({
             continuous: boolean;
             interimResults: boolean;
             maxAlternatives: number;
-            onresult: (e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void;
-            onerror: () => void;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onresult: (e: any) => void;
+            onerror: (e: unknown) => void;
             start: () => void;
             stop: () => void;
             abort: () => void;
@@ -187,30 +192,39 @@ export function PronounceDialog({
           try {
             const recognition = new SpeechRec();
             recognition.lang = "en-US";
-            recognition.continuous = false;
+            recognition.continuous = true;
             recognition.interimResults = true;
             recognition.maxAlternatives = 3;
 
-            recognition.onresult = (e) => {
-              const text = e.results[0]?.[0]?.transcript;
-              if (text) {
-                recognizedTextRef.current = text.trim();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            recognition.onresult = (e: any) => {
+              let fullText = "";
+              for (let i = 0; i < e.results.length; ++i) {
+                const t = e.results[i]?.[0]?.transcript;
+                if (t) fullText += (fullText ? " " : "") + t.trim();
+              }
+              if (fullText) {
+                recognizedTextRef.current = fullText;
+                setLiveTranscript(fullText);
+                setSpeechDetected(true);
               }
             };
-            recognition.onerror = () => {};
+            recognition.onerror = (e) => {
+              console.warn("SpeechRecognition error:", e);
+            };
             recognition.start();
             recognitionRef.current = recognition;
-          } catch {
-            // ignore STT errors
+          } catch (e) {
+            console.warn("Could not start SpeechRecognition:", e);
           }
         }
       }
 
       const recorder = new AudioRecorder({
         autoStopOnSilence: true,
-        speechThreshold: 0.06,
-        silenceThreshold: 0.035,
-        silenceDurationMs: 900,
+        speechThreshold: 0.035,
+        silenceThreshold: 0.02,
+        silenceDurationMs: 1200,
         onSpeechDetected: () => {
           setSpeechDetected(true);
         },
@@ -219,6 +233,9 @@ export function PronounceDialog({
         },
         onVolumeChange: (vol) => {
           setVolume(vol);
+          if (vol >= 0.04) {
+            setSpeechDetected(true);
+          }
         },
       });
 
@@ -348,9 +365,13 @@ export function PronounceDialog({
 
               <div className="text-center space-y-1">
                 <p className="text-xs font-semibold text-red-500">
-                  {speechDetected
-                    ? "✨ Đã nhận diện giọng nói — tự dừng khi dứt lời..."
-                    : "Đang lắng nghe... Hãy phát âm từ trên"}
+                  {liveTranscript ? (
+                    <span className="text-emerald-600 dark:text-emerald-400">✨ Đã nghe: &ldquo;{liveTranscript}&rdquo;</span>
+                  ) : speechDetected ? (
+                    "✨ Đã nhận diện âm thanh — tự dừng khi dứt lời..."
+                  ) : (
+                    "Đang lắng nghe... Hãy phát âm từ trên"
+                  )}
                 </p>
                 <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
                   <span>{duration}s / 5s</span>

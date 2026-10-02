@@ -71,6 +71,23 @@ export class AudioRecorder {
       throw new Error("Trình duyệt không hỗ trợ thu âm Microphone (MediaDevices API)");
     }
 
+    // Initialize AudioContext immediately on user gesture to prevent 'suspended' state on iOS/Android
+    if (typeof window !== "undefined") {
+      try {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          this.audioContext = new AudioCtx();
+          if (this.audioContext.state === "suspended") {
+            await this.audioContext.resume();
+          }
+        }
+      } catch (e) {
+        console.warn("Could not pre-init AudioContext:", e);
+      }
+    }
+
     this.chunks = [];
     this.hasSpoken = false;
     this.silenceStart = null;
@@ -83,6 +100,14 @@ export class AudioRecorder {
         autoGainControl: true,
       },
     });
+
+    if (this.audioContext && this.audioContext.state === "suspended") {
+      try {
+        await this.audioContext.resume();
+      } catch {
+        // ignore
+      }
+    }
 
     const mimeType = getSupportedAudioMime();
     const options: MediaRecorderOptions = mimeType ? { mimeType } : {};
@@ -103,16 +128,22 @@ export class AudioRecorder {
     if (!this.stream || typeof window === "undefined") return;
 
     try {
-      const AudioCtx =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (!AudioCtx) return;
+      if (!this.audioContext) {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (!AudioCtx) return;
+        this.audioContext = new AudioCtx();
+      }
 
-      this.audioContext = new AudioCtx();
+      if (this.audioContext.state === "suspended") {
+        void this.audioContext.resume();
+      }
+
       const source = this.audioContext.createMediaStreamSource(this.stream);
       this.analyser = this.audioContext.createAnalyser();
       this.analyser.fftSize = 256;
-      this.analyser.smoothingTimeConstant = 0.5;
+      this.analyser.smoothingTimeConstant = 0.4;
       source.connect(this.analyser);
 
       const bufferLength = this.analyser.frequencyBinCount;
@@ -127,7 +158,8 @@ export class AudioRecorder {
           sum += dataArray[i];
         }
         const avg = sum / bufferLength;
-        const normalized = Math.min(1, avg / 128); // 0 to 1
+        // Boost sensitivity for mobile built-in microphones
+        const normalized = Math.min(1, (avg / 96) * 1.2); // 0 to 1
 
         this.options.onVolumeChange?.(normalized);
 
