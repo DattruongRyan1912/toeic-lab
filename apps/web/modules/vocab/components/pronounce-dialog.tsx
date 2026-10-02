@@ -86,15 +86,6 @@ export function PronounceDialog({
     isStoppingRef.current = true;
     isRecordingRef.current = false;
 
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // ignore
-      }
-      recognitionRef.current = null;
-    }
-
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -105,20 +96,66 @@ export function PronounceDialog({
     setError(null);
     setVolume(0);
 
-    try {
-      if (recorderRef.current) {
-        const { base64 } = await recorderRef.current.stop();
-        const res = await api<VocabPronounceResponse>("/ai/pronounce-vocab", {
-          method: "POST",
-          json: {
-            word: word.trim(),
-            expected_ipa: expectedIpa || undefined,
-            audio_base64: base64,
-            user_transcript: recognizedTextRef.current || undefined,
-          },
+    // Wait for recognition engine to finalize transcript if not yet received
+    const rec = recognitionRef.current;
+    if (rec) {
+      if (!recognizedTextRef.current) {
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(resolve, 800);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const origResult = (rec as any).onresult;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (rec as any).onresult = (e: any) => {
+            origResult?.(e);
+            clearTimeout(timeout);
+            resolve();
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const origEnd = (rec as any).onend;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (rec as any).onend = () => {
+            origEnd?.();
+            clearTimeout(timeout);
+            resolve();
+          };
+          try {
+            rec.stop();
+          } catch {
+            clearTimeout(timeout);
+            resolve();
+          }
         });
-        setResult(res);
+      } else {
+        try {
+          rec.stop();
+        } catch {
+          // ignore
+        }
       }
+      recognitionRef.current = null;
+    }
+
+    try {
+      let base64 = "";
+      if (recorderRef.current) {
+        try {
+          const res = await recorderRef.current.stop();
+          base64 = res.base64;
+        } catch {
+          // ignore recorder stop error
+        }
+      }
+
+      const res = await api<VocabPronounceResponse>("/ai/pronounce-vocab", {
+        method: "POST",
+        json: {
+          word: word.trim(),
+          expected_ipa: expectedIpa || undefined,
+          audio_base64: base64,
+          user_transcript: recognizedTextRef.current || undefined,
+        },
+      });
+      setResult(res);
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -161,7 +198,10 @@ export function PronounceDialog({
     recognizedTextRef.current = "";
     cleanup();
 
+    const isIOS = typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
+
     try {
+      let hasRecognition = false;
       if (typeof window !== "undefined") {
         const win = window as unknown as {
           SpeechRecognition?: new () => {
@@ -172,6 +212,9 @@ export function PronounceDialog({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onresult: (e: any) => void;
             onerror: (e: unknown) => void;
+            onspeechstart?: () => void;
+            onsoundstart?: () => void;
+            onspeechend?: () => void;
             start: () => void;
             stop: () => void;
             abort: () => void;
@@ -184,6 +227,9 @@ export function PronounceDialog({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onresult: (e: any) => void;
             onerror: (e: unknown) => void;
+            onspeechstart?: () => void;
+            onsoundstart?: () => void;
+            onspeechend?: () => void;
             start: () => void;
             stop: () => void;
             abort: () => void;
@@ -199,6 +245,14 @@ export function PronounceDialog({
             recognition.interimResults = true;
             recognition.maxAlternatives = 3;
 
+            recognition.onspeechstart = () => {
+              setSpeechDetected(true);
+            };
+
+            recognition.onsoundstart = () => {
+              setSpeechDetected(true);
+            };
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             recognition.onresult = (e: any) => {
               let fullText = "";
@@ -212,38 +266,54 @@ export function PronounceDialog({
                 setSpeechDetected(true);
               }
             };
+
+            recognition.onspeechend = () => {
+              setTimeout(() => {
+                if (isRecordingRef.current) {
+                  void stopRecordingRef.current();
+                }
+              }, 1200);
+            };
+
             recognition.onerror = (e) => {
               console.warn("SpeechRecognition error:", e);
             };
+
             recognition.start();
             recognitionRef.current = recognition;
+            hasRecognition = true;
           } catch (e) {
             console.warn("Could not start SpeechRecognition:", e);
           }
         }
       }
 
-      const recorder = new AudioRecorder({
-        autoStopOnSilence: true,
-        speechThreshold: 0.035,
-        silenceThreshold: 0.02,
-        silenceDurationMs: 1200,
-        onSpeechDetected: () => {
-          setSpeechDetected(true);
-        },
-        onSilence: () => {
-          void stopRecordingRef.current();
-        },
-        onVolumeChange: (vol) => {
-          setVolume(vol);
-          if (vol >= 0.04) {
+      // On iOS Safari, getUserMedia and webkitSpeechRecognition conflict over hardware mic access.
+      // If SpeechRecognition is available on iOS, let it handle microphone exclusively.
+      // On non-iOS devices or when SpeechRecognition is unavailable, use AudioRecorder for volume & audio capture.
+      if (!isIOS || !hasRecognition) {
+        const recorder = new AudioRecorder({
+          autoStopOnSilence: true,
+          speechThreshold: 0.035,
+          silenceThreshold: 0.02,
+          silenceDurationMs: 1800,
+          onSpeechDetected: () => {
             setSpeechDetected(true);
-          }
-        },
-      });
+          },
+          onSilence: () => {
+            void stopRecordingRef.current();
+          },
+          onVolumeChange: (vol) => {
+            setVolume(vol);
+            if (vol >= 0.04) {
+              setSpeechDetected(true);
+            }
+          },
+        });
 
-      recorderRef.current = recorder;
-      await recorder.start();
+        recorderRef.current = recorder;
+        await recorder.start();
+      }
 
       isRecordingRef.current = true;
       isStoppingRef.current = false;
@@ -254,6 +324,10 @@ export function PronounceDialog({
       timerRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
         setDuration(elapsed);
+        if (isIOS && hasRecognition) {
+          // Provide animated volume wave bars on iOS
+          setVolume(Math.random() * 0.4 + 0.35);
+        }
         if (elapsed >= 5) {
           void stopRecordingRef.current();
         }
@@ -389,20 +463,22 @@ export function PronounceDialog({
                 ))}
               </div>
 
-              <div className="text-center space-y-1">
-                <p className="text-xs font-semibold text-red-500">
-                  {liveTranscript ? (
-                    <span className="text-emerald-600 dark:text-emerald-400">✨ Đã nghe: &ldquo;{liveTranscript}&rdquo;</span>
-                  ) : speechDetected ? (
-                    "✨ Đã nhận diện âm thanh — tự dừng khi dứt lời..."
-                  ) : (
-                    "Đang lắng nghe... Hãy phát âm từ trên"
-                  )}
-                </p>
+              <div className="text-center space-y-1.5 max-w-xs">
+                {liveTranscript ? (
+                  <div className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800 animate-in fade-in">
+                    ✨ Đã nghe: &ldquo;{liveTranscript}&rdquo;
+                  </div>
+                ) : (
+                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                    {speechDetected
+                      ? "Đang ghi nhận giọng nói... Bấm nút đỏ hoặc dừng khi nói xong"
+                      : "Đang lắng nghe... Hãy phát âm từ trên"}
+                  </p>
+                )}
                 <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
                   <span>{duration}s / 5s</span>
                   <span>•</span>
-                  <span>Bấm nút đỏ để dừng ngay</span>
+                  <span>Bấm nút đỏ để hoàn thành</span>
                 </div>
               </div>
             </div>
