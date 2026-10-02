@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { AlertTriangle, ArrowRight, Bot, Check, CheckCircle2, Clock, Lightbulb, Loader2, RotateCcw, Timer, Volume2, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bot, Check, CheckCircle2, Clock, Image as ImageIcon, Lightbulb, Loader2, RotateCcw, Timer, Volume2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -49,10 +49,12 @@ function choicesOf(q: PracticeQuestion) {
 }
 
 function askAboutQuestion(q: PracticeQuestion, userChoice: string | null | undefined) {
+  const isPart1 = q.part === "Part 1";
+  const part1Context = isPart1 ? ` Lưu ý: Đây là câu hỏi tranh ảnh Part 1, bức ảnh được mô tả ngữ cảnh là: "${q.sentence}".` : "";
   const prompt =
     userChoice && userChoice !== q.correct_choice
-      ? `Tôi chọn (${userChoice}) ở câu ${q.question_no} nhưng đáp án là (${q.correct_choice}). Phân tích giúp tôi vì sao sai.`
-      : `Phân tích câu ${q.question_no} (${q.part}) giúp tôi.`;
+      ? `Tôi chọn (${userChoice}) ở câu ${q.question_no} (${q.part}) nhưng đáp án là (${q.correct_choice}).${part1Context} Phân tích giúp tôi vì sao sai theo 3 chiều và cách xử lý bẫy Part 1.`
+      : `Phân tích câu ${q.question_no} (${q.part}) giúp tôi theo 3 chiều.${part1Context}`;
   askMentor(prompt, { questionId: q.id, pageContext: "/mock-tests" });
 }
 
@@ -177,7 +179,22 @@ function ResultScreen({ result, questions, onRestart }: { result: QuizSubmitResu
                     {r.trap_tag && <span className="text-slate-500">{r.trap_tag}</span>}
                     {r.time_ms ? <span className="text-slate-500">• {Math.round(r.time_ms / 1000)}s</span> : null}
                   </div>
-                  <p className="text-sm text-slate-800 dark:text-slate-200">{q.sentence}</p>
+                  {q.part === "Part 1" ? (
+                    <div className="rounded-xl border border-blue-200/80 bg-blue-50/60 p-3 text-xs dark:border-blue-900/40 dark:bg-blue-950/30 space-y-1.5">
+                      <div className="flex items-center gap-1.5 font-bold text-blue-700 dark:text-blue-300">
+                        <ImageIcon className="h-4 w-4" />
+                        <span>Bối cảnh bức tranh Part 1 (Photograph Context):</span>
+                      </div>
+                      <p className="text-slate-800 dark:text-slate-200 italic font-medium leading-relaxed">
+                        &ldquo;{q.sentence}&rdquo;
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        💡 Trong đề thi thật ETS, phần này in một bức ảnh chụp thực tế cảnh trên để đối chiếu bẫy nghe.
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-800 dark:text-slate-200">{q.sentence}</p>
+                  )}
                   <p className="text-xs">
                     <span className="font-bold text-red-500 line-through">{r.user_choice ?? "Bỏ trống"}</span> ➔{" "}
                     <span className="font-bold text-emerald-600 dark:text-emerald-400">
@@ -360,20 +377,53 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
             </span>
           )}
         </div>
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-lg leading-relaxed font-medium text-slate-900 dark:text-slate-100">{q.sentence}</p>
-          {LISTENING.has(q.part) && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0 cursor-pointer"
-              onClick={() => void speak(`${q.sentence} ... ${choicesOf(q).map((c) => `${c.key}. ${c.text}`).join(" ... ")}`)}
-              aria-label="Nghe câu hỏi và các lựa chọn"
-            >
-              <Volume2 className="h-4 w-4" /> Nghe
-            </Button>
-          )}
-        </div>
+        {q.part === "Part 1" ? (
+          <div className="w-full space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-300">
+                <ImageIcon className="h-4 w-4" /> Bối cảnh bức tranh Part 1 (Photograph Context)
+              </span>
+              {LISTENING.has(q.part) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 cursor-pointer text-xs"
+                  onClick={() => void speak(`Photograph: ${q.sentence} ... Question ${q.question_no}. ${choicesOf(q).map((c) => `${c.key}. ${c.text}`).join(" ... ")}`)}
+                  aria-label="Nghe các lựa chọn"
+                >
+                  <Volume2 className="h-3.5 w-3.5 mr-1" /> Nghe 4 phương án
+                </Button>
+              )}
+            </div>
+            <div className="rounded-2xl border-2 border-dashed border-blue-300/80 bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-slate-50 p-5 text-center dark:border-blue-800/80 dark:from-blue-950/30 dark:via-slate-900/50 dark:to-slate-900/40 space-y-2">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 shadow-xs">
+                <ImageIcon className="h-6 w-6" />
+              </div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600/90 dark:text-blue-400/90">Mô tả nội dung bức ảnh</span>
+              <p className="text-base sm:text-lg font-semibold text-slate-900 dark:text-slate-100 italic leading-relaxed max-w-xl mx-auto">
+                &ldquo;{q.sentence}&rdquo;
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
+                💡 Trong kỳ thi TOEIC thật, ETS sẽ in một bức ảnh chụp thực tế cảnh này. Hãy lắng nghe 4 phương án (A, B, C, D) và chọn câu mô tả đúng nhất!
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-lg leading-relaxed font-medium text-slate-900 dark:text-slate-100">{q.sentence}</p>
+            {LISTENING.has(q.part) && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 cursor-pointer"
+                onClick={() => void speak(`${q.sentence} ... ${choicesOf(q).map((c) => `${c.key}. ${c.text}`).join(" ... ")}`)}
+                aria-label="Nghe câu hỏi và các lựa chọn"
+              >
+                <Volume2 className="h-4 w-4" /> Nghe
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="grid gap-3 pt-2" role="radiogroup" aria-label={`Lựa chọn cho câu ${q.question_no}`}>
           {choicesOf(q).map((choice) => {
