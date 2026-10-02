@@ -205,10 +205,10 @@ export function FlashcardPlayer({
         aria-label={flipped ? "Lật về mặt trước" : "Lật thẻ xem nghĩa"}
         onClick={() => setFlipped((f) => !f)}
         onKeyDown={(event) => event.key === "Enter" && setFlipped((f) => !f)}
-        className="h-80 w-full cursor-pointer rounded-2xl select-none [perspective:1000px]"
+        className="min-h-[380px] sm:h-80 w-full cursor-pointer rounded-2xl select-none [perspective:1000px]"
       >
         <div className={cn("relative h-full w-full rounded-2xl shadow-xl transition-transform duration-500 [transform-style:preserve-3d]", flipped && "[transform:rotateY(180deg)]")}>
-          <div className="absolute inset-0 flex h-full w-full flex-col justify-between rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-8 [backface-visibility:hidden] dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
+          <div className="absolute inset-0 flex h-full w-full flex-col justify-between rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 sm:p-8 [backface-visibility:hidden] dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
             <div className="flex items-start justify-between">
               <span className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold tracking-wider text-blue-700 uppercase dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
                 {word.word_type || "Vocabulary"}
@@ -242,8 +242,8 @@ export function FlashcardPlayer({
               </div>
             </div>
             <div className="my-auto space-y-3 text-center">
-              <h2 className="text-4xl font-black tracking-tight text-slate-900 md:text-5xl dark:text-white">{word.word}</h2>
-              {word.ipa && <p className="font-mono text-lg text-slate-500 dark:text-slate-400">{ipa(word.ipa)}</p>}
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl md:text-5xl dark:text-white">{word.word}</h2>
+              {word.ipa && <p className="font-mono text-base sm:text-lg text-slate-500 dark:text-slate-400">{ipa(word.ipa)}</p>}
             </div>
             <div className="flex items-center justify-center gap-1 text-center text-xs text-slate-500">
               <span>Chạm hoặc nhấn Space để xem nghĩa</span>
@@ -251,7 +251,7 @@ export function FlashcardPlayer({
             </div>
           </div>
 
-          <div className="absolute inset-0 flex h-full w-full flex-col justify-between overflow-y-auto rounded-2xl border border-blue-300 bg-gradient-to-b from-white to-slate-50 p-6 [transform:rotateY(180deg)] [backface-visibility:hidden] dark:border-blue-500/40 dark:from-slate-800 dark:to-slate-900">
+          <div className="absolute inset-0 flex h-full w-full flex-col justify-between overflow-y-auto rounded-2xl border border-blue-300 bg-gradient-to-b from-white to-slate-50 p-4 sm:p-6 [transform:rotateY(180deg)] [backface-visibility:hidden] dark:border-blue-500/40 dark:from-slate-800 dark:to-slate-900">
             <div className="space-y-3">
               <div>
                 <span className="text-xs font-semibold text-slate-500 uppercase">Nghĩa tiếng Việt</span>
@@ -329,19 +329,19 @@ export function FlashcardPlayer({
       {flipped ? (
         <div className="space-y-2">
           <p className="text-center text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">Đánh giá mức độ ghi nhớ (SM-2)</p>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {RATINGS.map((item) => (
               <Button
                 key={item.value}
                 onClick={() => void rate(item.value)}
                 disabled={saving}
                 variant="outline"
-                className={cn("flex h-14 cursor-pointer flex-col py-1", item.style)}
+                className={cn("flex h-13 sm:h-14 cursor-pointer flex-col px-1 sm:px-2 py-1", item.style)}
               >
-                <span className="text-sm font-bold">
+                <span className="text-xs sm:text-sm font-bold">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : `${item.value}. ${item.label}`}
                 </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400">{item.hint}</span>
+                <span className="text-[9px] sm:text-[10px] leading-tight text-slate-500 dark:text-slate-400 line-clamp-1">{item.hint}</span>
               </Button>
             ))}
           </div>

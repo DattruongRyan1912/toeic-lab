@@ -113,15 +113,15 @@ function MockTestsContent() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Luyện Thi Thực Chiến</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Luyện Thi Thực Chiến</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Mỗi câu được ghi lại (đúng/sai, thời gian) để cập nhật mức thành thạo, lịch ôn lỗi và kế hoạch của bạn.
           </p>
         </div>
         {session > 0 && (
-          <Button variant="outline" onClick={() => setSession(0)} className="cursor-pointer">
+          <Button variant="outline" onClick={() => setSession(0)} className="self-start sm:self-auto cursor-pointer">
             Thoát phòng thi
           </Button>
         )}
@@ -211,10 +211,10 @@ function MockTestsContent() {
                 </EmptyState>
               ) : (
                 <>
-                  <div className="grid max-w-md grid-cols-3 gap-4 text-sm text-slate-700 dark:text-slate-300">
-                    <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-blue-500" aria-hidden="true" /> {list.length} câu</span>
-                    <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-amber-500" aria-hidden="true" /> {formatDuration(limit)}</span>
-                    <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-purple-500" aria-hidden="true" /> {pageMode === "exam" ? "Bấm giờ" : "Giải 3 chiều"}</span>
+                  <div className="grid max-w-md grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                    <span className="flex items-center gap-1.5 sm:gap-2"><FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" aria-hidden="true" /> {list.length} câu</span>
+                    <span className="flex items-center gap-1.5 sm:gap-2"><Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-500" aria-hidden="true" /> {formatDuration(limit)}</span>
+                    <span className="flex items-center gap-1.5 sm:gap-2"><Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-500" aria-hidden="true" /> {pageMode === "exam" ? "Bấm giờ" : "Giải 3 chiều"}</span>
                   </div>
                   {pageMode === "smart" && (
                     <div className="space-y-2">

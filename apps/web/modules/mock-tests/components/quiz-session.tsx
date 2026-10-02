@@ -64,12 +64,12 @@ function ResultScreen({ result, questions, onRestart }: { result: QuizSubmitResu
   const slow = result.avg_time_seconds != null && result.avg_time_seconds > target * 1.3;
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <Card className="border-slate-200 bg-white p-8 text-center dark:border-slate-700/70 dark:bg-slate-800/80">
+      <Card className="border-slate-200 bg-white p-5 sm:p-8 text-center dark:border-slate-700/70 dark:bg-slate-800/80">
         <CardHeader>
           <div className="mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
             <Check className="h-8 w-8" aria-hidden="true" />
           </div>
-          <CardTitle className="text-3xl font-bold text-slate-900 dark:text-white">Kết quả bài luyện</CardTitle>
+          <CardTitle className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Kết quả bài luyện</CardTitle>
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {result.lesson_number ? `Bài ${String(result.lesson_number).padStart(2, "0")}` : result.part} • {formatDuration(result.time_spent_seconds)}
           </p>
@@ -305,7 +305,7 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-5 py-3 dark:border-slate-700/70 dark:bg-slate-800/80">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 sm:px-5 sm:py-3 dark:border-slate-700/70 dark:bg-slate-800/80">
         <div>
           <p className="text-[11px] font-semibold text-slate-500 uppercase">{title}</p>
           <span className="text-base font-bold text-slate-900 dark:text-white">
@@ -315,21 +315,21 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
             ({index + 1}/{total} • đã làm {answeredCount})
           </span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <span
             role="timer"
             aria-label="Thời gian còn lại"
             className={cn(
-              "flex items-center gap-1.5 rounded-lg border px-3 py-1 font-mono text-sm",
+              "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 sm:px-3 font-mono text-xs sm:text-sm",
               secondsLeft <= 60 ? "border-red-300 text-red-600 dark:border-red-500/40 dark:text-red-400" : "border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300",
             )}
           >
-            <Clock className="h-4 w-4" aria-hidden="true" /> {formatDuration(secondsLeft)}
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" /> {formatDuration(secondsLeft)}
           </span>
           {examOnly ? (
             <span className="rounded-lg bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">Thi thật</span>
           ) : (
-            <Button size="sm" variant="ghost" onClick={() => setStudyMode(!studyMode)} className="cursor-pointer text-xs">
+            <Button size="sm" variant="ghost" onClick={() => setStudyMode(!studyMode)} className="cursor-pointer text-xs h-8 px-2 sm:px-3">
               {studyMode ? "Chế độ: Học & Giải" : "Chế độ: Thi thật"}
             </Button>
           )}
@@ -338,7 +338,7 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
 
       <Progress value={((index + 1) / total) * 100} className="h-1.5" aria-label="Tiến độ bài làm" />
 
-      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700/70 dark:bg-slate-800/80">
+      <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-slate-700/70 dark:bg-slate-800/80">
         <div className="flex flex-wrap items-center gap-2">
           {q.difficulty && (
             <span
@@ -430,7 +430,7 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
       </div>
 
       {isChecked && studyMode && (
-        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-700/70 dark:bg-slate-800/80">
+        <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 dark:border-slate-700/70 dark:bg-slate-800/80">
           <div className="flex items-center justify-between">
             <h4 className="flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
               <Lightbulb className="h-5 w-5 text-amber-500" aria-hidden="true" /> Phân tích 3 chiều

@@ -371,7 +371,7 @@ function ErrorLogContent() {
           <span className="rounded-full border border-red-200 bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700 dark:border-red-500/30 dark:bg-red-500/20 dark:text-red-400">
             DATA-DRIVEN ERROR LOG
           </span>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Sổ Tay Lỗi Sai (RCA)</h1>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Sổ Tay Lỗi Sai (RCA)</h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
             {openCount} câu chưa khắc phục / {all.length} tổng. Câu sai quay lại theo lịch 1 → 3 → 7 ngày; làm đúng đủ 3 lần đúng hạn sẽ tự chuyển <strong>Đã nắm chắc</strong> và lỗ hổng tự đóng.
           </p>
@@ -381,7 +381,7 @@ function ErrorLogContent() {
             </Link>
           )}
         </div>
-        <Button onClick={() => exportCsv(filtered)} disabled={!filtered.length} variant="outline" className="flex shrink-0 cursor-pointer items-center gap-2">
+        <Button onClick={() => exportCsv(filtered)} disabled={!filtered.length} variant="outline" className="flex shrink-0 self-start sm:self-auto cursor-pointer items-center gap-2">
           <Download className="h-4 w-4 text-emerald-500" aria-hidden="true" /> Xuất CSV ({filtered.length})
         </Button>
       </div>

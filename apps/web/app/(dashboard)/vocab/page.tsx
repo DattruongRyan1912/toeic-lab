@@ -112,7 +112,7 @@ function VocabContent() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Sổ Tay Từ Vựng & SRS Flashcards</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Sổ Tay Từ Vựng & SRS Flashcards</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Học tập chủ động theo từng chủ đề hoặc ôn đúng thẻ đến hạn theo thuật toán SuperMemo-2.
           </p>
@@ -120,7 +120,7 @@ function VocabContent() {
         <AddWordDialog onWordAdded={onAdded} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         <Metric title="Tổng số từ" value={s?.total_cards ?? "…"} hint={`${Object.keys(s?.categories ?? {}).length} chủ đề thương mại`} icon={BookOpen} tone="text-blue-600 dark:text-blue-400" />
         <Metric title="Cần học hôm nay" value={s?.due_cards ?? "…"} hint={s ? `${s.review_due} đến hạn + ${s.new_available} mới` : ""} icon={Clock} tone="text-amber-600 dark:text-amber-400" />
         <Metric title="Đã ôn hôm nay" value={s?.reviewed_today ?? "…"} hint={s ? `${s.learning_cards} thẻ đang trong chu kỳ` : ""} icon={Layers} tone="text-purple-600 dark:text-purple-400" />
@@ -128,20 +128,22 @@ function VocabContent() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
-        <TabsList className="h-auto border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900 flex flex-wrap">
-          <TabsTrigger value="review" className={TAB}>
-            Luyện thẻ SRS ({due.data?.length ?? "…"})
-          </TabsTrigger>
-          <TabsTrigger value="topics" className={TAB}>
-            Chủ đề học tập ({categoryList.length})
-          </TabsTrigger>
-          <TabsTrigger value="library" className={TAB}>
-            Kho từ vựng ({words.data?.length ?? "…"})
-          </TabsTrigger>
-          <TabsTrigger value="paraphrases" className={TAB}>
-            Paraphrase Vault
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto no-scrollbar">
+          <TabsList className="h-auto w-max sm:w-auto border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900 flex">
+            <TabsTrigger value="review" className={TAB}>
+              Luyện thẻ SRS ({due.data?.length ?? "…"})
+            </TabsTrigger>
+            <TabsTrigger value="topics" className={TAB}>
+              Chủ đề học tập ({categoryList.length})
+            </TabsTrigger>
+            <TabsTrigger value="library" className={TAB}>
+              Kho từ vựng ({words.data?.length ?? "…"})
+            </TabsTrigger>
+            <TabsTrigger value="paraphrases" className={TAB}>
+              Paraphrase Vault
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Tab 1: Review Player with Topic Selector bar */}
         <TabsContent value="review" className="space-y-4">
@@ -158,7 +160,7 @@ function VocabContent() {
                     aria-label="Chọn chủ đề từ vựng"
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="max-w-[170px] sm:max-w-none truncate cursor-pointer rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                   >
                     <option value="all">Tất cả chủ đề ({s?.total_cards ?? 621} từ)</option>
                     {categoryList.map((c) => (

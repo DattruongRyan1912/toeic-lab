@@ -9,6 +9,8 @@ interface LearnerState {
   aiStatus: AIStatus | null;
   error: string | null;
   loading: boolean;
+  mobileNavOpen: boolean;
+  setMobileNavOpen: (open: boolean) => void;
   refresh: () => Promise<void>;
   loadAiStatus: () => Promise<void>;
 }
@@ -24,6 +26,8 @@ export const useLearnerStore = create<LearnerState>((set) => ({
   aiStatus: null,
   error: null,
   loading: false,
+  mobileNavOpen: false,
+  setMobileNavOpen: (open: boolean) => set({ mobileNavOpen: open }),
   refresh: () => {
     if (inflight) return inflight;
     set({ loading: true });

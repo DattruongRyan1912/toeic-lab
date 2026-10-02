@@ -72,15 +72,15 @@ function MetricCard({
 }) {
   return (
     <Link href={href} className="group block">
-      <Card className={cn(CARD, "p-5 transition-all group-hover:border-blue-400 dark:group-hover:border-blue-500/60")}>
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">{label}</span>
-          <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg border", tone)}>
-            <Icon className="h-4 w-4" aria-hidden="true" />
+      <Card className={cn(CARD, "p-3.5 sm:p-5 transition-all group-hover:border-blue-400 dark:group-hover:border-blue-500/60")}>
+        <div className="mb-2 sm:mb-3 flex items-center justify-between">
+          <span className="text-[10px] sm:text-[11px] font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">{label}</span>
+          <div className={cn("flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-lg border", tone)}>
+            <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
           </div>
         </div>
-        <div className="font-mono text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">{value}</div>
-        {detail && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{detail}</p>}
+        <div className="font-mono text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">{value}</div>
+        {detail && <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{detail}</p>}
         {children}
       </Card>
     </Link>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <MetricCard
           href="/vocab"
           label="Thẻ SRS cần học"
@@ -265,40 +265,42 @@ export default function DashboardPage() {
       </div>
 
       {/* Weekly activity */}
-      <Card className={cn(CARD, "p-5")}>
-        <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+      <Card className={cn(CARD, "p-3.5 sm:p-5")}>
+        <div className="mb-3 sm:mb-4 flex flex-col justify-between gap-2 sm:gap-3 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-blue-600 dark:text-blue-400" aria-hidden="true" />
             <h2 className="text-xs font-bold tracking-wider text-slate-800 uppercase dark:text-slate-200">Hoạt động tuần này</h2>
           </div>
-          <span className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-400">
+          <span className="font-mono text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400">
             {activeDays}/{pastDays.length} ngày có học • chuỗi {stats.streak_days} ngày
           </span>
         </div>
-        <div className="grid grid-cols-7 gap-2">
-          {stats.activity_week.map((day) => (
-            <div
-              key={day.date}
-              title={day.is_future ? undefined : `${day.srs_reviews} thẻ SRS, ${day.questions_answered} câu hỏi, ${day.errors_logged} lỗi, ${day.tasks_completed} nhiệm vụ, ${day.mentor_questions} câu hỏi AI`}
-              className={cn(
-                "rounded-xl border p-3 text-center transition-all",
-                day.is_today
-                  ? "border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-600/15 dark:text-white"
-                  : day.active
-                    ? "border-emerald-300 bg-emerald-50/40 dark:border-emerald-500/30 dark:bg-slate-800"
-                    : "border-slate-200 bg-slate-50 dark:border-slate-700/40 dark:bg-slate-900/40",
-              )}
-            >
-              <span className="block font-mono text-[10px] font-semibold text-slate-500 dark:text-slate-400">{day.weekday}</span>
-              <span className={cn("my-0.5 block text-sm font-bold", day.active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400")}>
-                {formatDate(day.date)}
-              </span>
-              <span className="block truncate text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                {day.active ? "✓ " : ""}
-                {activityLabel(day)}
-              </span>
-            </div>
-          ))}
+        <div className="overflow-x-auto no-scrollbar -mx-1 px-1 sm:mx-0 sm:px-0">
+          <div className="grid min-w-[540px] sm:min-w-0 grid-cols-7 gap-1.5 sm:gap-2">
+            {stats.activity_week.map((day) => (
+              <div
+                key={day.date}
+                title={day.is_future ? undefined : `${day.srs_reviews} thẻ SRS, ${day.questions_answered} câu hỏi, ${day.errors_logged} lỗi, ${day.tasks_completed} nhiệm vụ, ${day.mentor_questions} câu hỏi AI`}
+                className={cn(
+                  "rounded-xl border p-2 sm:p-3 text-center transition-all",
+                  day.is_today
+                    ? "border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-600/15 dark:text-white"
+                    : day.active
+                      ? "border-emerald-300 bg-emerald-50/40 dark:border-emerald-500/30 dark:bg-slate-800"
+                      : "border-slate-200 bg-slate-50 dark:border-slate-700/40 dark:bg-slate-900/40",
+                )}
+              >
+                <span className="block font-mono text-[10px] font-semibold text-slate-500 dark:text-slate-400">{day.weekday}</span>
+                <span className={cn("my-0.5 block text-xs sm:text-sm font-bold", day.active ? "text-emerald-600 dark:text-emerald-400" : "text-slate-400")}>
+                  {formatDate(day.date)}
+                </span>
+                <span className="block truncate text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                  {day.active ? "✓ " : ""}
+                  {activityLabel(day)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </Card>
 

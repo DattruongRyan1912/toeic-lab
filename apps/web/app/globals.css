@@ -111,3 +111,11 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

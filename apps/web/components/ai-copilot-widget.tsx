@@ -40,7 +40,7 @@ export function AiCopilotWidget() {
       <button
         type="button"
         onClick={() => setWidgetOpen(true)}
-        className="group fixed right-6 bottom-6 z-50 flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-gradient-to-r from-blue-600 to-indigo-600 p-3.5 text-white shadow-xl shadow-blue-500/25 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95 sm:px-4 sm:py-3"
+        className="group fixed right-4 bottom-20 md:right-6 md:bottom-6 z-40 flex cursor-pointer items-center gap-3 rounded-full border border-white/20 bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white shadow-xl shadow-blue-500/25 transition-all hover:scale-105 hover:shadow-blue-500/40 active:scale-95 sm:px-4 sm:py-3"
         aria-label="Mở trợ lý AI Mentor"
       >
         <span className="relative">
@@ -56,8 +56,8 @@ export function AiCopilotWidget() {
     <section
       aria-label="AI Mentor Copilot"
       className={cn(
-        "fixed right-6 bottom-6 z-50 flex w-[92vw] flex-col overflow-hidden rounded-2xl border border-slate-300 bg-white/95 shadow-2xl backdrop-blur-2xl transition-all duration-300 sm:w-[420px] dark:border-slate-700/80 dark:bg-[#11192e]/95",
-        widgetMinimized ? "h-14" : "h-[600px] max-h-[85vh]",
+        "fixed right-3 bottom-20 md:right-6 md:bottom-6 z-50 flex w-[calc(100vw-1.5rem)] max-w-[420px] flex-col overflow-hidden rounded-2xl border border-slate-300 bg-white/95 shadow-2xl backdrop-blur-2xl transition-all duration-300 dark:border-slate-700/80 dark:bg-[#11192e]/95",
+        widgetMinimized ? "h-14" : "h-[540px] max-h-[75vh] md:h-[600px] md:max-h-[85vh]",
       )}
     >
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 bg-slate-100/90 px-4 dark:border-slate-800/80 dark:bg-slate-800/60">

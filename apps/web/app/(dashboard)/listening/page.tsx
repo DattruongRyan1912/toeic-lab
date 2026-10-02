@@ -970,13 +970,15 @@ export default function ListeningStudioPage() {
         <div className="flex items-center gap-2">
           <Tabs value={mode} onValueChange={(v) => setMode(v as "dictation" | "shadowing")}>
             <TabsList className="bg-slate-100 dark:bg-slate-800">
-              <TabsTrigger value="dictation" className="flex items-center gap-1.5 text-xs font-medium">
+              <TabsTrigger value="dictation" className="flex items-center gap-1.5 text-xs font-medium px-2.5 sm:px-3">
                 <BookOpen className="h-3.5 w-3.5" />
-                Chép Chính Tả (Dictation)
+                <span className="hidden sm:inline">Chép Chính Tả (Dictation)</span>
+                <span className="sm:hidden">Dictation</span>
               </TabsTrigger>
-              <TabsTrigger value="shadowing" className="flex items-center gap-1.5 text-xs font-medium">
+              <TabsTrigger value="shadowing" className="flex items-center gap-1.5 text-xs font-medium px-2.5 sm:px-3">
                 <Mic className="h-3.5 w-3.5" />
-                Nói Nhại (Shadowing)
+                <span className="hidden sm:inline">Nói Nhại (Shadowing)</span>
+                <span className="sm:hidden">Shadowing</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -985,8 +987,8 @@ export default function ListeningStudioPage() {
 
       {/* Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
-          <span className="mr-1 font-semibold text-slate-500 uppercase">Phần thi:</span>
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar max-w-full pb-0.5 sm:pb-0 text-xs">
+          <span className="mr-1 shrink-0 font-semibold text-slate-500 uppercase">Phần thi:</span>
           {["all", "Part 1", "Part 2", "Part 3"].map((p) => (
             <Button
               key={p}

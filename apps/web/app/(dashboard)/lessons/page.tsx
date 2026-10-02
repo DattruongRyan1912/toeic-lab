@@ -150,13 +150,13 @@ function LessonsContent() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/60 p-6 md:p-8 dark:border-blue-500/20 dark:from-blue-950/60 dark:via-slate-900 dark:to-indigo-950/50">
+      <div className="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/80 via-white to-indigo-50/60 p-4 sm:p-6 md:p-8 dark:border-blue-500/20 dark:from-blue-950/60 dark:via-slate-900 dark:to-indigo-950/50">
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <span className="rounded-full border border-blue-200 bg-blue-100 px-2.5 py-0.5 text-xs font-bold text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/20 dark:text-blue-400">
               SYNTAX RULES • PART 5
             </span>
-            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">12 Chuyên Đề Cú Pháp Giải Nhanh Part 5</h1>
+            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">12 Chuyên Đề Cú Pháp Giải Nhanh Part 5</h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
               Mỗi câu trong ngân hàng đề được gắn vào một chuyên đề theo tag bẫy — độ chính xác và lỗi của bạn được tính riêng cho từng bài.
             </p>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, Flame, Sparkles, Target } from "lucide-react";
+import { CalendarClock, Flame, Menu, Sparkles, Target } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useLearnerStore } from "@/lib/learner-store";
 
@@ -14,14 +14,26 @@ function initials(name: string): string {
 export function Topbar() {
   const stats = useLearnerStore((state) => state.stats);
   const error = useLearnerStore((state) => state.error);
+  const mobileNavOpen = useLearnerStore((state) => state.mobileNavOpen);
+  const setMobileNavOpen = useLearnerStore((state) => state.setMobileNavOpen);
   const name = stats?.display_name ?? "…";
 
   return (
-    <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/90 px-6 shadow-xs backdrop-blur-md transition-colors duration-200 dark:border-slate-800/80 dark:bg-[#0f172a]/90 dark:shadow-none">
-      <div className="flex items-center gap-3">
-        <Link href="/analytics" className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs dark:border-slate-700/60 dark:bg-slate-800/80">
-          <Target className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" aria-hidden="true" />
-          <span className="font-semibold text-slate-800 dark:text-slate-200">Mục tiêu: {stats ? `${stats.target_score}+ TOEIC` : "…"}</span>
+    <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/90 px-3 sm:px-6 shadow-xs backdrop-blur-md transition-colors duration-200 dark:border-slate-800/80 dark:bg-[#0f172a]/90 dark:shadow-none">
+      <div className="flex items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen(!mobileNavOpen)}
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 md:hidden dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+          aria-label="Mở menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <Link href="/analytics" className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs dark:border-slate-700/60 dark:bg-slate-800/80">
+          <Target className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" aria-hidden="true" />
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
+            {stats ? `Mục tiêu: ${stats.target_score}+` : "…"}
+          </span>
           {stats && <span className="hidden font-mono text-[10px] text-slate-500 sm:inline dark:text-slate-400">• {stats.target_cefr.split(" - ")[0]}</span>}
         </Link>
         {stats && (

@@ -20,9 +20,9 @@ import { BrandLogo } from "@/components/brand/logo";
 import { api } from "@/lib/api";
 import { PROVIDER_LABELS, useLearnerStore } from "@/lib/learner-store";
 import { cn } from "@/lib/utils";
-import type { HealthStatus } from "@/types";
+import type { AIStatus, DashboardStats, HealthStatus } from "@/types";
 
-interface NavItem {
+export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
@@ -30,7 +30,7 @@ interface NavItem {
   alert?: boolean;
 }
 
-function useBackendHealth() {
+export function useBackendHealth() {
   const [health, setHealth] = useState<{ ok: boolean; data: HealthStatus | null } | null>(null);
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +49,26 @@ function useBackendHealth() {
   return health;
 }
 
-function NavSection({ title, items, pathname }: { title: string; items: NavItem[]; pathname: string }) {
+export function getSidebarNav(stats: DashboardStats | null, aiStatus: AIStatus | null): { studyNav: NavItem[]; toolsNav: NavItem[] } {
+  return {
+    studyNav: [
+      { label: "Dashboard", href: "/", icon: LayoutDashboard },
+      { label: "Sổ Tay Từ Vựng", href: "/vocab", icon: Layers, badge: stats ? (stats.srs_due_count ? `${stats.srs_due_count} cần ôn` : "Xong ✓") : null, alert: Boolean(stats?.srs_review_due) },
+      { label: "Luyện Nghe (Audio)", href: "/listening", icon: Headphones, badge: "Dictation" },
+      { label: "Luyện Đề Thi Thử", href: "/mock-tests", icon: CheckSquare, badge: stats?.latest_submission?.accuracy != null ? `${Math.round(stats.latest_submission.accuracy * 100)}%` : "Part 5" },
+      { label: "12 Chuyên Đề Cú Pháp", href: "/lessons", icon: GraduationCap, badge: stats?.recommended_lesson ? `Bài ${String(stats.recommended_lesson.lesson_number).padStart(2, "0")}` : null },
+      { label: "Sổ Tay Lỗi Sai (RCA)", href: "/error-log", icon: AlertCircle, badge: stats?.open_errors ? `${stats.open_errors} mở` : null, alert: Boolean(stats?.open_errors) },
+    ],
+    toolsNav: [
+      { label: "Phân Tích & Quy Đổi Điểm", href: "/analytics", icon: Calculator },
+      { label: `Lộ Trình ${stats?.total_weeks ?? 24} Tuần`, href: "/roadmaps", icon: Calendar, badge: stats ? `Tuần ${stats.current_week}` : null },
+      { label: "AI Mentor Copilot", href: "/mentor", icon: Bot, badge: aiStatus ? PROVIDER_LABELS[aiStatus.provider] ?? aiStatus.provider : null },
+      { label: "Cài Đặt & Hồ Sơ", href: "/settings", icon: Settings },
+    ],
+  };
+}
+
+export function NavSection({ title, items, pathname, onItemClick }: { title: string; items: NavItem[]; pathname: string; onItemClick?: () => void }) {
   return (
     <div className="space-y-1">
       <p className="mb-2 px-3 text-[11px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">{title}</p>
@@ -60,6 +79,7 @@ function NavSection({ title, items, pathname }: { title: string; items: NavItem[
           <Link
             key={item.href}
             href={item.href}
+            onClick={onItemClick}
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition-all",
@@ -99,24 +119,11 @@ export function Sidebar() {
   const aiStatus = useLearnerStore((state) => state.aiStatus);
   const health = useBackendHealth();
 
-  const studyNav: NavItem[] = [
-    { label: "Dashboard", href: "/", icon: LayoutDashboard },
-    { label: "Sổ Tay Từ Vựng", href: "/vocab", icon: Layers, badge: stats ? (stats.srs_due_count ? `${stats.srs_due_count} cần ôn` : "Xong ✓") : null, alert: Boolean(stats?.srs_review_due) },
-    { label: "Luyện Nghe (Audio)", href: "/listening", icon: Headphones, badge: "Dictation" },
-    { label: "Luyện Đề Thi Thử", href: "/mock-tests", icon: CheckSquare, badge: stats?.latest_submission?.accuracy != null ? `${Math.round(stats.latest_submission.accuracy * 100)}%` : "Part 5" },
-    { label: "12 Chuyên Đề Cú Pháp", href: "/lessons", icon: GraduationCap, badge: stats?.recommended_lesson ? `Bài ${String(stats.recommended_lesson.lesson_number).padStart(2, "0")}` : null },
-    { label: "Sổ Tay Lỗi Sai (RCA)", href: "/error-log", icon: AlertCircle, badge: stats?.open_errors ? `${stats.open_errors} mở` : null, alert: Boolean(stats?.open_errors) },
-  ];
-  const toolsNav: NavItem[] = [
-    { label: "Phân Tích & Quy Đổi Điểm", href: "/analytics", icon: Calculator },
-    { label: `Lộ Trình ${stats?.total_weeks ?? 24} Tuần`, href: "/roadmaps", icon: Calendar, badge: stats ? `Tuần ${stats.current_week}` : null },
-    { label: "AI Mentor Copilot", href: "/mentor", icon: Bot, badge: aiStatus ? PROVIDER_LABELS[aiStatus.provider] ?? aiStatus.provider : null },
-    { label: "Cài Đặt & Hồ Sơ", href: "/settings", icon: Settings },
-  ];
+  const { studyNav, toolsNav } = getSidebarNav(stats, aiStatus);
 
   const online = health?.ok ?? false;
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-colors duration-200 select-none dark:border-slate-800/80 dark:bg-[#0d162a]">
+    <aside className="hidden md:flex h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white transition-colors duration-200 select-none dark:border-slate-800/80 dark:bg-[#0d162a]">
       <div className="flex h-16 items-center justify-between border-b border-slate-200 px-5 dark:border-slate-800/80">
         <Link href="/" className="transition-opacity hover:opacity-95" aria-label="TOEIC Master Home">
           <BrandLogo size={34} subtitle="SELF-STUDY LAB" />
