@@ -1,9 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { CalendarClock, Flame, Menu, Sparkles, Target } from "lucide-react";
+import { CalendarClock, Flame, LogIn, LogOut, Menu, Sparkles, Target } from "lucide-react";
+import React, { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useLearnerStore } from "@/lib/learner-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -16,9 +20,21 @@ export function Topbar() {
   const error = useLearnerStore((state) => state.error);
   const mobileNavOpen = useLearnerStore((state) => state.mobileNavOpen);
   const setMobileNavOpen = useLearnerStore((state) => state.setMobileNavOpen);
-  const name = stats?.display_name ?? "…";
+
+  const authUser = useAuthStore((state) => state.user);
+  const initAuth = useAuthStore((state) => state.initAuth);
+  const openLogin = useAuthStore((state) => state.openLogin);
+  const openRegister = useAuthStore((state) => state.openRegister);
+  const logout = useAuthStore((state) => state.logout);
+
+  useEffect(() => {
+    void initAuth();
+  }, [initAuth]);
+
+  const name = authUser?.display_name || stats?.display_name || "…";
 
   return (
+    <>
     <header className="z-20 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white/90 px-3 sm:px-6 shadow-xs backdrop-blur-md transition-colors duration-200 dark:border-slate-800/80 dark:bg-[#0f172a]/90 dark:shadow-none">
       <div className="flex items-center gap-2 sm:gap-3">
         <button
@@ -66,18 +82,53 @@ export function Topbar() {
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <Link href="/settings" className="flex items-center gap-3 border-l border-slate-200 pl-3 dark:border-slate-800" aria-label="Hồ sơ học viên">
-          <div className="hidden text-right sm:block">
-            <p className="text-xs leading-tight font-semibold text-slate-800 dark:text-slate-200">{name}</p>
-            <p className="mt-0.5 font-mono text-[10px] leading-tight text-slate-500 dark:text-slate-400">
-              {stats?.headline ?? (stats ? `Tuần ${stats.current_week}/${stats.total_weeks}` : "")}
-            </p>
+        {authUser ? (
+          <div className="flex items-center gap-2 border-l border-slate-200 pl-3 dark:border-slate-800">
+            <Link href="/settings" className="flex items-center gap-2.5 text-right hover:opacity-85 transition-opacity" aria-label="Hồ sơ học viên">
+              <div className="hidden text-right sm:block">
+                <p className="text-xs leading-tight font-semibold text-slate-800 dark:text-slate-200">
+                  {authUser.display_name || authUser.username}
+                </p>
+                <p className="mt-0.5 font-mono text-[10px] leading-tight text-slate-500 dark:text-slate-400">
+                  {authUser.email || authUser.username}
+                </p>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-inner ring-2 ring-blue-500/20">
+                {initials(name)}
+              </div>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void logout()}
+              className="h-8 w-8 p-0 text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 cursor-pointer"
+              title="Đăng xuất"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-xs font-bold text-white shadow-inner ring-2 ring-blue-500/20">
-            {stats ? initials(name) : "…"}
+        ) : (
+          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-3 dark:border-slate-800">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openLogin}
+              className="h-8 px-2.5 text-xs font-medium cursor-pointer"
+            >
+              <LogIn className="h-3.5 w-3.5 mr-1 text-slate-600 dark:text-slate-300" /> Đăng nhập
+            </Button>
+            <Button
+              size="sm"
+              onClick={openRegister}
+              className="h-8 px-2.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white cursor-pointer"
+            >
+              Đăng ký
+            </Button>
           </div>
-        </Link>
+        )}
       </div>
     </header>
+    <AuthModal />
+    </>
   );
 }

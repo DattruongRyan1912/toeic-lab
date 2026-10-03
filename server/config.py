@@ -57,6 +57,10 @@ LEGACY_UI_ENABLED = _bool("LEGACY_UI_ENABLED", True)
 APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Ho_Chi_Minh")
 DEFAULT_USER_ID = 1  # single-learner mode until real authentication exists
 
+# --- Authentication ---
+SECRET_KEY = os.getenv("SECRET_KEY", "toeic-lab-jwt-super-secret-key-2026-production")
+ACCESS_TOKEN_EXPIRE_DAYS = _int("ACCESS_TOKEN_EXPIRE_DAYS", 30)
+
 # --- Learning rules ---
 SRS_NEW_CARDS_PER_DAY = max(0, _int("SRS_NEW_CARDS_PER_DAY", 15))
 

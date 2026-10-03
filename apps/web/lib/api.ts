@@ -35,14 +35,40 @@ function detailMessage(body: unknown, fallback: string): string {
   return fallback;
 }
 
+const TOKEN_KEY = "toeic_access_token";
+
+export function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  } catch {
+    // Ignore quota or private mode errors
+  }
+}
+
 export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
   const { json, headers, body, ...rest } = init;
+  const token = getAuthToken();
   const response = await fetch(`/api${path.startsWith("/") ? path : `/${path}`}`, {
     cache: "no-store",
     ...rest,
     headers: {
       Accept: "application/json",
       ...(json !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: json !== undefined ? JSON.stringify(json) : body,

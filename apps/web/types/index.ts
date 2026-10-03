@@ -7,8 +7,11 @@ export type LessonStatus = "not_started" | "weak" | "improving" | "strong";
 export interface UserProfile {
   id: number;
   username: string;
+  email?: string | null;
   display_name: string | null;
   headline: string | null;
+  role?: string | null;
+  avatar_url?: string | null;
   target_score: number;
   daily_goal_minutes: number;
   target_cefr: string | null;
@@ -26,6 +29,25 @@ export interface UserProfile {
   auto_adjust: boolean;
   onboarded: boolean;
   onboarded_at: string | null;
+}
+
+export interface AuthUser {
+  id: number;
+  username: string;
+  email?: string | null;
+  display_name?: string | null;
+  headline?: string | null;
+  target_score: number;
+  target_cefr?: string | null;
+  role?: string | null;
+  avatar_url?: string | null;
+  created_at?: string | null;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
 }
 
 export type ExplanationStyle = "concise" | "detailed" | "socratic";

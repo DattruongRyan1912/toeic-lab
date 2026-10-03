@@ -75,6 +75,16 @@ function ProfileCard({ profile, onSaved }: { profile: UserProfile; onSaved: (p: 
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-xs dark:border-slate-800 dark:bg-slate-900/60">
+          <div>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">Tài khoản: </span>
+            <span className="font-mono font-bold text-blue-600 dark:text-blue-400">@{profile.username}</span>
+            {profile.email && <span className="ml-2 text-slate-500">({profile.email})</span>}
+          </div>
+          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 uppercase">
+            {profile.role || "learner"}
+          </span>
+        </div>
         <form onSubmit={save} className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1">
             <Label htmlFor="p-name">Tên hiển thị</Label>

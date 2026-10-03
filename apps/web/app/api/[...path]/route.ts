@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND_URL = (process.env.BACKEND_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 const UPSTREAM_TIMEOUT_MS = 180_000; // AI mentor tool loops can take several model round-trips
 
-const FORWARD_REQUEST_HEADERS = ["accept", "accept-language", "content-type", "range", "if-none-match", "if-modified-since"];
+const FORWARD_REQUEST_HEADERS = ["accept", "accept-language", "content-type", "range", "if-none-match", "if-modified-since", "authorization", "cookie"];
 const HOP_BY_HOP = new Set([
   "connection",
   "keep-alive",

@@ -33,8 +33,11 @@ ExplanationStyle = Literal["concise", "detailed", "socratic"]
 class UserRead(ORMModel):
     id: int
     username: str
+    email: Optional[str] = None
     display_name: Optional[str] = None
     headline: Optional[str] = None
+    role: Optional[str] = "learner"
+    avatar_url: Optional[str] = None
     target_score: int
     daily_goal_minutes: int
     target_cefr: Optional[str] = None
@@ -85,6 +88,39 @@ class OnboardingRequest(BaseModel):
     focus_parts: List[str] = Field(default_factory=list, max_length=7)
     weak_areas: Optional[str] = Field(None, max_length=1000, description="Tự nhận xét điểm yếu (lưu thành trí nhớ cho AI)")
     learning_goal_note: Optional[str] = Field(None, max_length=2000)
+
+
+# --------------------------------------------------------------------------- auth
+class RegisterRequest(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
+    email: str = Field(..., min_length=5, max_length=255)
+    password: str = Field(..., min_length=6, max_length=100)
+    display_name: Optional[str] = Field(None, max_length=100)
+    target_score: int = Field(800, ge=10, le=990)
+
+
+class LoginRequest(BaseModel):
+    username_or_email: str = Field(..., min_length=3, max_length=255)
+    password: str = Field(..., min_length=1, max_length=100)
+
+
+class AuthUser(BaseModel):
+    id: int
+    username: str
+    email: Optional[str] = None
+    display_name: Optional[str] = None
+    headline: Optional[str] = None
+    target_score: int = 800
+    target_cefr: Optional[str] = None
+    role: Optional[str] = "learner"
+    avatar_url: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: AuthUser
 
 
 # --------------------------------------------------------------------------- tests & submissions

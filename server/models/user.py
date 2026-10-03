@@ -16,6 +16,13 @@ class User(Base):
     daily_goal_minutes = Column(Integer, default=60)
     created_at = Column(DateTime, default=utcnow)
 
+    # --- Authentication credentials (nullable for additive migration) ---
+    email = Column(String(255), unique=True, index=True, nullable=True)
+    hashed_password = Column(String(255), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=True)
+    role = Column(String(20), default="learner", nullable=True)
+    avatar_url = Column(String(500), nullable=True)
+
     # --- Personalization profile (all nullable: added by the additive migration) ---
     exam_date = Column(Date, nullable=True)
     baseline_listening = Column(Integer, nullable=True)  # scaled 5-495 estimate when starting
