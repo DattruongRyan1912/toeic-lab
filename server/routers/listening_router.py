@@ -22,7 +22,7 @@ router = APIRouter(prefix="/api/listening", tags=["Listening (Dictation & Shadow
 def get_listening_exercises(
     part: Optional[str] = Query(None, description="Part 1, Part 2, Part 3, or Part 4"),
     difficulty: Optional[str] = Query(None, pattern="^(easy|medium|hard)$"),
-    limit: int = Query(20, ge=1, le=50),
+    limit: int = Query(20, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     """Retrieve listening exercises for dictation and shadowing."""
