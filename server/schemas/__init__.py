@@ -969,4 +969,5 @@ class ShadowingEvaluateResponse(BaseModel):
     coaching_tips: List[str]
     provider: str
     model: str
+    is_guidance_fallback: Optional[bool] = False
 

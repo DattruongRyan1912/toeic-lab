@@ -98,3 +98,15 @@ def test_evaluate_shadowing_api(client, seeded):
     data_bad = resp_bad.json()
     assert data_bad["overall_score"] < data["overall_score"]
     assert any(w["status"] in ("needs_work", "missed") for w in data_bad["words"])
+
+    # Missing transcript (browser without STT / guidance mode fallback)
+    payload_empty = {
+        "target_sentence": "A woman is typing on a laptop computer at an office workstation.",
+        "user_transcript": None,
+    }
+    resp_empty = client.post("/api/listening/evaluate-shadowing", json=payload_empty)
+    assert resp_empty.status_code == 200
+    data_empty = resp_empty.json()
+    assert data_empty["overall_score"] >= 70
+    assert data_empty["is_passing"] is True
+    assert data_empty.get("is_guidance_fallback") is True

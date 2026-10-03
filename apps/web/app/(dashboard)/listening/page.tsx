@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import {
+  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   BookOpen,
@@ -219,9 +220,11 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
             lang: string;
             continuous: boolean;
             interimResults: boolean;
+            maxAlternatives?: number;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onresult: (e: any) => void;
-            onerror: () => void;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onerror: (e: any) => void;
             start: () => void;
             stop: () => void;
           };
@@ -229,9 +232,11 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
             lang: string;
             continuous: boolean;
             interimResults: boolean;
+            maxAlternatives?: number;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onresult: (e: any) => void;
-            onerror: () => void;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onerror: (e: any) => void;
             start: () => void;
             stop: () => void;
           };
@@ -243,25 +248,23 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
             recognition.lang = "en-US";
             recognition.continuous = true;
             recognition.interimResults = true;
-            let finalStr = "";
+            recognition.maxAlternatives = 3;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             recognition.onresult = (e: any) => {
-              let interimStr = "";
+              let fullText = "";
               for (let i = 0; i < e.results.length; ++i) {
-                if (e.results[i].isFinal) {
-                  finalStr += e.results[i][0].transcript + " ";
-                } else {
-                  interimStr += e.results[i][0].transcript;
-                }
+                const t = e.results[i]?.[0]?.transcript;
+                if (t) fullText += (fullText ? " " : "") + t.trim();
               }
-              const total = (finalStr + " " + interimStr).trim();
-              if (total) setUserTranscript(total);
+              if (fullText) setUserTranscript(fullText);
             };
-            recognition.onerror = () => {};
+            recognition.onerror = (e: unknown) => {
+              console.warn("SpeechRecognition error in shadowing:", e);
+            };
             recognition.start();
             recognitionRef.current = recognition;
-          } catch {
-            // ignore speech recognition error
+          } catch (e) {
+            console.warn("Could not start SpeechRecognition:", e);
           }
         }
       }
@@ -789,12 +792,59 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                     </Button>
                   </div>
 
-                  {userTranscript && !aiEvaluation && (
-                    <div className="text-center font-mono text-xs text-slate-500 dark:text-slate-400">
-                      <span>Thu âm được: </span>
-                      <span className="font-semibold text-slate-700 dark:text-slate-300">&ldquo;{userTranscript}&rdquo;</span>
-                    </div>
-                  )}
+                  <div className="max-w-lg mx-auto space-y-2 pt-1">
+                    {userTranscript ? (
+                      <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3 text-left dark:border-emerald-900/50 dark:bg-emerald-950/30 text-xs">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>Giọng nói nhận diện được:</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setUserTranscript(exercise.sentence)}
+                            className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
+                          >
+                            Dùng câu chuẩn 100%
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          value={userTranscript}
+                          onChange={(e) => setUserTranscript(e.target.value)}
+                          className="w-full font-mono text-xs bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 rounded-lg px-2.5 py-1.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                          placeholder="Chỉnh sửa câu bạn vừa đọc nếu cần..."
+                        />
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-3 text-left dark:border-amber-900/50 dark:bg-amber-950/20 text-xs space-y-2">
+                        <div className="flex items-start gap-2 text-amber-800 dark:text-amber-200">
+                          <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                          <div className="flex-1 text-[11px] leading-relaxed">
+                            <span>Đã lưu bản thu ({recordingSeconds}s). Trình duyệt chưa chuyển âm thanh sang văn bản tự động (phổ biến trên Opera / iOS / PWA). Bạn có thể bấm <strong>Chấm Điểm & Hướng Dẫn AI</strong> ngay để nhận phân tích ngữ âm toàn diện, hoặc bấm điền câu để đối soát chi tiết:</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <input
+                            type="text"
+                            value={userTranscript}
+                            onChange={(e) => setUserTranscript(e.target.value)}
+                            placeholder="Nhập hoặc dán câu bạn vừa đọc..."
+                            className="flex-1 font-mono text-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setUserTranscript(exercise.sentence)}
+                            className="h-7 text-xs shrink-0 cursor-pointer text-blue-600 border-blue-200 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-950/40"
+                          >
+                            Điền câu chuẩn
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -861,6 +911,19 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                     </div>
                   </div>
                 </div>
+
+                {/* Guidance fallback notice if STT was not available in browser */}
+                {aiEvaluation.is_guidance_fallback && (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 space-y-1 animate-in fade-in">
+                    <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-300">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <span>Chế độ Hướng dẫn Ngữ âm chi tiết (Không có STT tự động)</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
+                      Trình duyệt này (Opera/iOS/PWA) không hỗ trợ dịch giọng nói (Google STT) nên AI đã cung cấp phân tích ngữ âm chuẩn mực và điểm tham chiếu (<strong>{aiEvaluation.overall_score}%</strong>). Để AI chấm điểm trực tiếp theo từng từ bạn đọc (lên tới 100%), bạn hãy mở qua <strong>Chrome</strong> hoặc <strong>Safari</strong> hoặc dùng nút <em>Điền câu chuẩn</em> phía trên nhé!
+                    </p>
+                  </div>
+                )}
 
                 {/* Recognized Speech */}
                 <div className="space-y-1.5">

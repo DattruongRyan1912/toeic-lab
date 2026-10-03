@@ -836,6 +836,7 @@ export interface ShadowingEvaluateResponse {
   coaching_tips: string[];
   provider: string;
   model: string;
+  is_guidance_fallback?: boolean;
 }
 
 
