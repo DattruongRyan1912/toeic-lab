@@ -13,7 +13,7 @@ export function ThemeToggle() {
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
 
   if (!mounted) {
-    return <div className="h-8 w-28 rounded-full bg-slate-200/60 dark:bg-slate-800/40" aria-hidden="true" />;
+    return <div className="h-8 w-8 sm:w-28 rounded-full bg-slate-200/60 dark:bg-slate-800/40 shrink-0" aria-hidden="true" />;
   }
 
   const isDark = resolvedTheme === "dark";
@@ -22,7 +22,7 @@ export function ThemeToggle() {
       variant="outline"
       size="sm"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border-slate-300 bg-white/80 px-3 text-xs font-semibold text-slate-800 shadow-sm transition-all hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/80"
+      className="flex h-8 w-8 sm:w-auto p-0 sm:px-3 cursor-pointer items-center justify-center sm:gap-1.5 rounded-full border-slate-300 bg-white/80 text-xs font-semibold text-slate-800 shadow-xs transition-all hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100 dark:hover:bg-slate-700/80 shrink-0"
       aria-label={isDark ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
     >
       {isDark ? (
