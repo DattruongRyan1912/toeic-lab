@@ -33,6 +33,7 @@ services:
       - ./server/data:/app/server/data
       - ./server/cache:/app/server/cache
       - ./docs:/app/docs
+      - ./lessons:/app/lessons
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
