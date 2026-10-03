@@ -10,8 +10,9 @@ Workspace tự học, luyện thi TOEIC Listening & Reading đạt 800 - 900+ ch
 ## General Working Rules for All Agents
 1. **Language**: Giao tiếp bằng tiếng Việt thân thiện, súc tích, logic. Dùng thuật ngữ TOEIC chuẩn quốc tế.
 2. **Quality of Explanations**: Mọi câu hỏi ngữ pháp hoặc đọc hiểu phải kèm dẫn chứng, phân tích bẫy (distractor analysis) và cặp từ đồng nghĩa (paraphrase pairs).
-3. **HTML-First Reporting**: Báo cáo thi thử, tài liệu tổng quan, lộ trình học: ưu tiên HTML tự chứa (CSS/JS nhúng) trong `docs/`.
-4. **Tools & Scripts**:
+3. **Authentic Content Only (Tuyệt Đối Không Dùng Đề AI Tự Sinh)**: Mọi đề thi thử (Mock Tests) và câu hỏi bài tập rèn luyện chuyên sâu (Topic Drills) bắt buộc phải được thu thập, trích xuất và chuẩn hóa từ các nguồn tài liệu ôn luyện TOEIC chuẩn quốc tế, uy tín (ETS Official Actual Tests 2020-2024, Hackers TOEIC 1-2-3, YBM, Economy TOEIC). Tuyệt đối KHÔNG dùng AI tự sinh câu hỏi giả lập để đảm bảo 100% văn phong kinh doanh, tần suất từ vựng và ma trận bẫy sát đề thi thật. AI chỉ đóng vai trò phân tích, giải thích và huấn luyện (Mentor).
+4. **HTML-First Reporting**: Báo cáo thi thử, tài liệu tổng quan, lộ trình học: ưu tiên HTML tự chứa (CSS/JS nhúng) trong `docs/`.
+5. **Tools & Scripts**:
    - Quy đổi điểm: `python scripts/score_calculator.py` (cùng đường cong với web, nguồn: `server/services/scoring.py`).
    - Mẫu bảng trong `templates/` khi cập nhật error log hoặc lộ trình thủ công.
 
