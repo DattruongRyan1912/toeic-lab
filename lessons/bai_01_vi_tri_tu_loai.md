@@ -44,18 +44,41 @@ Tính từ bổ nghĩa cho Danh từ hoặc mô tả trạng thái của Chủ n
 ---
 
 ### 📌 Công thức 2: Vị trí của TRẠNG TỪ (Adverb)
-Trạng từ đuôi `-ly` bổ nghĩa cho Động từ, Tính từ hoặc cả câu:
+Trạng từ đuôi `-ly` bổ nghĩa cho Động từ, Tính từ hoặc toàn bộ câu:
+
 1. **Kẹp giữa Trợ động từ và Động từ chính (Bẫy kinh điển ETS chiếm 90%)**:
    $$\text{have / has} + \mathbf{[\text{TRẠNG TỪ}]} + \text{V3/ed}$$
    $$\text{be} + \mathbf{[\text{TRẠNG TỪ}]} + \text{V-ed (thể bị động)}$$
    $$\text{can / will / must} + \mathbf{[\text{TRẠNG TỪ}]} + \text{V nguyên mẫu}$$
    * *Ví dụ*: The budget was **carefully** [Adv] reviewed [V-ed].
-2. **Đứng giữa Chủ ngữ và Động từ thường**:
+   * *Ví dụ*: The system will **automatically** [Adv] restart [V-bare].
+
+2. **Đứng trước Động từ thường (Giữa Chủ ngữ và Động từ)**:
    $$\text{Chủ ngữ (S)} + \mathbf{[\text{TRẠNG TỪ}]} + \text{Động từ (V)} + \text{Tân ngữ (O)}$$
    * *Ví dụ*: Ms. Carter **promptly** [Adv] replied [V] to the inquiry.
-3. **Đứng trước bổ nghĩa cho Tính từ**:
+
+3. **Đứng SAU Động từ (Động từ + Trạng từ) — [RẤT QUAN TRỌNG TRONG PART 5]**:
+   * **Với Nội động từ (Intransitive Verbs - không cần tân ngữ)**:
+     $$\text{Chủ ngữ (S)} + \text{Nội động từ (V)} + \mathbf{[\text{TRẠNG TỪ}]}$$
+     * *Ví dụ*: The company expanded **rapidly** [Adv] throughout Southeast Asia.
+     * *Ví dụ*: The backup servers operate **reliably** [Adv].
+     * *Ví dụ*: Quarterly sales grew **significantly** [Adv].
+   * **Với Ngoại động từ (Transitive Verbs - có tân ngữ đi kèm)**:
+     $$\text{Chủ ngữ (S)} + \text{Ngoại động từ (V)} + \text{Tân ngữ (O)} + \mathbf{[\text{TRẠNG TỪ}]}$$
+     * *Ví dụ*: The engineering team completed the datacenter migration **successfully** [Adv].
+     * *Ví dụ*: Please read the updated safety manual **carefully** [Adv].
+   * ⚠️ **BẪY CHÍ MẠNG ETS (Cấm kỵ)**: **TUYỆT ĐỐI KHÔNG** chèn Trạng từ chen ngang giữa Ngoại động từ và Tân ngữ!
+     ❌ *Sai ngữ pháp*: *The team completed **successfully** [Adv] the migration [O].*
+     ✅ *Đúng ngữ pháp*: *The team completed the migration [O] **successfully** [Adv].* (hoặc *The team **successfully** completed the migration.*)
+
+4. **Đứng trước bổ nghĩa cho Tính từ hoặc Trạng từ khác**:
    $$\mathbf{[\text{TRẠNG TỪ}]} + \text{Tính từ} + \text{Danh từ}$$
    * *Ví dụ*: an **extremely** [Adv] competitive [Adj] salary package [N].
+   * *Ví dụ*: The prototype performed **remarkably** [Adv] **well** [Adv].
+
+5. **Đứng ở đầu câu (ngăn cách bằng dấu phẩy) bổ nghĩa cho toàn bộ mệnh đề**:
+   $$\mathbf{[\text{TRẠNG TỪ}]}, \quad \text{Chủ ngữ (S)} + \text{V} + \text{O}$$
+   * *Ví dụ*: **Surprisingly** [Adv], the third-quarter earnings report demonstrated a marked recovery.
 
 ---
 

@@ -63,6 +63,7 @@ def ingest_authentic_drills(db_session=None):
                 print(f"  • Drill Test record {test_id} already exists")
 
             inserted_q = 0
+            updated_q = 0
             for item in questions:
                 exists = db.query(TestQuestion).filter_by(
                     test_id=item["test_id"], question_no=item["question_no"]
@@ -86,9 +87,18 @@ def ingest_authentic_drills(db_session=None):
                     )
                     db.add(q)
                     inserted_q += 1
+                else:
+                    changed = False
+                    for field in ("sentence", "choice_a", "choice_b", "choice_c", "choice_d", "correct_choice", "explanation", "distractor_analysis", "paraphrase_pair", "lesson_number", "source"):
+                        new_val = item.get(field)
+                        if getattr(exists, field) != new_val:
+                            setattr(exists, field, new_val)
+                            changed = True
+                    if changed:
+                        updated_q += 1
             db.commit()
             total_questions_added += inserted_q
-            print(f"  ✓ Ingested {inserted_q} new authentic questions for {test_id} (Total defined: {len(questions)})")
+            print(f"  ✓ Processed {test_id}: {inserted_q} new, {updated_q} updated (Total: {len(questions)})")
 
         print(f"\n🎉 Successfully verified {len(ALL_AUTHENTIC_DRILLS)} drill packs and ingested {total_questions_added} authentic questions!")
         return {
