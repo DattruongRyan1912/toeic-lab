@@ -196,17 +196,16 @@ async def run_agent(
 
 
 async def _run_gemini(provider, system_prompt, history, message, image_base64, tool_executor, max_rounds) -> AgentResult:
-    url = f"{provider.base_url}/models/{provider.model}:generateContent"
     turns = _normalize_turns(list(history))
-    contents = [{"role": "model" if t.role == "assistant" else "user", "parts": [{"text": t.content}]} for t in turns]
+    initial_contents = [{"role": "model" if t.role == "assistant" else "user", "parts": [{"text": t.content}]} for t in turns]
     user_parts = [{"text": message}]
     if image_base64:
         mime, data = split_image(image_base64)
         user_parts.append({"inlineData": {"mimeType": mime, "data": data}})
-    if contents and contents[-1]["role"] == "user":
-        contents[-1]["parts"].extend(user_parts)
+    if initial_contents and initial_contents[-1]["role"] == "user":
+        initial_contents[-1]["parts"].extend(user_parts)
     else:
-        contents.append({"role": "user", "parts": user_parts})
+        initial_contents.append({"role": "user", "parts": user_parts})
 
     base = {
         "systemInstruction": {"parts": [{"text": system_prompt}]},
@@ -215,34 +214,50 @@ async def _run_gemini(provider, system_prompt, history, message, image_base64, t
     if tool_executor is not None:
         base["tools"] = [{"functionDeclarations": agent_tools.declarations()}]
     actions = []
+
+    candidate_models = [provider.model]
+    for fallback in ("gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
+        if fallback not in candidate_models:
+            candidate_models.append(fallback)
+
     async with _http_client() as client:
-        for round_no in range(max_rounds):
-            payload = {**base, "contents": contents}
-            if tool_executor is not None and round_no == max_rounds - 1:
-                payload["toolConfig"] = {"functionCallingConfig": {"mode": "NONE"}}  # force a final text answer
-            resp = await client.post(url, headers={"x-goog-api-key": provider.api_key}, json=payload)
-            if resp.status_code != 200:
-                logger.warning("Gemini error %s: %s", resp.status_code, resp.text[:500])
-                raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
-            candidate = (resp.json().get("candidates") or [{}])[0]
-            parts = (candidate.get("content") or {}).get("parts") or []
-            calls = [p["functionCall"] for p in parts if isinstance(p, dict) and p.get("functionCall")]
-            text = "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
-            if not calls or tool_executor is None:
-                if not text:
-                    raise LLMError(f"Gemini trả về phản hồi rỗng ({candidate.get('finishReason', 'unknown')})")
-                return AgentResult(text, actions, provider.name, provider.model)
-            contents.append({"role": "model", "parts": parts})  # keep thought signatures intact
-            responses = []
-            for call in calls:
-                result = tool_executor(call.get("name", ""), call.get("args") or {})
-                actions.append(result)
-                function_response = {"name": call.get("name", ""), "response": {"result": result}}
-                if call.get("id"):
-                    function_response["id"] = call["id"]
-                responses.append({"functionResponse": function_response})
-            contents.append({"role": "user", "parts": responses})
-    return AgentResult(_summarize_actions(actions), actions, provider.name, provider.model)
+        for model_idx, active_model in enumerate(candidate_models):
+            contents = [dict(c) for c in initial_contents]
+            url = f"{provider.base_url}/models/{active_model}:generateContent"
+            try:
+                for round_no in range(max_rounds):
+                    payload = {**base, "contents": contents}
+                    if tool_executor is not None and round_no == max_rounds - 1:
+                        payload["toolConfig"] = {"functionCallingConfig": {"mode": "NONE"}}  # force a final text answer
+                    resp = await client.post(url, headers={"x-goog-api-key": provider.api_key}, json=payload)
+                    if resp.status_code != 200:
+                        logger.warning("Gemini error %s: %s", resp.status_code, resp.text[:500])
+                        raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
+                    candidate = (resp.json().get("candidates") or [{}])[0]
+                    parts = (candidate.get("content") or {}).get("parts") or []
+                    calls = [p["functionCall"] for p in parts if isinstance(p, dict) and p.get("functionCall")]
+                    text = "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
+                    if not calls or tool_executor is None:
+                        if not text:
+                            raise LLMError(f"Gemini trả về phản hồi rỗng ({candidate.get('finishReason', 'unknown')})")
+                        return AgentResult(text, actions, provider.name, active_model)
+                    contents.append({"role": "model", "parts": parts})  # keep thought signatures intact
+                    responses = []
+                    for call in calls:
+                        result = tool_executor(call.get("name", ""), call.get("args") or {})
+                        actions.append(result)
+                        function_response = {"name": call.get("name", ""), "response": {"result": result}}
+                        if call.get("id"):
+                            function_response["id"] = call["id"]
+                        responses.append({"functionResponse": function_response})
+                    contents.append({"role": "user", "parts": responses})
+                return AgentResult(_summarize_actions(actions), actions, provider.name, active_model)
+            except LLMError as exc:
+                if model_idx == len(candidate_models) - 1:
+                    raise
+                logger.warning("Gemini model %s failed (%s), trying fallback...", active_model, exc)
+                continue
+    raise LLMError("Không kết nối được Gemini qua các model dự phòng")
 
 
 async def _run_openai_compatible(provider, system_prompt, history, message, image_base64, tool_executor, max_rounds) -> AgentResult:
@@ -330,9 +345,9 @@ async def complete_with_audio(prompt: str, audio_base64: str, system_prompt: str
             "generationConfig": {"temperature": 0.2, "maxOutputTokens": 2048},
         }
 
-        # Try configured model first, fallback to stable models if 404
+        # Try configured model first, fallback to stable models if 404, 429, or 503
         candidate_models = [provider.model]
-        for fallback in ("gemini-3.5-flash", "gemini-flash-latest"):
+        for fallback in ("gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
             if fallback not in candidate_models:
                 candidate_models.append(fallback)
 
@@ -344,8 +359,8 @@ async def complete_with_audio(prompt: str, audio_base64: str, system_prompt: str
                     candidate = (resp.json().get("candidates") or [{}])[0]
                     parts = (candidate.get("content") or {}).get("parts") or []
                     return "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
-                elif resp.status_code == 404 and model_name != candidate_models[-1]:
-                    logger.warning("Gemini model %s returned 404, trying fallback", model_name)
+                elif resp.status_code in (404, 429, 500, 502, 503, 504) and model_name != candidate_models[-1]:
+                    logger.warning("Gemini audio error %s on %s, trying fallback...", resp.status_code, model_name)
                     continue
                 else:
                     logger.warning("Gemini audio error %s: %s", resp.status_code, resp.text[:500])
