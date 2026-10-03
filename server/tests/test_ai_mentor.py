@@ -324,4 +324,33 @@ def test_vocab_pronunciation_falls_back_to_deepseek(client, seeded, monkeypatch)
     assert data["provider"] == "deepseek"
 
 
+def test_gemini_multi_key_rotation_and_quota_failover(client, monkeypatch):
+    monkeypatch.setattr(config, "GEMINI_API_KEYS", ["key-alpha", "key-beta"])
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "key-alpha")
+    monkeypatch.setattr(ai_agent_service, "_gemini_key_index", 0)
+
+    seen_keys = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        key = request.headers.get("x-goog-api-key")
+        seen_keys.append(key)
+        if key == "key-alpha":
+            # First key is quota exhausted / rate limited
+            return httpx.Response(429, json={"error": {"code": 429, "message": "Resource exhausted"}})
+        if key == "key-beta":
+            # Second key succeeds
+            return httpx.Response(200, json={"candidates": [{"content": {"role": "model", "parts": [{"text": "Hello from Key Beta!"}]}}]})
+        return httpx.Response(400)
+
+    use_mock_transport(monkeypatch, handler)
+
+    res = client.post("/api/ai/chat", json={"message": "hello", "include_history": False})
+    assert res.status_code == 200
+    data = res.json()
+    assert data["reply"] == "Hello from Key Beta!"
+    assert data["provider"] == "gemini"
+    assert "key-alpha" in seen_keys
+    assert "key-beta" in seen_keys
+
+
 

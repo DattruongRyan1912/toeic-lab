@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import threading
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -70,10 +71,36 @@ class ProviderInfo:
     vision: bool
 
 
+_gemini_key_lock = threading.Lock()
+_gemini_key_index = 0
+
+
+def get_gemini_api_keys(advance: bool = False) -> list[str]:
+    """Returns candidate Gemini keys in round-robin order for load balancing,
+    with all keys available in the list for failover on rate-limiting (429/403).
+    """
+    global _gemini_key_index
+    keys = list(getattr(config, "GEMINI_API_KEYS", []))
+    if config.GEMINI_API_KEY and config.GEMINI_API_KEY not in keys:
+        keys.insert(0, config.GEMINI_API_KEY)
+    if not keys:
+        return []
+    if len(keys) == 1:
+        return keys
+
+    with _gemini_key_lock:
+        start_idx = _gemini_key_index % len(keys)
+        if advance:
+            _gemini_key_index = (_gemini_key_index + 1) % len(keys)
+
+    return keys[start_idx:] + keys[:start_idx]
+
+
 def _configured_providers() -> dict:
     providers = {}
-    if config.GEMINI_API_KEY:
-        providers["gemini"] = ProviderInfo("gemini", config.GEMINI_MODEL, config.GEMINI_API_KEY, config.GEMINI_BASE_URL, True)
+    gemini_keys = get_gemini_api_keys()
+    if gemini_keys:
+        providers["gemini"] = ProviderInfo("gemini", config.GEMINI_MODEL, gemini_keys[0], config.GEMINI_BASE_URL, True)
     if config.DEEPSEEK_API_KEY:
         providers["deepseek"] = ProviderInfo(
             "deepseek", config.DEEPSEEK_MODEL, config.DEEPSEEK_API_KEY, config.DEEPSEEK_BASE_URL, False
@@ -134,6 +161,7 @@ def provider_status() -> dict:
     chain = get_provider_priority_chain()
     provider = chain[0] if chain else None
     audio_prov = resolve_audio_provider()
+    keys_count = len(get_gemini_api_keys())
     return {
         "provider": provider.name if provider else "offline",
         "model": provider.model if provider else None,
@@ -143,11 +171,16 @@ def provider_status() -> dict:
         "offline": provider is None,
         "configured_providers": [p.name for p in chain],
         "fallback_providers": [p.name for p in chain[1:]],
+        "gemini_keys_count": keys_count,
     }
 
 
 # --------------------------------------------------------------------------- LLM calls
 class LLMError(RuntimeError):
+    pass
+
+
+class _KeyQuotaExceededError(LLMError):
     pass
 
 
@@ -258,48 +291,71 @@ async def _run_gemini(provider, system_prompt, history, message, image_base64, t
     actions = []
 
     candidate_models = [provider.model]
-    for fallback in ("gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
+    for fallback in ("gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
         if fallback not in candidate_models:
             candidate_models.append(fallback)
 
+    candidate_keys = get_gemini_api_keys(advance=True) or [provider.api_key]
+
     async with _http_client() as client:
-        for model_idx, active_model in enumerate(candidate_models):
-            contents = [dict(c) for c in initial_contents]
-            url = f"{provider.base_url}/models/{active_model}:generateContent"
-            try:
-                for round_no in range(max_rounds):
-                    payload = {**base, "contents": contents}
-                    if tool_executor is not None and round_no == max_rounds - 1:
-                        payload["toolConfig"] = {"functionCallingConfig": {"mode": "NONE"}}  # force a final text answer
-                    resp = await client.post(url, headers={"x-goog-api-key": provider.api_key}, json=payload)
-                    if resp.status_code != 200:
-                        logger.warning("Gemini error %s: %s", resp.status_code, resp.text[:500])
-                        raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
-                    candidate = (resp.json().get("candidates") or [{}])[0]
-                    parts = (candidate.get("content") or {}).get("parts") or []
-                    calls = [p["functionCall"] for p in parts if isinstance(p, dict) and p.get("functionCall")]
-                    text = "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
-                    if not calls or tool_executor is None:
-                        if not text:
-                            raise LLMError(f"Gemini trả về phản hồi rỗng ({candidate.get('finishReason', 'unknown')})")
-                        return AgentResult(text, actions, provider.name, active_model)
-                    contents.append({"role": "model", "parts": parts})  # keep thought signatures intact
-                    responses = []
-                    for call in calls:
-                        result = tool_executor(call.get("name", ""), call.get("args") or {})
-                        actions.append(result)
-                        function_response = {"name": call.get("name", ""), "response": {"result": result}}
-                        if call.get("id"):
-                            function_response["id"] = call["id"]
-                        responses.append({"functionResponse": function_response})
-                    contents.append({"role": "user", "parts": responses})
-                return AgentResult(_summarize_actions(actions), actions, provider.name, active_model)
-            except (LLMError, httpx.HTTPError) as exc:
-                if model_idx == len(candidate_models) - 1:
-                    raise
-                logger.warning("Gemini model %s failed (%s), trying fallback...", active_model, exc)
-                continue
-    raise LLMError("Không kết nối được Gemini qua các model dự phòng")
+        last_exc: Optional[Exception] = None
+        for key_idx, active_key in enumerate(candidate_keys):
+            for model_idx, active_model in enumerate(candidate_models):
+                contents = [dict(c) for c in initial_contents]
+                url = f"{provider.base_url}/models/{active_model}:generateContent"
+                try:
+                    for round_no in range(max_rounds):
+                        payload = {**base, "contents": contents}
+                        if tool_executor is not None and round_no == max_rounds - 1:
+                            payload["toolConfig"] = {"functionCallingConfig": {"mode": "NONE"}}  # force a final text answer
+                        resp = await client.post(url, headers={"x-goog-api-key": active_key}, json=payload)
+                        if resp.status_code != 200:
+                            logger.warning(
+                                "Gemini error %s on key %s/%s (%s): %s",
+                                resp.status_code,
+                                key_idx + 1,
+                                len(candidate_keys),
+                                active_model,
+                                resp.text[:300],
+                            )
+                            if resp.status_code in (429, 403) and key_idx < len(candidate_keys) - 1:
+                                raise _KeyQuotaExceededError(f"HTTP {resp.status_code} quota exceeded")
+                            raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
+                        candidate = (resp.json().get("candidates") or [{}])[0]
+                        parts = (candidate.get("content") or {}).get("parts") or []
+                        calls = [p["functionCall"] for p in parts if isinstance(p, dict) and p.get("functionCall")]
+                        text = "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
+                        if not calls or tool_executor is None:
+                            if not text:
+                                raise LLMError(f"Gemini trả về phản hồi rỗng ({candidate.get('finishReason', 'unknown')})")
+                            return AgentResult(text, actions, provider.name, active_model)
+                        contents.append({"role": "model", "parts": parts})  # keep thought signatures intact
+                        responses = []
+                        for call in calls:
+                            result = tool_executor(call.get("name", ""), call.get("args") or {})
+                            actions.append(result)
+                            function_response = {"name": call.get("name", ""), "response": {"result": result}}
+                            if call.get("id"):
+                                function_response["id"] = call["id"]
+                            responses.append({"functionResponse": function_response})
+                        contents.append({"role": "user", "parts": responses})
+                    return AgentResult(_summarize_actions(actions), actions, provider.name, active_model)
+                except _KeyQuotaExceededError as q_err:
+                    logger.warning("Gemini key %d rate-limited (%s), switching to next key in pool...", key_idx + 1, q_err)
+                    last_exc = q_err
+                    break  # rotate to next key
+                except (LLMError, httpx.HTTPError) as exc:
+                    last_exc = exc
+                    if model_idx == len(candidate_models) - 1:
+                        if key_idx < len(candidate_keys) - 1:
+                            logger.warning("All models failed on key %d, rotating to next key in pool...", key_idx + 1)
+                            break
+                        raise
+                    logger.warning("Gemini model %s failed (%s), trying fallback model...", active_model, exc)
+                    continue
+        if last_exc:
+            raise last_exc
+    raise LLMError("Không kết nối được Gemini qua các key và model dự phòng")
 
 
 async def _run_openai_compatible(provider, system_prompt, history, message, image_base64, tool_executor, max_rounds) -> AgentResult:
@@ -393,24 +449,40 @@ async def complete_with_audio(prompt: str, audio_base64: str, system_prompt: str
 
         # Try configured model first, fallback to stable models if 404, 429, or 503
         candidate_models = [provider.model]
-        for fallback in ("gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
+        for fallback in ("gemini-3.8-flash", "gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-3.5-flash"):
             if fallback not in candidate_models:
                 candidate_models.append(fallback)
 
+        candidate_keys = get_gemini_api_keys(advance=True) or [provider.api_key]
+
         async with _http_client() as client:
-            for model_name in candidate_models:
-                url = f"{provider.base_url}/models/{model_name}:generateContent"
-                resp = await client.post(url, headers={"x-goog-api-key": provider.api_key}, json=payload)
-                if resp.status_code == 200:
-                    candidate = (resp.json().get("candidates") or [{}])[0]
-                    parts = (candidate.get("content") or {}).get("parts") or []
-                    return "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
-                elif resp.status_code in (404, 429, 500, 502, 503, 504) and model_name != candidate_models[-1]:
-                    logger.warning("Gemini audio error %s on %s, trying fallback...", resp.status_code, model_name)
-                    continue
-                else:
-                    logger.warning("Gemini audio error %s: %s", resp.status_code, resp.text[:500])
-                    raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
+            for key_idx, active_key in enumerate(candidate_keys):
+                for model_name in candidate_models:
+                    url = f"{provider.base_url}/models/{model_name}:generateContent"
+                    try:
+                        resp = await client.post(url, headers={"x-goog-api-key": active_key}, json=payload)
+                        if resp.status_code == 200:
+                            candidate = (resp.json().get("candidates") or [{}])[0]
+                            parts = (candidate.get("content") or {}).get("parts") or []
+                            return "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
+                        elif resp.status_code in (429, 403) and key_idx < len(candidate_keys) - 1:
+                            logger.warning(
+                                "Gemini audio rate-limited on key %s/%s (HTTP %s), switching to next key...",
+                                key_idx + 1,
+                                len(candidate_keys),
+                                resp.status_code,
+                            )
+                            break  # rotate to next key
+                        elif resp.status_code in (404, 429, 500, 502, 503, 504) and model_name != candidate_models[-1]:
+                            logger.warning("Gemini audio error %s on %s, trying fallback model...", resp.status_code, model_name)
+                            continue
+                        else:
+                            logger.warning("Gemini audio error %s: %s", resp.status_code, resp.text[:500])
+                            raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
+                    except (LLMError, httpx.HTTPError) as exc:
+                        if model_name == candidate_models[-1] and key_idx == len(candidate_keys) - 1:
+                            raise
+                        continue
     raise LLMError(f"Provider '{provider.name}' hiện chưa hỗ trợ phân tích trực tiếp sóng âm thanh. Hãy dùng Gemini.")
 
 
