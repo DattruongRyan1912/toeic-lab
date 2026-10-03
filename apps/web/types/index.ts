@@ -837,6 +837,7 @@ export interface ShadowingEvaluateResponse {
   provider: string;
   model: string;
   is_guidance_fallback?: boolean;
+  analysis_mode?: "audio_multimodal" | "text_stt" | "guidance" | string;
 }
 
 

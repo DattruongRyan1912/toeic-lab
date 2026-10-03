@@ -300,9 +300,10 @@ async def evaluate_vocab_pronunciation(
     target_ipa = (expected_ipa or "").strip() or f"/{clean_word}/"
 
     status = agent.provider_status()
+    audio_provider = agent.resolve_audio_provider()
 
     # Case 1: Multimodal Gemini is configured -> analyze raw audio directly
-    if status.get("provider") == "gemini" and not status.get("offline") and audio_base64:
+    if audio_provider and audio_base64 and audio_base64.strip():
         prompt = VOCAB_PRONOUNCE_PROMPT_TEMPLATE.format(word=clean_word, expected_ipa=target_ipa)
         try:
             raw_reply = await agent.complete_with_audio(
@@ -327,8 +328,8 @@ async def evaluate_vocab_pronunciation(
                         "stress": str(fb.get("stress", "Trọng âm chuẩn.")),
                         "tips": str(fb.get("tips", "Duy trì luyện tập đều đặn.")),
                     },
-                    "provider": "gemini",
-                    "model": status.get("model", "gemini-2.5-flash"),
+                    "provider": audio_provider.name,
+                    "model": audio_provider.model,
                     "is_guidance_fallback": False,
                 }
         except Exception as exc:
@@ -478,6 +479,48 @@ TRẢ VỀ DUY NHẤT 1 ĐỐI TƯỢNG JSON (không kèm chữ nào khác ngoà
 }}
 """
 
+SHADOWING_AUDIO_PROMPT_TEMPLATE = """Bạn là Senior TOEIC Speaking & Pronunciation Examiner (Giám khảo ngữ âm bản xứ chuyên sâu).
+ĐỐI TƯỢNG HỌC VIÊN: Kỹ sư phần mềm đang luyện tập Shadowing để đạt TOEIC Speaking & Listening 850-990.
+
+CÂU GỐC MẪU (TARGET SENTENCE):
+"{target_sentence}"
+
+LƯU Ý NGỮ ÂM TRỌNG TÂM:
+{cues_text}
+
+NHIỆM VỤ CỦA BẠN:
+Bạn đang được cung cấp TRỰC TIẾP FILE ÂM THANH GỐC (RAW AUDIO) do chính học viên thu âm qua micro.
+1. Lắng nghe trực tiếp sóng âm, nhận diện chính xác từng từ học viên đã phát âm (ghi nhận trung thực những gì học viên thực sự nói vào field 'recognized_transcript').
+2. So sánh đối chiếu phát âm thực tế của học viên với câu gốc chuẩn bản ngữ:
+   - overall_score (0-100): Điểm tổng thể thực tế dựa trên tai nghe của bạn (nếu nói thiếu từ hoặc nuốt âm sai, điểm phải giảm tương ứng).
+   - accuracy_score (0-100): Độ chính xác âm vị từng từ, nguyên âm, phụ âm và âm đuôi (-s, -ed, -t, -th).
+   - fluency_score (0-100): Độ trôi chảy, tốc độ, nhịp điệu ngắt nghỉ theo cụm nghĩa (chunking).
+3. Đánh giá chi tiết TỪNG TỪ trong câu gốc:
+   - word: Từ trong câu gốc.
+   - status: 'perfect' (phát âm chuẩn bản ngữ), 'good' (đúng nhưng chưa tự nhiên), 'needs_work' (sai âm hoặc thiếu âm đuôi), 'missed' (học viên bỏ sót không đọc từ này).
+   - note: Nhận xét ngắn gọn cụ thể về âm vị của từ đó mà học viên đã phát ra (VD: 'Bị bỏ sót hoàn toàn', 'Phát âm chuẩn trọng âm', 'Thiếu âm đuôi /t/').
+4. Đánh giá hiện tượng nối âm và ngữ điệu (connected_speech_feedback):
+   - Nhận xét xem học viên có nối âm (linking), biến âm (flap-T), hay ngữ điệu tự nhiên không.
+5. Đưa ra 2-3 lời khuyên ngắn gọn, hành động được (coaching_tips bằng tiếng Việt) giúp học viên sửa ngay khuyết điểm phát âm trong file ghi âm vừa rồi.
+
+TRẢ VỀ DUY NHẤT 1 ĐỐI TƯỢNG JSON (không kèm markdown ngoài code block json):
+{{
+  "overall_score": <0-100>,
+  "accuracy_score": <0-100>,
+  "fluency_score": <0-100>,
+  "recognized_transcript": "<văn bản học viên thực sự phát âm nghe được từ audio>",
+  "verdict": "<Xuất sắc (Native-like) / Khá tốt (Clear & Confident) / Cần cải thiện (Needs Review)>",
+  "words": [
+    {{"word": "<từ trong câu gốc>", "status": "perfect|good|needs_work|missed", "note": "<nhận xét>"}}
+  ],
+  "connected_speech_feedback": "<nhận xét nối âm và biến âm>",
+  "coaching_tips": [
+    "<lời khuyên 1>",
+    "<lời khuyên 2>"
+  ]
+}}
+"""
+
 
 def _normalize_shadowing_response(
     parsed: dict,
@@ -486,6 +529,7 @@ def _normalize_shadowing_response(
     provider: str,
     model: str,
     is_guidance_fallback: bool = False,
+    analysis_mode: str = "text_stt",
 ) -> dict:
     overall = max(0, min(100, int(parsed.get("overall_score", 75))))
     acc = max(0, min(100, int(parsed.get("accuracy_score", overall))))
@@ -549,6 +593,7 @@ def _normalize_shadowing_response(
         "provider": provider,
         "model": model,
         "is_guidance_fallback": is_guidance_fallback,
+        "analysis_mode": analysis_mode,
     }
 
 
@@ -671,31 +716,31 @@ async def evaluate_shadowing_speech(
     recognized = (user_transcript or "").strip()
     cues_text = "\n- ".join(phonetic_cues) if phonetic_cues else "- Chú ý trọng âm câu, nối âm và ngữ điệu tự nhiên."
     status = agent.provider_status()
+    audio_provider = agent.resolve_audio_provider()
 
-    # Case 1: Multimodal Gemini (if raw audio is provided and provider is gemini)
-    if status.get("provider") == "gemini" and not status.get("offline") and audio_base64:
-        prompt = (
-            f"BẠN LÀ GIÁM KHẢO CHẤM ĐIỂM VÀ HUẤN LUYỆN VIÊN PHÁT ÂM TOEIC (SHADOWING COACH).\n\n"
-            f"CÂU GỐC MẪU (TARGET SENTENCE):\n\"{clean_target}\"\n\n"
-            f"LƯU Ý NGỮ ÂM TRỌNG TÂM:\n{cues_text}\n\n"
-            f"NHIỆM VỤ:\n"
-            f"1. Lắng nghe trực tiếp file âm thanh của học viên, đối chiếu từng âm vị với câu gốc.\n"
-            f"2. Chấm điểm chính xác theo 3 thang điểm (0-100): overall_score, accuracy_score, fluency_score.\n"
-            f"3. Đánh giá chi tiết từng từ trong câu: word, status (perfect | good | needs_work | missed), note.\n"
-            f"4. Đánh giá hiện tượng nối âm / biến âm (connected_speech_feedback).\n"
-            f"5. Đưa ra 2-3 lời khuyên ngắn gọn bằng tiếng Việt (coaching_tips) để học viên đọc tiến bộ hơn.\n\n"
-            f"Trả về DUY NHẤT một JSON hợp lệ."
+    # Case 1: Multimodal Gemini (if raw audio is provided and Gemini is configured)
+    if audio_provider and audio_base64 and audio_base64.strip():
+        prompt = SHADOWING_AUDIO_PROMPT_TEMPLATE.format(
+            target_sentence=clean_target,
+            cues_text=cues_text,
         )
         try:
             raw_reply = await agent.complete_with_audio(
                 prompt=prompt,
                 audio_base64=audio_base64,
-                system_prompt="Bạn là giám khảo ngữ âm TOEIC. Luôn trả về DUY NHẤT một JSON hợp lệ.",
+                system_prompt="Bạn là giám khảo ngữ âm TOEIC độc lập. Luôn trả về DUY NHẤT một JSON hợp lệ.",
             )
             parsed = agent.extract_json_object(raw_reply)
             if parsed and "overall_score" in parsed:
+                audio_rec = str(parsed.get("recognized_transcript") or recognized or clean_target).strip()
                 return _normalize_shadowing_response(
-                    parsed, clean_target, recognized, "gemini", status.get("model", "gemini-2.5-flash")
+                    parsed,
+                    clean_target,
+                    audio_rec,
+                    audio_provider.name,
+                    audio_provider.model,
+                    is_guidance_fallback=False,
+                    analysis_mode="audio_multimodal",
                 )
         except Exception as exc:
             logger.warning("Gemini shadowing audio analysis failed: %s", exc)
@@ -754,10 +799,11 @@ async def process_voice_turn(
             dialogue_lines.append(f"{role}: {turn.get('content', '')}")
 
     status = agent.provider_status()
+    audio_provider = agent.resolve_audio_provider()
 
     # Case 1: Raw Audio input (Multimodal Audio)
     if audio_base64:
-        if status.get("offline"):
+        if not audio_provider and status.get("offline"):
             simulated = _offline_turn_reply(scenario, user_transcript or "I'm practicing speaking English.")
             simulated["audio_url"] = _make_audio_url(simulated["spoken_reply"], accent)
             return simulated
@@ -797,8 +843,8 @@ async def process_voice_turn(
                     "pronunciation_tips": str(feedback_dict.get("pronunciation_tips", "")),
                     "acoustic_notes": str(feedback_dict.get("acoustic_notes", "Sóng âm rõ ràng, nhịp độ nói tốt.")),
                 },
-                "provider": status.get("provider", "gemini"),
-                "model": status.get("model", "gemini-2.5-flash"),
+                "provider": audio_provider.name if audio_provider else status.get("provider", "gemini"),
+                "model": audio_provider.model if audio_provider else status.get("model", "gemini-3.5-flash"),
             }
         except Exception as exc:
             logger.warning("AI voice multimodal turn failed, falling back to offline: %s", exc)

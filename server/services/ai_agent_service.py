@@ -28,9 +28,21 @@ from server.services import agent_tools, curriculum, insights
 logger = logging.getLogger(__name__)
 
 ERROR_TYPES = curriculum.ERROR_TYPES
-_DATA_URL_RE = re.compile(r"^data:((?:image|audio)/[a-zA-Z0-9.+-]+);base64,(.+)$", re.S)
+_DATA_URL_RE = re.compile(r"^data:((?:image|audio)/[a-zA-Z0-9.+-]+)(?:;[^,]+)*;base64,(.+)$", re.S)
 _ALLOWED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp", "image/heic", "image/heif"}
-_ALLOWED_AUDIO_TYPES = {"audio/webm", "audio/wav", "audio/mp3", "audio/mpeg", "audio/ogg", "audio/m4a", "audio/x-m4a", "audio/aac", "audio/flac"}
+_ALLOWED_AUDIO_TYPES = {
+    "audio/webm",
+    "audio/wav",
+    "audio/mp3",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/m4a",
+    "audio/x-m4a",
+    "audio/mp4",
+    "audio/aac",
+    "audio/flac",
+    "audio/opus",
+}
 
 
 BASE_SYSTEM_PROMPT = """Bạn là Senior TOEIC AI Mentor & Learning Strategist — huấn luyện viên cá nhân của một kỹ sư phần mềm tự học TOEIC (mục tiêu 800-900+). Bạn có quyền đọc và chỉnh sửa dữ liệu học của học viên qua công cụ.
@@ -83,12 +95,26 @@ def resolve_provider() -> Optional[ProviderInfo]:
     return None
 
 
+def resolve_audio_provider() -> Optional[ProviderInfo]:
+    """Returns an audio-capable multimodal provider (currently Gemini) if configured."""
+    providers = _configured_providers()
+    if "gemini" in providers:
+        return providers["gemini"]
+    primary = resolve_provider()
+    if primary and primary.name == "gemini":
+        return primary
+    return None
+
+
 def provider_status() -> dict:
     provider = resolve_provider()
+    audio_prov = resolve_audio_provider()
     return {
         "provider": provider.name if provider else "offline",
         "model": provider.model if provider else None,
         "vision": bool(provider and provider.vision),
+        "audio": audio_prov is not None,
+        "audio_model": audio_prov.model if audio_prov else None,
         "offline": provider is None,
         "configured_providers": list(_configured_providers()),
     }
@@ -289,11 +315,10 @@ async def complete_text(prompt: str, system_prompt: str = VOCAB_SYSTEM_PROMPT) -
 
 
 async def complete_with_audio(prompt: str, audio_base64: str, system_prompt: str = VOCAB_SYSTEM_PROMPT) -> str:
-    provider = resolve_provider()
+    provider = resolve_audio_provider()
     if provider is None:
-        raise LLMError("Chưa cấu hình API key cho AI provider")
+        raise LLMError("Chưa cấu hình API key cho AI provider hỗ trợ phân tích âm thanh (Gemini)")
     if provider.name == "gemini":
-        url = f"{provider.base_url}/models/{provider.model}:generateContent"
         mime, data = split_media(audio_base64, default_mime="audio/webm")
         user_parts = [
             {"text": prompt},
@@ -304,14 +329,27 @@ async def complete_with_audio(prompt: str, audio_base64: str, system_prompt: str
             "contents": [{"role": "user", "parts": user_parts}],
             "generationConfig": {"temperature": 0.2, "maxOutputTokens": 2048},
         }
+
+        # Try configured model first, fallback to stable models if 404
+        candidate_models = [provider.model]
+        for fallback in ("gemini-3.5-flash", "gemini-flash-latest"):
+            if fallback not in candidate_models:
+                candidate_models.append(fallback)
+
         async with _http_client() as client:
-            resp = await client.post(url, headers={"x-goog-api-key": provider.api_key}, json=payload)
-            if resp.status_code != 200:
-                logger.warning("Gemini audio error %s: %s", resp.status_code, resp.text[:500])
-                raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
-            candidate = (resp.json().get("candidates") or [{}])[0]
-            parts = (candidate.get("content") or {}).get("parts") or []
-            return "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
+            for model_name in candidate_models:
+                url = f"{provider.base_url}/models/{model_name}:generateContent"
+                resp = await client.post(url, headers={"x-goog-api-key": provider.api_key}, json=payload)
+                if resp.status_code == 200:
+                    candidate = (resp.json().get("candidates") or [{}])[0]
+                    parts = (candidate.get("content") or {}).get("parts") or []
+                    return "".join(p.get("text", "") for p in parts if isinstance(p, dict) and not p.get("thought")).strip()
+                elif resp.status_code == 404 and model_name != candidate_models[-1]:
+                    logger.warning("Gemini model %s returned 404, trying fallback", model_name)
+                    continue
+                else:
+                    logger.warning("Gemini audio error %s: %s", resp.status_code, resp.text[:500])
+                    raise LLMError(f"Gemini trả về HTTP {resp.status_code}")
     raise LLMError(f"Provider '{provider.name}' hiện chưa hỗ trợ phân tích trực tiếp sóng âm thanh. Hãy dùng Gemini.")
 
 

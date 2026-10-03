@@ -110,3 +110,56 @@ def test_evaluate_shadowing_api(client, seeded):
     assert data_empty["overall_score"] >= 70
     assert data_empty["is_passing"] is True
     assert data_empty.get("is_guidance_fallback") is True
+
+
+def test_evaluate_shadowing_with_audio_mock(client, monkeypatch):
+    from server.services import ai_agent_service, voice_coach_service
+
+    # Mock audio provider to return Gemini
+    provider = ai_agent_service.ProviderInfo(
+        name="gemini",
+        model="gemini-3.5-flash",
+        api_key="mock-key",
+        base_url="https://generativelanguage.googleapis.com/v1beta",
+        vision=True,
+    )
+    monkeypatch.setattr(ai_agent_service, "resolve_audio_provider", lambda: provider)
+
+    mock_gemini_reply = """```json
+    {
+      "overall_score": 92,
+      "accuracy_score": 95,
+      "fluency_score": 90,
+      "recognized_transcript": "We must postpone the meeting.",
+      "verdict": "Xuất sắc (Native-like)",
+      "words": [
+        {"word": "We", "status": "perfect", "note": "Rõ ràng"},
+        {"word": "must", "status": "perfect", "note": "Nuốt âm /t/ tốt"},
+        {"word": "postpone", "status": "perfect", "note": "Trọng âm âm 2 chuẩn"},
+        {"word": "the", "status": "perfect", "note": "Tự nhiên"},
+        {"word": "meeting", "status": "perfect", "note": "Âm đuôi chuẩn"}
+      ],
+      "connected_speech_feedback": "Nối âm rất mượt mà.",
+      "coaching_tips": ["Tiếp tục phát huy!"]
+    }
+    ```"""
+
+    async def fake_complete_with_audio(prompt, audio_base64, system_prompt=None):
+        return mock_gemini_reply
+
+    monkeypatch.setattr(ai_agent_service, "complete_with_audio", fake_complete_with_audio)
+
+    payload = {
+        "target_sentence": "We must postpone the meeting.",
+        "audio_base64": "data:audio/webm;codecs=opus;base64,AAAA",
+    }
+    resp = client.post("/api/listening/evaluate-shadowing", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["overall_score"] == 92
+    assert data["provider"] == "gemini"
+    assert data["model"] == "gemini-3.5-flash"
+    assert data["analysis_mode"] == "audio_multimodal"
+    assert data["recognized_transcript"] == "We must postpone the meeting."
+    assert len(data["words"]) == 5
+

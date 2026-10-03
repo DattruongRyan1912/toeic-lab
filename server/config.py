@@ -67,7 +67,7 @@ SRS_NEW_CARDS_PER_DAY = max(0, _int("SRS_NEW_CARDS_PER_DAY", 15))
 # --- AI providers ("auto" = first configured of gemini, deepseek, openai) ---
 AI_PROVIDER = os.getenv("AI_PROVIDER", "auto").strip().lower()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash").strip()
 GEMINI_BASE_URL = os.getenv("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta").rstrip("/")
 DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "").strip()
 # "deepseek-chat" was retired by DeepSeek; "deepseek-flash" is the current general model id.

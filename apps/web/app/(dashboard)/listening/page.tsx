@@ -198,7 +198,8 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const mimeType = mediaRecorder.mimeType || "audio/webm";
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const url = URL.createObjectURL(audioBlob);
         setRecordedAudioUrl(url);
         stream.getTracks().forEach((track) => track.stop());
@@ -207,8 +208,7 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
         reader.onloadend = () => {
           const res = reader.result as string;
           if (res) {
-            const b64 = res.split(",")[1] ?? res;
-            setRecordedAudioBase64(b64);
+            setRecordedAudioBase64(res);
           }
         };
         reader.readAsDataURL(audioBlob);
@@ -868,7 +868,7 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                       {aiEvaluation.overall_score}%
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge
                           className={cn(
                             "text-xs font-bold",
@@ -881,12 +881,21 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                         >
                           {aiEvaluation.verdict}
                         </Badge>
-                        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                          AI Examiner • {aiEvaluation.provider}
-                        </span>
+                        {aiEvaluation.analysis_mode === "audio_multimodal" ? (
+                          <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] font-bold flex items-center gap-1 shadow-xs">
+                            <Sparkles className="h-3 w-3" />
+                            <span>Gemini Multimodal • Sóng âm gốc</span>
+                          </Badge>
+                        ) : (
+                          <span className="font-mono text-xs text-slate-500 dark:text-slate-400">
+                            AI Examiner • {aiEvaluation.provider}
+                          </span>
+                        )}
                       </div>
                       <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">
-                        Đánh giá dựa trên đối soát âm vị, độ ngắt nghỉ và hiện tượng nối âm thực chiến.
+                        {aiEvaluation.analysis_mode === "audio_multimodal"
+                          ? "Giám khảo Gemini đã nghe trực tiếp file ghi âm từ micro của bạn để chấm điểm ngữ âm thực tế."
+                          : "Đánh giá dựa trên đối soát âm vị, độ ngắt nghỉ và hiện tượng nối âm thực chiến."}
                       </p>
                     </div>
                   </div>
@@ -928,8 +937,16 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
                 {/* Recognized Speech */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span className="font-semibold uppercase tracking-wider">AI nghe được từ giọng đọc của bạn:</span>
-                    <span className="font-mono text-[11px] text-blue-600 dark:text-blue-400">Speech Recognition</span>
+                    <span className="font-semibold uppercase tracking-wider">
+                      {aiEvaluation.analysis_mode === "audio_multimodal"
+                        ? "Gemini nhận diện trực tiếp từ sóng âm micro của bạn:"
+                        : "AI nghe được từ giọng đọc của bạn:"}
+                    </span>
+                    <span className="font-mono text-[11px] text-blue-600 dark:text-blue-400">
+                      {aiEvaluation.analysis_mode === "audio_multimodal"
+                        ? `Gemini ${aiEvaluation.model || "Flash"} (Raw Audio)`
+                        : "Speech Recognition"}
+                    </span>
                   </div>
                   <div className="rounded-xl bg-slate-100/80 p-3 font-mono text-sm text-slate-800 italic border border-slate-200 dark:bg-slate-950 dark:border-slate-800 dark:text-slate-200">
                     &ldquo;{aiEvaluation.recognized_transcript || "(Chưa bắt được âm thanh rõ ràng)"}&rdquo;

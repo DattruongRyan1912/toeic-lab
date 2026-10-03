@@ -970,4 +970,6 @@ class ShadowingEvaluateResponse(BaseModel):
     provider: str
     model: str
     is_guidance_fallback: Optional[bool] = False
+    analysis_mode: Optional[str] = "text_stt"
+
 
