@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Thống Kê Dữ Liệu Nền Tảng: TOEIC Self-Study Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased p-4 sm:p-8">
+  <div class="max-w-6xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <header class="border-b border-slate-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+          Live Production Data Inventory & Analytics
+        </div>
+        <h1 class="text-3xl font-extrabold tracking-tight text-white">Báo Cáo Tổng Hợp Dữ Liệu Hệ Thống TOEIC</h1>
+        <p class="text-slate-400 text-sm">Nguồn dữ liệu: Database Production SQLite (<code class="text-slate-300">/app/server/data/toeic_lab.db</code>) trên VPS <a href="https://toeic.truongquocdat.id.vn" target="_blank" class="text-blue-400 hover:underline">toeic.truongquocdat.id.vn</a></p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400 bg-slate-900 border border-slate-800 px-3 py-2 rounded-lg">Cập nhật: 03/10/2026 17:05</span>
+        <a href="https://toeic.truongquocdat.id.vn" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2">
+          <span>Truy Cập Web App</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        </a>
+      </div>
+    </header>
+
+    <!-- KPI Metric Cards Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Bộ đề thi (Tests)</div>
+        <div class="text-3xl font-extrabold text-blue-400">2</div>
+        <div class="text-[11px] text-slate-500">1 ETS 2024 + 1 AI Practice</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Ngân hàng câu hỏi</div>
+        <div class="text-3xl font-extrabold text-emerald-400">50</div>
+        <div class="text-[11px] text-slate-500">Kèm bẫy & Paraphrase</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Thẻ từ vựng (SRS)</div>
+        <div class="text-3xl font-extrabold text-amber-400">684</div>
+        <div class="text-[11px] text-slate-500">39 chuyên ngành kinh doanh</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Bài học ngữ pháp</div>
+        <div class="text-3xl font-extrabold text-purple-400">12</div>
+        <div class="text-[11px] text-slate-500">100% bám đề ETS 800+</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Lượt làm câu hỏi</div>
+        <div class="text-3xl font-extrabold text-indigo-400">108</div>
+        <div class="text-[11px] text-slate-500">9 bài nộp (Submissions)</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 space-y-1">
+        <div class="text-xs text-slate-400 font-medium">Phiên học tập</div>
+        <div class="text-3xl font-extrabold text-rose-400">23</div>
+        <div class="text-[11px] text-slate-500">~76.4 phút thực học</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Đề thi & Ngân hàng câu hỏi -->
+    <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">1</div>
+          <div>
+            <h2 class="text-lg font-bold text-white">1. Bộ Đề Thi & Ngân Hàng Câu Hỏi (Mock Tests & Question Bank)</h2>
+            <p class="text-xs text-slate-400">Hiện có 2 đề thi đã được đăng ký trong hệ thống</p>
+          </div>
+        </div>
+        <span class="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20">50 Câu Hỏi Đã Sẵn Sàng</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Đề 1 -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold">ETS2024_01</span>
+              <h3 class="text-base font-bold text-white mt-1">ETS TOEIC Regular Test 2024 - Test 01</h3>
+              <p class="text-xs text-slate-400">Nhà xuất bản: ETS (Năm 2024) • Chuẩn đề thi thật</p>
+            </div>
+            <span class="px-2 py-1 rounded bg-slate-800 text-xs font-semibold text-slate-300">45 Câu Hỏi</span>
+          </div>
+
+          <div class="grid grid-cols-5 gap-2 text-center text-xs">
+            <div class="p-2 rounded bg-slate-900 border border-slate-800/60">
+              <div class="text-slate-400 font-medium">Part 1</div>
+              <div class="text-sm font-bold text-white mt-0.5">5 câu</div>
+              <div class="text-[10px] text-emerald-400">Có ảnh + Audio</div>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800/60">
+              <div class="text-slate-400 font-medium">Part 2</div>
+              <div class="text-sm font-bold text-white mt-0.5">7 câu</div>
+              <div class="text-[10px] text-emerald-400">Có Audio STT</div>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800/60">
+              <div class="text-slate-400 font-medium">Part 3</div>
+              <div class="text-sm font-bold text-white mt-0.5">2 câu</div>
+              <div class="text-[10px] text-slate-400">Hội thoại ngắn</div>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800/60">
+              <div class="text-slate-400 font-medium">Part 5</div>
+              <div class="text-sm font-bold text-emerald-400 mt-0.5">30 câu</div>
+              <div class="text-[10px] text-slate-400">Full 12 chủ điểm</div>
+            </div>
+            <div class="p-2 rounded bg-slate-900 border border-slate-800/60">
+              <div class="text-slate-400 font-medium">Part 7</div>
+              <div class="text-sm font-bold text-white mt-0.5">1 câu</div>
+              <div class="text-[10px] text-slate-400">Memo suy luận</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Đề 2 -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+          <div class="flex items-start justify-between">
+            <div>
+              <span class="text-xs font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-semibold">AI_PRACTICE</span>
+              <h3 class="text-base font-bold text-white mt-1">Câu Luyện Cá Nhân Hoá (AI Generated)</h3>
+              <p class="text-xs text-slate-400">Đơn vị sinh: AI Mentor Copilot (Năm 2026) • Sinh tự động theo lỗi sai</p>
+            </div>
+            <span class="px-2 py-1 rounded bg-slate-800 text-xs font-semibold text-slate-300">5 Câu Hỏi</span>
+          </div>
+
+          <div class="p-3 rounded-lg bg-slate-900 border border-slate-800 text-xs space-y-1.5">
+            <div class="flex justify-between items-center text-slate-300">
+              <span>Chủ điểm rèn luyện:</span>
+              <span class="font-semibold text-purple-400">Part 5 (5 câu hỏi phân hóa cao)</span>
+            </div>
+            <div class="text-slate-400 leading-relaxed text-[11px]">
+              Tập trung khắc phục các bẫy ngữ pháp thường gặp: Vị trí trạng từ, Vị trí tính từ trước danh từ, Mệnh đề quan hệ rút gọn và Câu điều kiện đảo ngữ.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Kho từ vựng & Thuật toán SRS -->
+    <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">2</div>
+          <div>
+            <h2 class="text-lg font-bold text-white">2. Kho Từ Vựng & Thuật Toán Spaced Repetition (SRS)</h2>
+            <p class="text-xs text-slate-400">Hệ thống ghi nhớ ngắt quãng theo đường cong lãng quên Ebbinghaus (SM-2)</p>
+          </div>
+        </div>
+        <span class="text-xs font-mono text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20">684 Flashcards • 1,368 Bản Ghi Tiến Độ</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+          <div class="text-sm font-bold text-slate-200">Trạng Thái SRS Của Ryan Truong (User 2)</div>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="text-slate-400">Thẻ mới (New):</span>
+              <span class="font-mono font-semibold text-slate-300">667 thẻ</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5">
+              <div class="bg-slate-500 h-1.5 rounded-full" style="width: 97.5%"></div>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <span class="text-amber-400">Đang học (Learning):</span>
+              <span class="font-mono font-semibold text-amber-400">9 thẻ</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5">
+              <div class="bg-amber-400 h-1.5 rounded-full" style="width: 1.3%"></div>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <span class="text-emerald-400">Cần ôn tập (Review Stage):</span>
+              <span class="font-mono font-semibold text-emerald-400">8 thẻ</span>
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-1.5">
+              <div class="bg-emerald-400 h-1.5 rounded-full" style="width: 1.2%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-2 p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
+          <div class="text-sm font-bold text-slate-200">Top 8 Chủ Đề Từ Vựng Trọng Tâm</div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">Computers & IT</span>
+              <span class="text-lg font-bold text-blue-400">103 từ</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">General Business</span>
+              <span class="text-lg font-bold text-emerald-400">84 từ</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">Human Resources</span>
+              <span class="text-lg font-bold text-purple-400">54 từ</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">Finance & Accounting</span>
+              <span class="text-lg font-bold text-amber-400">47 từ</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">Marketing & Sales</span>
+              <span class="text-lg font-bold text-rose-400">36 từ</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">Office Operations</span>
+              <span class="text-lg font-bold text-cyan-400">35 từ</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">Contracts & Legal</span>
+              <span class="text-lg font-bold text-indigo-400">31 từ</span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex flex-col justify-between">
+              <span class="text-slate-400 text-[11px]">Business Strategy</span>
+              <span class="text-lg font-bold text-teal-400">28 từ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: 12 Bài Học Ngữ Pháp & Paraphrase Vault -->
+    <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">3</div>
+          <div>
+            <h2 class="text-lg font-bold text-white">3. Hệ Thống 12 Chuyên Đề Ngữ Pháp & Kho Paraphrase Vault</h2>
+            <p class="text-xs text-slate-400">Bộ giáo trình được biên soạn riêng theo tư duy Logic, Root Cause Analysis</p>
+          </div>
+        </div>
+        <span class="text-xs font-mono text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded border border-purple-500/20">12 Bài Học • 10 Cặp Paraphrase Part 7</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">01</span>
+          <div>
+            <div class="font-bold text-white">Vị Trí 4 Loại Từ (Word Forms)</div>
+            <div class="text-slate-400 text-[11px]">Nouns, Verbs, Adjectives, Adverbs • Căn cứ nhận diện 10 giây</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">02</span>
+          <div>
+            <div class="font-bold text-white">Liên Từ vs Giới Từ (Conjunctions vs Prepositions)</div>
+            <div class="text-slate-400 text-[11px]">Because vs Because of, Although vs Despite, During vs While</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">03</span>
+          <div>
+            <div class="font-bold text-white">Dạng Động Từ: To-V hay V-ing? (Gerunds vs Infinitives)</div>
+            <div class="text-slate-400 text-[11px]">Quy tắc các động từ đi với To-V vs V-ing, các ngoại lệ kinh doanh</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">04</span>
+          <div>
+            <div class="font-bold text-white">Câu Bị Động & Cách Nhận Diện Trong 10 Giây</div>
+            <div class="text-slate-400 text-[11px]">Active vs Passive Voice, dấu hiệu có tân ngữ O hoặc giới từ</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">05</span>
+          <div>
+            <div class="font-bold text-white">Hòa Hợp Chủ Ngữ - Vị Ngữ (Subject-Verb Agreement)</div>
+            <div class="text-slate-400 text-[11px]">Singular vs Plural Verbs, bẫy cụm giới từ chen ngang</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">06</span>
+          <div>
+            <div class="font-bold text-white">6 Thì Thời Gian Trọng Tâm Trong Đề Thi TOEIC</div>
+            <div class="text-slate-400 text-[11px]">HT đơn (lịch trình) | HT hoàn thành (since/for) | Quá khứ | Tương lai</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">07</span>
+          <div>
+            <div class="font-bold text-white">Đại Từ & Tính Từ Sở Hữu (Pronouns & Possessives)</div>
+            <div class="text-slate-400 text-[11px]">Chủ ngữ vs Tân ngữ vs Tính từ sở hữu + N vs Đại từ phản thân</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">08</span>
+          <div>
+            <div class="font-bold text-white">Rút Gọn Mệnh Đề Quan Hệ (Participles)</div>
+            <div class="text-slate-400 text-[11px]">V-ing (chủ động làm gì) & V-ed (bị/được tác động)</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">09</span>
+          <div>
+            <div class="font-bold text-white">Thể Giả Định & Động Từ Cầu Khiến (Subjunctive Mood)</div>
+            <div class="text-slate-400 text-[11px]">S1 + demand/recommend/require + that + S2 + (SHOULD) + V-bare</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">10</span>
+          <div>
+            <div class="font-bold text-white">Câu Điều Kiện & Đảo Ngữ (Conditionals & Inversion)</div>
+            <div class="text-slate-400 text-[11px]">Đảo ngữ Should S + V | Were S to-V | Had S + V3/ed</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">11</span>
+          <div>
+            <div class="font-bold text-white">Cấu Trúc So Sánh (Comparisons)</div>
+            <div class="text-slate-400 text-[11px]">Bằng as...as | Hơn more...than / -er | Nhất the most / -est</div>
+          </div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-950/70 border border-slate-800 flex items-start gap-3">
+          <span class="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded">12</span>
+          <div>
+            <div class="font-bold text-white">50 Cụm Từ Đi Liền Nhau (Business Collocations)</div>
+            <div class="text-slate-400 text-[11px]">unanimously approve | conduct a survey | strictly comply with</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 4: Lỗi Sai (Error Logs) & Lỗ Hổng Kiến Thức (Learning Gaps) -->
+    <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold">4</div>
+          <div>
+            <h2 class="text-lg font-bold text-white">4. Nhật Ký Lỗi Sai (Error Logs) & Phân Tích Nguyên Nhân Gốc (RCA)</h2>
+            <p class="text-xs text-slate-400">Theo dõi 9 lỗi sai thực tế của Ryan Truong và lịch trình ôn tập 1→3→7 ngày</p>
+          </div>
+        </div>
+        <span class="text-xs font-mono text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20">9 Lỗi Đã Ghi Nhận</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border border-slate-800 rounded-lg overflow-hidden">
+          <thead class="bg-slate-950 text-slate-400 border-b border-slate-800 uppercase font-semibold text-[10px]">
+            <tr>
+              <th class="p-3">Part - Câu</th>
+              <th class="p-3">Loại Lỗi (RCA)</th>
+              <th class="p-3">Chủ Đề Bẫy</th>
+              <th class="p-3">Nguyên Nhân Gốc (Root Cause)</th>
+              <th class="p-3">Review Stage</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 font-mono">
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-3 font-semibold text-white">Part 5 - Câu 107</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">[GRAMMAR]</span></td>
+              <td class="p-3 text-slate-300 font-sans">Bẫy Vị Trí Tính Từ</td>
+              <td class="p-3 text-slate-400 font-sans">Chọn (D) comprehension thay vì (B) comprehensive đứng trước danh từ.</td>
+              <td class="p-3 text-emerald-400">Stage 1 (Đã ôn lần 1)</td>
+            </tr>
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-3 font-semibold text-white">Part 5 - Câu 108</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">[TIME]</span></td>
+              <td class="p-3 text-slate-300 font-sans">Bẫy Vị Trí Trạng Từ</td>
+              <td class="p-3 text-slate-400 font-sans">Bỏ trống chưa kịp làm do phân bổ thời gian chưa đều.</td>
+              <td class="p-3 text-emerald-400">Stage 1 (Đã ôn lần 1)</td>
+            </tr>
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-3 font-semibold text-white">Part 5 - Câu 118</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">[TIME]</span></td>
+              <td class="p-3 text-slate-300 font-sans">Bẫy Tính Từ Sau Linking Verb</td>
+              <td class="p-3 text-slate-400 font-sans">Bỏ trống do áp lực thời gian.</td>
+              <td class="p-3 text-emerald-400">Stage 1 (Đã ôn lần 1)</td>
+            </tr>
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-3 font-semibold text-white">Part 5 - Câu 123</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">[TIME]</span></td>
+              <td class="p-3 text-slate-300 font-sans">Bẫy Trạng Từ Bổ Nghĩa Cho Adj</td>
+              <td class="p-3 text-slate-400 font-sans">Bỏ trống do áp lực thời gian.</td>
+              <td class="p-3 text-emerald-400">Stage 1 (Đã ôn lần 1)</td>
+            </tr>
+            <tr class="hover:bg-slate-900/50">
+              <td class="p-3 font-semibold text-white">Part 1 - Câu 1 đến 5</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">[TIME]</span></td>
+              <td class="p-3 text-slate-300 font-sans">Bẫy Động Từ & Bị Động being</td>
+              <td class="p-3 text-slate-400 font-sans">Lượt test mô phỏng chưa kịp click chọn đáp án tranh.</td>
+              <td class="p-3 text-slate-400">Stage 0 (Chờ ôn lại)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Section 5: Hoạt Động Người Dùng & Hạ Tầng Lưu Trữ -->
+    <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">5</div>
+          <div>
+            <h2 class="text-lg font-bold text-white">5. Dữ Liệu Hoạt Động & Tài Nguyên Lưu Trữ (System Telemetry)</h2>
+            <p class="text-xs text-slate-400">Chi tiết phiên học, số phút tích lũy và cache âm thanh Edge-TTS</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+          <div class="text-slate-400 font-medium">Người dùng hệ thống</div>
+          <div class="space-y-1">
+            <div class="flex justify-between items-center text-slate-200">
+              <span>Admin: <strong class="text-white">Ryan Truong</strong></span>
+              <span class="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">User ID 2</span>
+            </div>
+            <div class="text-slate-500 text-[11px]">Email: dattruong19122003@gmail.com • Mục tiêu: 800+</div>
+            <div class="flex justify-between items-center text-slate-200 pt-2 border-t border-slate-800/60">
+              <span>Khách: <strong>Guest User</strong></span>
+              <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded">User ID 1</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+          <div class="text-slate-400 font-medium">Phân bố 23 phiên học tập</div>
+          <div class="space-y-1 text-slate-300">
+            <div class="flex justify-between">
+              <span>Làm bài tập (Practice):</span>
+              <span class="font-mono font-semibold text-emerald-400">8 phiên (100 câu)</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Ôn tập từ vựng (SRS):</span>
+              <span class="font-mono font-semibold text-amber-400">5 phiên (18 lượt)</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Học từ mới (Vocab):</span>
+              <span class="font-mono font-semibold text-cyan-400">4 phiên (20 từ)</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Hỏi đáp AI Mentor:</span>
+              <span class="font-mono font-semibold text-purple-400">3 phiên (5 câu hỏi)</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Học bài lý thuyết:</span>
+              <span class="font-mono font-semibold text-blue-400">2 phiên</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+          <div class="text-slate-400 font-medium">Tài nguyên Edge-TTS & Lộ trình</div>
+          <div class="space-y-1 text-slate-300">
+            <div class="flex justify-between">
+              <span>Cached Audio (.mp3):</span>
+              <span class="font-mono font-semibold text-emerald-400">35 file âm thanh</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Lộ trình Sprint (24 tuần):</span>
+              <span class="font-mono font-semibold text-blue-400">36 nhiệm vụ</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Kế hoạch ngày (Study Plan):</span>
+              <span class="font-mono font-semibold text-purple-400">40 mục kế hoạch</span>
+            </div>
+            <div class="flex justify-between">
+              <span>Cloudflare Access:</span>
+              <span class="font-mono font-semibold text-emerald-400">Đã kích hoạt Zero Trust</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="pt-4 border-t border-slate-800 text-center text-xs text-slate-500 space-y-1">
+      <p>TOEIC Self-Study Platform & AI Mentor Copilot • Báo cáo tự động từ cơ sở dữ liệu production</p>
+      <p>Để xuất dữ liệu hoặc nạp thêm bộ đề ETS 2024 mới, sử dụng script <code class="text-slate-400">python scripts/seed_database.py</code></p>
+    </footer>
+
+  </div>
+</body>
+</html>
