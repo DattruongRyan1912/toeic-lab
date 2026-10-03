@@ -27,6 +27,9 @@ $$\text{Chủ ngữ thật (S)} + \mathbf{[\text{Cụm giới từ: of / for / w
 | **`A as well as B` / `along with B`** | **Chia theo A (danh từ đứng đầu)** | *The director along with his assistants **has** arrived.* |
 | **`A number of + N(số nhiều)`** | **Chia số NHIỀU** *(Nghĩa: Nhiều...)* | *A number of issues **have** been detected.* |
 | **`The number of + N(số nhiều)`** | **Chia số ÍT** *(Nghĩa: Số lượng...)* | *The number of active users **is** growing.* |
+| **`One of / Each of + N(số nhiều)`** | **Luôn chia số ÍT** *(Một trong số...)* | *One of our lead engineers **is** presenting today.* |
+| **`Most of / All of / Some of / The majority of / Percent (%) of + N`** | **Chia theo N đứng sau `of`** (N số nhiều ➔ V số nhiều; N không đếm được ➔ V số ít) | *Most of the **servers are** online.* vs *Most of the **information is** confidential.* |
+| **Đại từ bất định (`Everyone, someone, anyone, nothing, each`)** | **Luôn chia số ÍT** | *Everyone in the department **understands** the policy.* |
 | **Khoảng tiền, thời gian, khoảng cách** | **Luôn chia số ÍT** *(coi là 1 đơn vị tổng)* | *Five thousand dollars **is** the maximum budget.* |
 | **Danh từ không đếm được (`information, equipment, luggage, furniture, software`)** | **Luôn chia số ÍT** *(Không bao giờ có dạng số nhiều thêm -s)* | *New diagnostic equipment **has** arrived.* |
 
@@ -91,3 +94,13 @@ All safety equipment imported from the German manufacturer ______ inspected thor
 > **Giải thích**: Từ `equipment` (trang thiết bị) là **danh từ không đếm được**, không bao giờ thêm `-s` và luôn đi với động từ số ít.  
 > ➔ Cần động từ số ít: `was`. (B), (C), (D) đều là động từ số nhiều.  
 > ➔ **Đáp án: (A) was** *(tất cả trang thiết bị an toàn đã được kiểm tra kỹ lưỡng)*.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 01: Subject-Verb Agreement* (Distractor modifiers between Subject and Verb, Collective nouns, Quantifiers + of + Noun, Correlative conjunction agreements).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Hòa hợp Chủ ngữ - Vị ngữ Part 5.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Unit 88: All / all of, most / most of, no / none of*
+  - *Unit 91: Each and every*.

@@ -45,6 +45,25 @@ $$\mathbf{[\text{To-V}]} + \dots, \quad \text{S} + \text{V} \quad (\text{Để l
 3. **be used to / accustomed to + V-ing**: quen với việc gì
 4. **in addition to + V-ing / Noun**: bên cạnh việc gì
 
+### 📌 Cấu trúc 3: Động từ đòi hỏi Tân ngữ + to-V ($V + O + \text{to-V}$)
+ETS rất thích kiểm tra nhóm động từ yêu cầu/cho phép/khuyến khích người khác làm gì:
+$$\mathbf{[\text{V}]} + \text{Tân ngữ (O)} + \mathbf{[\text{to-V}]}$$
+* **Nhóm động từ cốt lõi**: `require, request, ask, allow, permit, enable, encourage, invite, advise, remind, expect, urge`.
+* *Ví dụ*: The lead engineer **reminded all developers** [O] **to write** [to-V] automated unit tests.
+* **Dạng bị động tương ứng (Bẫy ETS: sau bị động vẫn đi với to-V)**:
+  $$\text{S} + \mathbf{[\text{be} + V_{\text{ed}}]} + \mathbf{[\text{to-V}]}$$
+  * *Ví dụ*: All employees **are required to wear** [to-V] safety badges inside the data center.
+
+### 📌 Cấu trúc 4: Động từ đi với cả To-V hoặc V-ing nhưng khác nghĩa
+1. **remember / forget / regret**:
+   * `+ to-V`: nhớ / quên / lấy làm tiếc sẽ phải làm gì (hành động tương lai/nghĩa vụ).
+     * *Ví dụ*: Please **remember to lock** the server room door before leaving.
+   * `+ V-ing`: nhớ / quên / hối hận việc đã làm trong quá khứ.
+     * *Ví dụ*: I **remember verifying** the production checksum yesterday.
+2. **stop**:
+   * `stop to-V`: dừng việc đang làm lại để làm một việc khác.
+   * `stop V-ing`: từ bỏ, chấm dứt hoàn toàn một hành động/thói quen.
+
 ---
 
 ## 3. Bộ Bài Tập Rèn Phản Xạ 5 Câu Chuẩn ETS
@@ -101,3 +120,15 @@ The senior architecture committee is actively considering ______ a microservices
 (D) adopt  
 > **Giải thích**: Cấu trúc động từ: `consider + V-ing` (cân nhắc thực hiện điều gì). `consider` không đi với `to-V`.  
 > ➔ **Đáp án: (B) adopting** *(đang cân nhắc áp dụng một kiến trúc microservices)*.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 03: To-infinitive* (To-V as Subject/Object/Complement, Adjective/Adverbial usage, $V + O + \text{to-V}$).
+  - *Chapter 04: Gerunds* (Verbs followed only by Gerunds, Preposition + Gerund, Idiomatic Gerund expressions).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Gerunds vs Infinitives.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Units 53-54: Verb + -ing / Verb + to...*
+  - *Unit 55: Verb (+ object) + to...*
+  - *Unit 60: To + -ing (look forward to doing, etc.)*.

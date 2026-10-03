@@ -37,6 +37,20 @@ $$\mathbf{[\text{much / significantly / substantially / far / considerably / eve
 $$\mathbf{\text{The}} + \text{So sánh hơn} + \text{S1} + \text{V1}, \quad \mathbf{\text{the}} + \text{So sánh hơn} + \text{S2} + \text{V2}$$
 * *Ví dụ*: **The earlier** we finalize the deployment plan, **the better** the project outcome will be.
 
+### 📌 Bổ trợ: Trạng từ bổ nghĩa cho So sánh nhất & Dạng bất quy tắc
+1. **Trạng từ bổ nghĩa cho So sánh nhất**:
+   $$\mathbf{[\text{by far / easily / quite}]} + \mathbf{\text{the + most + Adj / Adj-est}}$$
+   * *Ví dụ*: This is **by far the most comprehensive** security audit our firm has ever conducted.
+2. **Tính từ / Trạng từ so sánh bất quy tắc cốt lõi**:
+   * `good / well` ➔ `better` ➔ `the best`
+   * `bad / badly` ➔ `worse` ➔ `the worst`
+   * `many / much` ➔ `more` ➔ `the most`
+   * `little` ➔ `less` ➔ `the least`
+   * `far` ➔ `further / farther` ➔ `the furthest / farthest`
+3. **Cấu trúc `the same ... as` (Tương đồng như)**:
+   $$\mathbf{\text{the same}} + (\text{Danh từ}) + \mathbf{\text{as}}$$
+   * *Ví dụ*: The newly patched kernel has **the same performance benchmarks as** the bare-metal build.
+
 ---
 
 ## 3. Bộ Bài Tập Rèn Phản Xạ 5 Câu Chuẩn ETS
@@ -94,3 +108,13 @@ The ______ we conduct comprehensive load testing, the more confident we will be 
 (D) thoroughly  
 > **Giải thích**: Cấu trúc so sánh kép: `The + comparative ..., the + comparative ...`. Vế sau là `the more confident...`. Động từ ở vế trước là `conduct` (thực hiện kiểm thử) ➔ Cần trạng từ ở dạng so sánh hơn: **more thoroughly**.  
 > ➔ **Đáp án: (B) more thoroughly**.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 10: Comparisons* (Equality `as...as`, Comparatives with `than`, Superlatives, Modifiers for Comparatives & Superlatives, Double Comparatives).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Cấu trúc so sánh Part 5 & Part 6.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Units 105-107: Comparison (cheaper, more expensive, as...as)*
+  - *Unit 108: Superlatives (the longest, the most expensive)*.

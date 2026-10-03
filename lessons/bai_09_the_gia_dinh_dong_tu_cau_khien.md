@@ -19,6 +19,19 @@ $$\mathbf{\text{It is}} + \mathbf{[\text{essential / vital / important / necessa
 
 * *Ví dụ*: It is imperative that every developer **submit** [V nguyên mẫu] daily code reviews.
 
+### 📌 Công thức 3: Động từ Sai khiến / Truyền khiến (Causative Verbs)
+ETS rất thích kiểm tra sự khác biệt giữa động từ nguyên mẫu và `to-V` sau các động từ sai khiến:
+1. **Thể chủ động (Nhờ / bắt / cho phép ai làm gì)**:
+   * $\mathbf{have / make / let} + \text{Tân ngữ người} + \mathbf{V_{\text{nguyên mẫu (bare)}}}$:
+     * *Ví dụ*: The lead architect **had the engineering team deploy** [V-bare] the hotfix immediately.
+     * *Ví dụ*: Company policy does not **let contractors access** [V-bare] production credentials.
+   * $\mathbf{get} + \text{Tân ngữ người} + \mathbf{to-V}$ *(Chú ý: `get` bắt buộc đi với `to-V`)*:
+     * *Ví dụ*: We managed to **get the vendor to expedite** [to-V] the hardware delivery.
+2. **Thể bị động (Thuê / nhờ cái gì được làm bởi ai)**:
+   * $\mathbf{have / get} + \text{Tân ngữ vật} + \mathbf{V_{3/ed}}$:
+     * *Ví dụ*: The company **had the financial statements audited** [V3/ed] by an external firm.
+     * *Ví dụ*: Please **get your travel visa renewed** [V3/ed] before next month.
+
 ---
 
 ## 2. Bảng Danh Từ & Động Từ Giả Định Hay Gặp Nhất
@@ -88,3 +101,14 @@ The committee issued a formal recommendation that the current legacy system ____
 > **Giải thích**: Cấu trúc danh từ giả định: `recommendation that + S + (should) be + V3/ed`.  
 > ➔ Động từ to-be ở thể giả định luôn là **be**.  
 > ➔ **Đáp án: (C) be**.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 09: Subjunctive Mood* (Verbs of demanding/suggesting/requesting, Impersonal expressions of necessity `It is essential that...`).
+  - *Chapter 03: Causative Verbs* (`have / make / let + O + V_bare`, `get + O + to-V`, `have/get + O + V_ed`).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Mandative Subjunctive & Causative Verbs Part 5.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Unit 34: Subjunctive (I suggest you do)*
+  - *Unit 46: Have and get something done*.

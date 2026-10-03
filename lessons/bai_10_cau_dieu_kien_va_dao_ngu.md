@@ -32,6 +32,17 @@ $$\mathbf{Had} + \text{Chủ ngữ (S)} + \mathbf{V_{3/ed}}, \quad \text{S} + \t
 * *Câu gốc*: If we had invested in additional cloud servers, the crash would not have occurred.
 * *Câu đảo ngữ*: **Had we invested** in additional cloud servers, the crash would not have occurred.
 
+### 📌 Các cụm từ thay thế cho `If` trong đề thi TOEIC:
+1. **`Unless = If ... not` (Trừ khi, nếu không)**:
+   * Theo sau là mệnh đề khẳng định: `Unless S + V, S + will/can + V`.
+   * *Ví dụ*: **Unless** we receive written confirmation by 5 PM, the booking will be canceled.
+2. **`Provided that / Providing that / As long as` (Miễn là, với điều kiện là)**:
+   * *Ví dụ*: The merger will proceed on schedule **provided that** regulatory approval is granted.
+3. **`In case of / In the event of + Noun Phrase` (Trong trường hợp / Phòng khi)**:
+   * *Ví dụ*: **In the event of** an unscheduled power outage, auxiliary generators start automatically.
+4. **`Without / But for + Noun Phrase` (Nếu không nhờ có / Nếu không vì...)**:
+   * *Ví dụ*: **Without** your dedicated engineering support, we could not have met the sprint deadline.
+
 ---
 
 ## 3. Bộ Bài Tập Rèn Phản Xạ 5 Câu Chuẩn ETS
@@ -90,3 +101,13 @@ Should Mr. Henderson ______ to relocate to the London office, the corporation wi
 (D) deciding  
 > **Giải thích**: Cấu trúc đảo ngữ loại 1: `Should + S + V-nguyên mẫu`. Dù `Mr. Henderson` là số ít, động từ sau `Should` luôn ở dạng nguyên mẫu không chia.  
 > ➔ **Đáp án: (A) decide**.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 11: Conditionals & Inversion* (Real and Unreal Conditionals, Inversion of Conditional Sentences with `Should / Were / Had`, Conditional Conjunctions `provided that, as long as, in case`).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Câu điều kiện & Đảo ngữ Part 5.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Units 38-40: If conditionals (If I do / If I did / If I had done)*
+  - *Unit 115: Unless, as long as, provided/providing that*.

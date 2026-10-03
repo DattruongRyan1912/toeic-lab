@@ -18,7 +18,7 @@
 
 ---
 
-## 2. 2 Quy Tắc Phối Thì Vàng Của ETS
+## 2. 3 Quy Tắc Phối Thì Vàng Của ETS
 
 ### 📌 Quy tắc 1: Cấu trúc `Since` (Bẫy kinh điển số 1 của đề thi TOEIC)
 $$\text{Mệnh đề Hiện tại hoàn thành} \quad + \quad \mathbf{since} \quad + \quad \text{Mệnh đề Quá khứ đơn / Mốc thời gian QK}$$
@@ -29,6 +29,15 @@ $$\text{S} + \mathbf{have / has + V_{3/ed}} \quad + \quad \mathbf{since} \quad +
 Trong mệnh đề phụ bắt đầu bằng: `when, as soon as, before, after, until, once, if`:
 $$\text{Liên từ thời gian} + \mathbf{[\text{Hiện tại đơn (KHÔNG DÙNG WILL)}]}, \quad \mathbf{[\text{Tương lai đơn: will + V}]}$$
 * *Ví dụ*: As soon as the project manager **approves** [HT đơn, không dùng *will approve*] the budget, we **will purchase** [TL đơn] the new hardware.
+
+### 📌 Quy tắc 3: Cấu trúc `By the time` & Thì Hoàn Thành
+1. **Phối thì Quá khứ hoàn thành**:
+   $$\mathbf{By\ the\ time} + \text{S} + \mathbf{V_{\text{quá khứ đơn}}}, \quad \text{S} + \mathbf{had + V_{3/ed}}$$
+   * *Ví dụ*: By the time the auditor **arrived**, the team **had prepared** all log files.
+2. **Phối thì Tương lai hoàn thành**:
+   $$\mathbf{By\ the\ time} + \text{S} + \mathbf{V_{\text{hiện tại đơn}}}, \quad \text{S} + \mathbf{will\ have + V_{3/ed}}$$
+   $$\mathbf{By} + \mathbf{\text{mốc thời gian tương lai}} \quad (\text{by next month, by Friday}), \quad \text{S} + \mathbf{will\ have + V_{3/ed}}$$
+   * *Ví dụ*: By the end of this fiscal year, the company **will have opened** three new data centers.
 
 ---
 
@@ -90,3 +99,15 @@ By the time the keynote speaker arrived at the exhibition center, the introducto
 > **Giải thích**: Cấu trúc: `By the time + S + V(quá khứ đơn: arrived) ➔ Mệnh đề chính chia ở Quá khứ hoàn thành (had + V3/ed)`.  
 > ➔ Cần: `had already ended`.  
 > ➔ **Đáp án: (B) had**.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 05: Tenses* (Simple, Continuous, Perfect, and Perfect Continuous tenses; Time markers; Sequence of tenses with `since`, `by the time`, time clauses).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Chia thì Part 5 & Part 6.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Units 1-4: Present tenses*
+  - *Units 5-8: Past tenses*
+  - *Units 9-16: Present Perfect tenses*
+  - *Units 19-25: Future forms*.

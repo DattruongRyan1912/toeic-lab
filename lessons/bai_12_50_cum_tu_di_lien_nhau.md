@@ -44,7 +44,25 @@
 
 ---
 
-## 3. Bộ Bài Tập Rèn Phản Xạ 5 Câu Chuẩn ETS
+## 3. Cụm Giới Từ & Danh Từ Ghép Thương Mại Cốt Lõi
+
+Trong đề thi ETS Part 5 & 6, dạng câu hỏi cụm giới từ thương mại và danh từ ghép chiếm tỷ lệ câu ăn điểm 3 giây rất cao:
+
+| Cụm từ cố định | Ý nghĩa kinh doanh | Ví dụ đề thi TOEIC |
+| :--- | :--- | :--- |
+| **in accordance with** | theo đúng với / phù hợp với | *in accordance with corporate policy* |
+| **in response to** | để phản hồi lại | *in response to customer feedback* |
+| **on behalf of** | thay mặt cho / đại diện cho | *accept the award on behalf of the team* |
+| **with regard to / in regard to** | liên quan tới / về vấn đề | *inquiries with regard to the merger* |
+| **in compliance with** | tuân thủ theo (quy định) | *in compliance with federal safety laws* |
+| **customer satisfaction** | sự hài lòng của khách hàng | *strive to improve customer satisfaction* |
+| **safety precautions / regulations** | biện pháp / quy định an toàn | *observe all workplace safety precautions* |
+| **expiration date** | ngày hết hạn | *check the expiration date on the coupon* |
+| **performance appraisal / review** | đánh giá hiệu suất công việc | *annual employee performance appraisal* |
+
+---
+
+## 4. Bộ Bài Tập Rèn Phản Xạ 5 Câu Chuẩn ETS
 
 ### Câu 1:
 The internal auditing team will ______ a comprehensive review of all accounting records next Tuesday.  
@@ -98,3 +116,10 @@ Updated developer documentation and API reference guides are ______ available on
 (D) hardly  
 > **Giải thích**: Cụm collocation quen thuộc: `readily available` (luôn có sẵn, sẵn sàng để sử dụng ngay).  
 > ➔ **Đáp án: (B) readily**.
+
+---
+
+## 5. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Oxford Collocations Dictionary for Students of English**: Chuẩn liên kết từ vựng Anh ngữ kinh doanh.
+* **Hackers TOEIC Reading & Vocabulary (David Cho)**: Business Collocations, Fixed Prepositional Phrases & Compound Nouns.
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Tần suất xuất hiện cụm từ Part 5 & Part 6.

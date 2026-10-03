@@ -30,7 +30,7 @@ $$\text{Chủ ngữ (S)} + \mathbf{[\text{to-be} + \text{V3/ed}]} + (\text{Giớ
 | **Hiện tại tiếp diễn** | $am / is / are + V\text{-ing}$ | $am / is / are + being + V_{3/ed}$ | *The website is being updated now.* |
 | **Động từ khuyết thiếu (Modal)** | $can / must / should + V$ | $can / must / should + be + V_{3/ed}$ | *Passwords must be changed every 90 days.* |
 
-### ⚠️ 2 Bẫy ETS đặc biệt:
+### ⚠️ 4 Bẫy ETS đặc biệt:
 1. **Ngoại lệ: Nội động từ (Intransitive Verbs) KHÔNG BAO GIỜ chia bị động**:
    * *occur, happen, take place* (xảy ra, diễn ra)
    * *arrive* (đến nơi), *remain* (duy trì)
@@ -38,6 +38,15 @@ $$\text{Chủ ngữ (S)} + \mathbf{[\text{to-be} + \text{V3/ed}]} + (\text{Giớ
    * ➔ Không bao giờ có `is occurred` hay `was happened`.
 2. **Bị động với 2 tân ngữ (`give, send, offer, provide`)**:
    * *She was offered a managerial position.* (Vẫn còn tân ngữ thứ 2 đứng sau).
+3. **Bị động đi kèm To-V ($\text{be} + V_{\text{3/ed}} + \mathbf{\text{to-V}}$)**:
+   * Nhiều thí sinh máy móc nghĩ rằng sau bị động không được có gì ngoài giới từ, nên khi gặp `to-V` lại tưởng là câu chủ động.
+   * Các cụm kinh điển: `be scheduled to-V` (được lên lịch làm gì), `be expected to-V` (được kỳ vọng), `be required to-V` (bị bắt buộc), `be permitted to-V` (được phép).
+   * *Ví dụ*: The keynote speaker is **scheduled to arrive** at 9:00 AM.
+4. **Các cụm bị động đi với giới từ cố định (không dùng `by`)**:
+   * `be equipped with` (được trang bị với)
+   * `be satisfied / pleased with` (hài lòng với)
+   * `be interested in` / `be involved in` (tham gia vào, quan tâm tới)
+   * `be exposed to` (tiếp xúc với) / `be dedicated to` (cống hiến cho)
 
 ---
 
@@ -99,3 +108,14 @@ All conference badges must ______ at the registration desk prior to entering the
 > **Giải thích**: Cấu trúc modal verb: `must` + ______ + `at the registration desk` (giới từ). Thẻ hội thảo (badges) là vật, phải "được thu nhận".  
 > ➔ Cần thể bị động với modal verb: `must be + V3/ed`.  
 > ➔ **Đáp án: (B) be collected** *(phải được thu nhận tại bàn đăng ký)*.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 02: Passive Voice* (Transitive vs Intransitive verbs in Passive, Passive Voice with Ditransitive Verbs, $be + V_{ed} + \text{to-V}$, Fixed Prepositional Passive).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Thể chủ động - Thể bị động Part 5.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Units 42-44: Passive (is done / was done, be done / been done)*
+  - *Unit 45: It is said that... / He is said to...*
+  - *Unit 46: Have something done*.

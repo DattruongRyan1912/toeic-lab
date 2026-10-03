@@ -19,10 +19,14 @@ ETS luôn đưa cả Liên từ và Giới từ có cùng ý nghĩa vào 4 lựa
 | **Miễn là / Với điều kiện** | *provided that, providing that, as long as* | *in case of (+ N)* |
 | **Trước khi** | *before (+ S + V)* | *prior to, ahead of, before (+ N)* |
 
-### ⚠️ 3 Bẫy ETS hay lừa nhất:
+### ⚠️ 4 Bẫy ETS hay lừa nhất:
 1. **`Although` vs `Despite`**: `Despite` không bao giờ đi với `of` (dù `in spite of` có `of`). Không chọn `despite of`.
 2. **`During` vs `While`**: `During` luôn đi với danh từ chỉ khoảng thời gian (`during the meeting`, `during the conference`), không bao giờ đi với mệnh đề hoặc V-ing (chỉ dùng `while visiting`, không dùng `during visiting`).
-3. **Từ lưỡng tính (vừa là liên từ vừa là giới từ)**: `before`, `after`, `since`, `until`. Cần quan sát động từ đi sau để xác định bản chất.
+3. **Từ lưỡng tính (vừa là liên từ vừa là giới từ)**: `before`, `after`, `since`, `until`. Cần quan sát động từ đi sau để xác định bản chất: nếu có S + V chia thì là Liên từ, nếu chỉ có Noun/V-ing là Giới từ.
+4. **Bẫy Trạng từ liên kết (Conjunctive Adverbs: `however, therefore, furthermore, nevertheless, moreover`)**:
+   - Các từ này **KHÔNG PHẢI liên từ phụ thuộc** nên **KHÔNG ĐƯỢC đứng nối trực tiếp 2 mệnh đề có dấu phẩy**: `*However S + V, S + V*` là **SAI**.
+   - Đúng cấu trúc: `S + V. However, S + V` hoặc `S + V; however, S + V`.
+   - Đề thi ETS thường để cả `Although` và `However` trong 4 đáp án để gài bẫy người chỉ dịch nghĩa mà không nhìn cấu trúc dấu câu!
 
 ---
 
@@ -104,3 +108,15 @@ The merger agreement will proceed as planned ______ both regulatory authorities 
 > **Giải thích**: Phía sau là mệnh đề: `both regulatory authorities` (S) + `issue` (V) + `final compliance approval` (O).  
 > ➔ Cần một **Liên từ điều kiện**: `provided that = as long as = if`. (B) và (D) là giới từ (+ Noun).  
 > ➔ **Đáp án: (A) provided that** *(miễn là cả hai cơ quan quản lý ban hành phê duyệt)*.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 12: Conjunctions* (Subordinating Conjunctions vs Prepositions, Correlative Conjunctions, Conjunctive Adverbs).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận phân loại câu hỏi Liên từ - Giới từ Part 5 & Part 6.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Unit 113: Although / though / even though / in spite of / despite*
+  - *Unit 114: In case*
+  - *Unit 119: For, during and while*
+  - *Unit 120: By and until*.

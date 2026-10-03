@@ -19,7 +19,7 @@
 
 ---
 
-## 2. 4 Vị Trí Vàng Cần Thuộc Lòng
+## 2. 6 Vị Trí Vàng Cần Thuộc Lòng
 
 ### 📌 Vị trí 1: TÍNH TỪ SỞ HỮU (Chiếm 70% câu hỏi dạng này trong TOEIC)
 $$\mathbf{[\text{Tính từ sở hữu: my, your, his, her, its, our, their}]} + \mathbf{[\text{DANH TỪ}]}$$
@@ -39,8 +39,23 @@ $$\text{Ngoại động từ (V)} / \text{Giới từ (Prep)} + \mathbf{[\text{m
    $$\text{S} + \mathbf{[\text{-self}]} + \text{V} + \text{O} \quad \text{hoặc} \quad \text{S} + \text{V} + \text{O} + \mathbf{[\text{-self}]}$$
    * *Ví dụ*: The CEO **himself** signed the merger agreement.
    * *Ví dụ*: She resolved the database issue **herself**.
-2. **Cụm thành ngữ cố định**: `by + reflexiv pronoun = on one's own` (tự mình, độc lập).
+2. **Cụm thành ngữ cố định**: `by + reflexive pronoun = on one's own` (tự mình, độc lập).
    * *Ví dụ*: `by himself = on his own`.
+
+### 📌 Vị trí 5: ĐẠI TỪ CHỈ ĐỊNH THAY THẾ (`that of` / `those of`)
+ETS thường xuyên kiểm tra việc dùng `that` hoặc `those` thay thế cho danh từ đứng trước để tránh lặp từ trong câu so sánh:
+* Dùng `that of` thay thế cho danh từ **số ít** hoặc **không đếm được**:
+  * *Ví dụ*: The warranty period of this server is longer than **that of** [= the warranty period of] the competitor's model.
+* Dùng `those of` thay thế cho danh từ **số nhiều**:
+  * *Ví dụ*: The technical skills of our developers are superior to **those of** [= the technical skills of] external contractors.
+
+### 📌 Vị trí 6: Cấu trúc `Those who` & Đại từ bất định
+* **`Those who + V(số nhiều)`**: Những người mà... (= Anyone who + V(số ít)).
+  * *Ví dụ*: **Those who** wish to participate in the workshop must enroll by Friday.
+* **Phân biệt `another / other / the other`**:
+  * `another + N(số ít)`: một cái/người khác (trong số nhiều).
+  * `other + N(số nhiều/không đếm được)`: những cái/người khác.
+  * `the other (+ N)`: cái còn lại trong hai cái.
 
 ---
 
@@ -102,3 +117,14 @@ Although several proposals were submitted to the board, none was as innovative a
 (D) yourself  
 > **Giải thích**: So sánh bản đề xuất của hội đồng với "bản đề xuất của bạn". `yours` là **Đại từ sở hữu** thay thế cho cả cụm `your proposal`.  
 > ➔ **Đáp án: (C) yours**.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 07: Pronouns* (Personal Pronouns, Possessive Adjectives & Pronouns, Reflexive Pronouns, Demonstrative Pronouns `that/those`, Indefinite Pronouns).
+* **ETS Official TOEIC Actual Tests (2020-2024)**: Ma trận câu hỏi Đại từ & Sở hữu Part 5.
+* **English Grammar in Use (Raymond Murphy)**:
+  - *Units 82-84: Myself / yourself / themselves, A friend of mine / my own friend*
+  - *Units 85-86: There... and it...*
+  - *Unit 87: Some and any, another / other*.

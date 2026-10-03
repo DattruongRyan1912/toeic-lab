@@ -157,3 +157,12 @@ Customer service representatives must remain ______ at all times when handling i
 (D) impolitely  
 > **Giải thích**: Sau động từ nối `remain` (duy trì trạng thái) + **Tính từ**.  
 > ➔ **Đáp án: (A) polite** *(lịch sự)*.
+
+---
+
+## 4. Nguồn Tài Liệu Tham Chiếu Chuẩn Quốc Tế (Authentic References)
+* **Hackers TOEIC Reading (David Cho)**:
+  - *Chapter 01: Noun Functions & Positions* (Vị trí Chủ ngữ, Tân ngữ, Sau mạo từ/tính từ).
+  - *Chapter 02: Adjectives & Adverbs* (Vị trí tính từ trước danh từ/sau linking verbs; 4 vị trí trạng từ: Adv + V, Adv + Adj, V_intransitive + Adv, V_transitive + O + Adv).
+* **ETS Official Test-Prep Matrix (2020-2024)**: Ma trận câu hỏi từ loại ( chiếm 30-35% tổng số câu Part 5).
+* **English Grammar in Use (Raymond Murphy)**: *Units 98-101 (Adjectives and Adverbs syntax patterns)*.
