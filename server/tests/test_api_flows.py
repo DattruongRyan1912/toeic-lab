@@ -128,6 +128,11 @@ def test_flashcard_create_dedupe_delete_and_ai_fill_offline(client, seeded):
 
 # --------------------------------------------------------------------------- quiz -> error log -> gaps -> lessons -> dashboard
 def test_quiz_submission_feeds_error_log_gaps_lessons_and_dashboard(client, seeded):
+    # Pin to a study day (Monday) so planner schedules practice tasks deterministically
+    today = timeutil.local_today()
+    monday = today - timedelta(days=today.weekday())
+    timeutil.set_now(timeutil.local_datetime_utc(monday, 9, 0))
+
     questions = client.get("/api/tests/ETS2024_01/questions", params={"part": "Part 5"}).json()
     assert [q["question_no"] for q in questions] == [101, 108, 111]
     ids = {q["question_no"]: q["id"] for q in questions}

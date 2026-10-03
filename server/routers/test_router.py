@@ -62,10 +62,15 @@ def list_mock_tests(
 ):
     query = db.query(MockTest)
     if category == "mock":
-        query = query.filter((MockTest.category != "drill") | (MockTest.category.is_(None)))
-        query = query.filter(~MockTest.test_id.like("DRILL_%"))
+        query = query.filter(
+            (MockTest.category == "mock") | ((MockTest.category.is_(None)) & (~MockTest.test_id.like("DRILL_%")))
+        )
     elif category == "drill":
         query = query.filter((MockTest.category == "drill") | (MockTest.test_id.like("DRILL_%")))
+    elif category == "all":
+        query = query.filter(MockTest.category != "unverified")
+    elif category:
+        query = query.filter(MockTest.category == category)
 
     result = []
     for test in query.order_by(MockTest.year.desc(), MockTest.test_id.asc()).all():
