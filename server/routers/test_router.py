@@ -38,6 +38,7 @@ def serialize_question(question: TestQuestion) -> dict:
         "paraphrase_pair": question.paraphrase_pair,
         "source": question.source or "seed",
         "image_url": question.image_url,
+        "audio_url": question.audio_url,
         **curriculum.classify_question(question),
     }
 

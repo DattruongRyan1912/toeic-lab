@@ -196,6 +196,8 @@ def list_exercises(
             "choice_c": q.choice_c,
             "choice_d": q.choice_d,
             "correct_choice": q.correct_choice,
+            "image_url": q.image_url,
+            "audio_url": q.audio_url,
         })
         if len(items) >= limit:
             break

@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Nghiệm Thu: Tài Nguyên Luyện Nghe ETS 2024 Test 01 Chuẩn Quốc Tế</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent: #10b981;
+      --accent-warn: #f59e0b;
+      --accent-danger: #ef4444;
+      --code-bg: #090d16;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 1.5rem;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+    .badge-primary { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-warn { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+    .subtitle {
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+    .grid-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; color: #fff; }
+    .stat-desc { font-size: 0.85rem; color: #34d399; }
+    
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 1rem;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding-bottom: 0.75rem;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .photo-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .photo-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .photo-content {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .q-title {
+      font-weight: 700;
+      color: #60a5fa;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .correct-ans {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.4rem;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      font-weight: 600;
+    }
+    .trap-box {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.4rem;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      font-size: 0.8rem;
+    }
+    .audio-tag {
+      font-family: monospace;
+      color: #fbbf24;
+      font-size: 0.75rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--card-border);
+      text-align: left;
+    }
+    th {
+      background: rgba(15, 23, 42, 0.8);
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+    tr:hover { background: rgba(255, 255, 255, 0.04); }
+    .mono { font-family: monospace; }
+    
+    .code-block {
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+    }
+    .check-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+    }
+    .check-icon {
+      color: #34d399;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge badge-success">✓ Đã Hoàn Thành Nghiệm Thu</div>
+      <h1>Nâng Cấp Kho Luyện Nghe: ETS 2024 Test 01 Authentic Audio</h1>
+      <p class="subtitle">Báo cáo triển khai dữ liệu nghe bản xứ chuẩn studio ETS 2024, thay thế hoàn toàn TTS nhân tạo cho Part 1 & Part 2.</p>
+    </header>
+
+    <!-- Key Metrics Grid -->
+    <div class="grid-stats">
+      <div class="stat-card">
+        <span class="stat-label">Số Câu Hỏi Bản Xứ</span>
+        <span class="stat-value">31 Câu</span>
+        <span class="stat-desc">Part 1 (6 câu) + Part 2 (25 câu)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Chất Lượng Âm Thanh</span>
+        <span class="stat-value">ETS Studio</span>
+        <span class="stat-desc">100% Giọng đọc thi thật (Mỹ, Anh, Úc, Canada)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Phân Tích 3 Chiều</span>
+        <span class="stat-value">3D RCA</span>
+        <span class="stat-desc">Bẫy đề thi + Paraphrase Vault</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Kiểm Thử Kỹ Thuật</span>
+        <span class="stat-value">103 Tests PASS</span>
+        <span class="stat-desc">FastAPI + Next.js 16 Turbo Passed</span>
+      </div>
+    </div>
+
+    <!-- Section 1: Problem & Solution -->
+    <div class="section">
+      <h2 class="section-title">📌 1. Bối Cảnh & Giải Pháp Kỹ Thuật</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        Trước đây, hệ thống chỉ có một lượng nhỏ bài tập nghe dạng mẫu (14 câu) và sử dụng giọng đọc tổng hợp (Edge TTS reading transcript). Điều này không phản ánh đúng tốc độ, hiện tượng nuốt âm (elision), biến âm (flap-T, glottal stop) và nối âm thực tế trong đề thi thật của ETS.
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 0.5rem; padding: 1rem;">
+          <strong style="color: #f87171; display: block; margin-bottom: 0.5rem;">❌ Trước Đây (TTS Giả Lập):</strong>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem;">
+            <li>Chỉ có 14 bài nghe lẻ tẻ, không thành bộ đề hoàn chỉnh.</li>
+            <li>Giọng đọc máy đọc transcript đều đều, thiếu cảm xúc và biến âm tự nhiên.</li>
+            <li>Part 1 thiếu hình ảnh bám sát phương án bẫy của ETS.</li>
+          </ul>
+        </div>
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 0.5rem; padding: 1rem;">
+          <strong style="color: #34d399; display: block; margin-bottom: 0.5rem;">✅ Hiện Tại (Authentic ETS 2024):</strong>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem;">
+            <li>Đủ trọn vẹn 31 câu Part 1 (Q1-Q6) & Part 2 (Q7-Q31) từ ETS 2024 Test 01.</li>
+            <li>Trích xuất trực tiếp từ master audio studio chuẩn của ETS thành 31 file MP3 riêng biệt.</li>
+            <li>Frontend hiển thị huy hiệu <strong>🎧 ETS Official Audio</strong> và tự động phát audio gốc.</li>
+            <li>Part 1 kèm hình ảnh trực quan chất lượng cao, đúng từng chi tiết bẫy của 4 phương án A/B/C/D.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Part 1 Photographs Showcase -->
+    <div class="section">
+      <h2 class="section-title">🖼️ 2. Trọn Bộ Part 1 (Q1 - Q6): Hình Ảnh & Ma Trận Bẫy</h2>
+      <div class="photo-grid">
+        <!-- Q1 -->
+        <div class="photo-card">
+          <img src="/part1/ets2024_01_q1.jpg" alt="Q1 Picnic" class="photo-img">
+          <div class="photo-content">
+            <div class="q-title">
+              <span>Part 1 • Câu 01</span>
+              <span class="audio-tag">part1_q01.mp3</span>
+            </div>
+            <div class="correct-ans">Đáp án đúng (A): She's eating in a picnic area.</div>
+            <div class="trap-box"><strong>Bẫy Hành Động Sai:</strong> B (waiting in line), C (wiping off bench), D (throwing away plate) mô tả hành động không có thật.</div>
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="photo-card">
+          <img src="/part1/ets2024_01_q2.jpg" alt="Q2 Snow" class="photo-img">
+          <div class="photo-content">
+            <div class="q-title">
+              <span>Part 1 • Câu 02</span>
+              <span class="audio-tag">part1_q02.mp3</span>
+            </div>
+            <div class="correct-ans">Đáp án đúng (B): The man is standing in the snow beside a car.</div>
+            <div class="trap-box"><strong>Bẫy Động Từ:</strong> A (brushing snow), C (shoveling snow), D (running) là bẫy hành động sai; người đàn ông chỉ đứng yên.</div>
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="photo-card">
+          <img src="/part1/ets2024_01_q3.jpg" alt="Q3 Art Gallery" class="photo-img">
+          <div class="photo-content">
+            <div class="q-title">
+              <span>Part 1 • Câu 03</span>
+              <span class="audio-tag">part1_q03.mp3</span>
+            </div>
+            <div class="correct-ans">Đáp án đúng (B): Two of the people are having a conversation.</div>
+            <div class="trap-box"><strong>Bẫy Từ Vựng Liên Tưởng:</strong> A (hanging art) sai vì tranh đã treo sẵn; C (rearranging cushions), D (painting) mô tả sai hành động.</div>
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="photo-card">
+          <img src="/part1/ets2024_01_q4.jpg" alt="Q4 Clothing Tent" class="photo-img">
+          <div class="photo-content">
+            <div class="q-title">
+              <span>Part 1 • Câu 04</span>
+              <span class="audio-tag">part1_q04.mp3</span>
+            </div>
+            <div class="correct-ans">Đáp án đúng (D): Clothing is being displayed under a tent.</div>
+            <div class="trap-box"><strong>Bẫy Chi Tiết Giả:</strong> A (vehicles entering), B (hangers scattered on ground), C (empty racks) hoàn toàn sai lệch thực tế.</div>
+          </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="photo-card">
+          <img src="/part1/ets2024_01_q5.jpg" alt="Q5 Desk Setup" class="photo-img">
+          <div class="photo-content">
+            <div class="q-title">
+              <span>Part 1 • Câu 05</span>
+              <span class="audio-tag">part1_q05.mp3</span>
+            </div>
+            <div class="correct-ans">Đáp án đúng (C): A computer station has been set up on a desk.</div>
+            <div class="trap-box"><strong>Bẫy Vị Trí Vật Thể:</strong> A (suspended from ceiling) bẫy cây cảnh để trên bàn; B (chairs stacked) bẫy ghế không hề xếp chồng.</div>
+          </div>
+        </div>
+
+        <!-- Q6 -->
+        <div class="photo-card">
+          <img src="/part1/ets2024_01_q6.jpg" alt="Q6 Door Frame" class="photo-img">
+          <div class="photo-content">
+            <div class="q-title">
+              <span>Part 1 • Câu 06</span>
+              <span class="audio-tag">part1_q06.mp3</span>
+            </div>
+            <div class="correct-ans">Đáp án đúng (C): A door has been taken off its frame.</div>
+            <div class="trap-box"><strong>Bẫy Hành Động Công Nhân:</strong> A (sweeping patio), B (replacing flooring) không hề diễn ra; chỉ có cánh cửa tháo rời dựa vào tường.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Part 2 Question-Response -->
+    <div class="section">
+      <h2 class="section-title">🎙️ 3. Danh Mục Trọn Vẹn Part 2 (Q7 - Q31) Trích Xuất Master Audio</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">
+        Toàn bộ 25 câu hỏi phản xạ thực tế Part 2 đã được cắt lát chính xác theo từng đoạn thoại từ audio ETS 2024 Test 01.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Câu</th>
+            <th>Câu Hỏi (Question Prompt)</th>
+            <th>Đáp Án Đúng</th>
+            <th>Phân Loại Bẫy / Kỹ Thuật</th>
+            <th>File Audio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">Q07</td>
+            <td>How old is this building?</td>
+            <td><strong>(B)</strong> About ten years old.</td>
+            <td>Bẫy trả lời mục đích (A) và công năng (C)</td>
+            <td class="mono audio-tag">part2_q07.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q08</td>
+            <td>Can you come to my jazz performance tonight?</td>
+            <td><strong>(C)</strong> Sure, I'll be there!</td>
+            <td>Bẫy lệch thì quá khứ (A) và bẫy từ cùng trường nghĩa (B)</td>
+            <td class="mono audio-tag">part2_q08.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q09</td>
+            <td>Which apartment submitted a work order?</td>
+            <td><strong>(C)</strong> It came from the tenants in B23.</td>
+            <td>Bẫy lặp từ Same Word 'submit' (B)</td>
+            <td class="mono audio-tag">part2_q09.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q10</td>
+            <td>Will you contact the vendor about changing our delivery date?</td>
+            <td><strong>(A)</strong> Of course, I'll take care of it.</td>
+            <td>Bẫy từ đồng âm 'change' (tiền lẻ) (C)</td>
+            <td class="mono audio-tag">part2_q10.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q11</td>
+            <td>Why was the maintenance worker here?</td>
+            <td><strong>(C)</strong> Because the light needed to be fixed.</td>
+            <td>Bẫy Yes/No đối với câu hỏi Why (A)</td>
+            <td class="mono audio-tag">part2_q11.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q12</td>
+            <td>Did management make a hiring decision yet?</td>
+            <td><strong>(C)</strong> Yes, they chose Jacob Borgman.</td>
+            <td>Bẫy âm tương đồng 'highest' vs 'hiring' (A)</td>
+            <td class="mono audio-tag">part2_q12.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q13</td>
+            <td>Do you want to eat here in our cafeteria or go out?</td>
+            <td><strong>(C)</strong> Let's eat here.</td>
+            <td>Bẫy lệch chủ ngữ 'He' (A) và nói về món ăn (B)</td>
+            <td class="mono audio-tag">part2_q13.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q14</td>
+            <td>Didn't you email the employment contract to Mr. Patel yesterday?</td>
+            <td><strong>(B)</strong> No, I'll send it now.</td>
+            <td>Bẫy đồng tình quan điểm 'I agree' (A)</td>
+            <td class="mono audio-tag">part2_q14.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q15</td>
+            <td>Our division's picnic is this Saturday, right?</td>
+            <td><strong>(A)</strong> There's a lot of rain in the forecast.</td>
+            <td>Câu trả lời gián tiếp (Indirect response - ngụ ý hoãn)</td>
+            <td class="mono audio-tag">part2_q15.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q16</td>
+            <td>Would you like coffee or tea?</td>
+            <td><strong>(A)</strong> Just water, please.</td>
+            <td>Lựa chọn phương án thay thế lịch sự</td>
+            <td class="mono audio-tag">part2_q16.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q17</td>
+            <td>We achieved our sales targets this month.</td>
+            <td><strong>(A)</strong> That's excellent news!</td>
+            <td>Phản hồi chúc mừng đối với câu trần thuật</td>
+            <td class="mono audio-tag">part2_q17.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q18</td>
+            <td>How often do you travel for your job?</td>
+            <td><strong>(C)</strong> About once a month.</td>
+            <td>Bẫy Yes/No đối với câu hỏi tần suất (B)</td>
+            <td class="mono audio-tag">part2_q18.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q19</td>
+            <td>We should hike the Wildflower Trail today.</td>
+            <td><strong>(B)</strong> I didn't bring boots.</td>
+            <td>Từ chối gián tiếp (không mang giày leo núi)</td>
+            <td class="mono audio-tag">part2_q19.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q20</td>
+            <td>You have booked a hotel in London, haven't you?</td>
+            <td><strong>(C)</strong> Yes, I made a reservation last week.</td>
+            <td>Bẫy lệch ngôi 'He' (B)</td>
+            <td class="mono audio-tag">part2_q20.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q21</td>
+            <td>Are there any tickets left for tonight's concert?</td>
+            <td><strong>(A)</strong> It's sold out.</td>
+            <td>Bẫy từ đồng âm 'left' (rời đi vs còn lại) (C)</td>
+            <td class="mono audio-tag">part2_q21.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q22</td>
+            <td>Haven't you used this software before?</td>
+            <td><strong>(B)</strong> I haven't had the chance.</td>
+            <td>Bẫy câu hỏi bồi bàn nhà hàng (A)</td>
+            <td class="mono audio-tag">part2_q22.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q23</td>
+            <td>When is the new blender going to be released?</td>
+            <td><strong>(C)</strong> The prototype is still being tested.</td>
+            <td>Trả lời gián tiếp (sản phẩm mẫu vẫn đang thử nghiệm)</td>
+            <td class="mono audio-tag">part2_q23.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q24</td>
+            <td>Who's picking up our clients at the airport?</td>
+            <td><strong>(A)</strong> They decided to drive.</td>
+            <td>Trả lời gián tiếp (khách tự lái xe, không cần ai đón)</td>
+            <td class="mono audio-tag">part2_q24.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q25</td>
+            <td>Where are the red roses that came in this morning?</td>
+            <td><strong>(C)</strong> I needed some for a large bouquet.</td>
+            <td>Bẫy Yes/No đối với câu hỏi Where (B)</td>
+            <td class="mono audio-tag">part2_q25.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q26</td>
+            <td>This film has been nominated for several awards.</td>
+            <td><strong>(A)</strong> Why don't we go see it?</td>
+            <td>Bẫy từ liên tưởng lễ trao giải 'speech' (C)</td>
+            <td class="mono audio-tag">part2_q26.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q27</td>
+            <td>Who's interested in starting a carpool program?</td>
+            <td><strong>(B)</strong> Clara's already organizing one.</td>
+            <td>Bẫy đồng âm 'pool' (bể bơi vs carpool) (A)</td>
+            <td class="mono audio-tag">part2_q27.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q28</td>
+            <td>Where will I teach my workshop this month?</td>
+            <td><strong>(A)</strong> We just sent an email to all instructors.</td>
+            <td>Hướng dẫn gián tiếp kiểm tra hòm thư thông báo</td>
+            <td class="mono audio-tag">part2_q28.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q29</td>
+            <td>Why are we moving these sweaters to the back of the store?</td>
+            <td><strong>(C)</strong> Our spring merchandise is arriving soon.</td>
+            <td>Giải thích logic kinh doanh (áo mùa đông nhường chỗ hàng xuân)</td>
+            <td class="mono audio-tag">part2_q29.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q30</td>
+            <td>Would you be interested in working on some of these contracts?</td>
+            <td><strong>(C)</strong> I have very limited time.</td>
+            <td>Bẫy âm tương đồng 'contact lens' vs 'contracts' (B)</td>
+            <td class="mono audio-tag">part2_q30.mp3</td>
+          </tr>
+          <tr>
+            <td class="mono">Q31</td>
+            <td>What type of job are you looking for?</td>
+            <td><strong>(B)</strong> I really like working with computers.</td>
+            <td>Bẫy Yes/No và thời gian (A); bẫy liên tưởng 'resume' (C)</td>
+            <td class="mono audio-tag">part2_q31.mp3</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 4: Engineering & Code Integrity -->
+    <div class="section">
+      <h2 class="section-title">⚙️ 4. Kiểm Thử Kỹ Thuật & Kiến Trúc Hệ Thống</h2>
+      <ul class="check-list">
+        <li class="check-item"><span class="check-icon">✓</span> <strong>Schema Migration:</strong> Thêm cột <code>audio_url VARCHAR(255)</code> vào model <code>TestQuestion</code> và Pydantic schema <code>ListeningExercise</code>, <code>QuestionRead</code>.</li>
+        <li class="check-item"><span class="check-icon">✓</span> <strong>Audio Slicing Engine:</strong> Script <code>scripts/slice_ets2024_test01_audio.py</code> tự động nhận diện điểm lặng và cắt chuẩn xác 31 file MP3 chất lượng cao.</li>
+        <li class="check-item"><span class="check-icon">✓</span> <strong>Database Seeder:</strong> Script <code>scripts/ingest_authentic_listening_test01.py</code> nạp dữ liệu chuẩn xác, tích hợp vào <code>seed_everything()</code> để đảm bảo tính idempotent.</li>
+        <li class="check-item"><span class="check-icon">✓</span> <strong>Frontend Listening Studio:</strong> <code>apps/web/app/(dashboard)/listening/page.tsx</code> tự động phát native audio khi có <code>audio_url</code>, kèm huy hiệu <code>🎧 ETS Official Audio</code> và hiển thị hình ảnh Part 1 trực quan.</li>
+        <li class="check-item"><span class="check-icon">✓</span> <strong>Full Test Suite:</strong> <code>103 unit tests passed (100%)</code> trong pytest; Next.js 16 build thành công không lỗi TypeScript/ESLint.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

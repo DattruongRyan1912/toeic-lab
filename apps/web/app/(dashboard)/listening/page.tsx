@@ -117,20 +117,20 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
       return;
     }
 
-    const audioUrl = getAudioUrl(exercise.sentence, exercise.voice, playbackSpeed);
+    const audioUrl = exercise.audio_url || getAudioUrl(exercise.sentence, exercise.voice, playbackSpeed);
     const audio = new Audio(audioUrl);
     audioRef.current = audio;
     audio.playbackRate = playbackSpeed;
     audio.onended = () => setIsPlaying(false);
     audio.onerror = () => {
       setIsPlaying(false);
-      toast.add({ title: "Không phát được âm thanh", description: "Lỗi kết nối tới giọng đọc bản xứ", type: "error" });
+      toast.add({ title: "Không phát được âm thanh", description: "Lỗi kết nối tới file audio ETS hoặc giọng đọc bản xứ", type: "error" });
     };
     audio.play().then(
       () => setIsPlaying(true),
       () => setIsPlaying(false),
     );
-  }, [exercise.sentence, exercise.voice, getAudioUrl, isPlaying, playbackSpeed]);
+  }, [exercise.audio_url, exercise.sentence, exercise.voice, getAudioUrl, isPlaying, playbackSpeed]);
 
   const replayNativeAudio = useCallback(() => {
     if (audioRef.current) {
@@ -373,6 +373,12 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
             <Badge variant="secondary" className="capitalize text-xs shrink-0">
               Độ khó: {exercise.difficulty}
             </Badge>
+            {exercise.audio_url && (
+              <Badge className="bg-amber-500/10 text-amber-700 border-amber-300 dark:border-amber-800 dark:text-amber-400 font-medium text-xs shrink-0 flex items-center gap-1">
+                <span>🎧</span>
+                <span>ETS Official Audio</span>
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-1">
@@ -432,6 +438,22 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
             Lắng nghe ngữ điệu và trọng âm câu với giọng bản ngữ {accentInfo.label}
           </div>
         </div>
+
+        {/* Part 1 Photograph Display */}
+        {exercise.image_url && (
+          <div className="flex flex-col items-center justify-center p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-800">
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2.5 flex items-center gap-1.5 self-start">
+              <span>📷</span>
+              <span>Hình ảnh Part 1 (ETS Official Photograph)</span>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={exercise.image_url}
+              alt={`Part 1 Question ${exercise.question_no ?? ""}`}
+              className="max-h-80 w-auto object-contain rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm"
+            />
+          </div>
+        )}
 
         {/* DICTATION MODE */}
         {mode === "dictation" && (
@@ -1041,7 +1063,7 @@ function ExerciseStudio({ exercise, mode }: ExerciseStudioProps) {
 }
 
 export default function ListeningStudioPage() {
-  const { data: exercises, error, loading, reload } = useApi<ListeningExercise[]>("/listening/exercises?limit=40");
+  const { data: exercises, error, loading, reload } = useApi<ListeningExercise[]>("/listening/exercises?limit=100");
 
   const [selectedPart, setSelectedPart] = useState<string>("all");
   const [currentIndex, setCurrentIndex] = useState<number>(0);

@@ -191,6 +191,7 @@ class QuestionRead(BaseModel):
     error_type: str
     lesson_number: Optional[int] = None
     image_url: Optional[str] = None
+    audio_url: Optional[str] = None
     source: Optional[str] = None
 
 
@@ -939,6 +940,8 @@ class ListeningExercise(BaseModel):
     choice_c: Optional[str] = None
     choice_d: Optional[str] = None
     correct_choice: Optional[str] = None
+    image_url: Optional[str] = None
+    audio_url: Optional[str] = None
 
 
 class ListeningTrackRequest(BaseModel):

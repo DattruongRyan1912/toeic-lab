@@ -328,6 +328,7 @@ export interface TestQuestionItem {
   lesson_number?: number | null;
   source?: string | null;
   image_url?: string | null;
+  audio_url?: string | null;
 }
 
 export interface MockTestItem {
@@ -755,6 +756,8 @@ export interface ListeningExercise {
   choice_c: string | null;
   choice_d: string | null;
   correct_choice: string | null;
+  image_url?: string | null;
+  audio_url?: string | null;
 }
 
 export interface VoiceCoachFeedback {

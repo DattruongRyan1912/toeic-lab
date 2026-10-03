@@ -298,16 +298,6 @@ def seed_all():
             db.commit()
 
         SAMPLE_QUESTIONS = [
-            ("ETS2024_01", "Part 2", 14,
-             "Where did Mr. Davis go for the afternoon meeting?",
-             "He went out at two o'clock.",
-             "Yes, the meeting was productive.",
-             "Please check his public schedule on the intranet.",
-             None, "C",
-             "Đáp án C trả lời gián tiếp: Thay vì nói địa điểm, speaker hướng dẫn kiểm tra lịch công tác.",
-             "[Bẫy Similar Sound] Đáp án A dùng từ 'went out' nghe giống câu hỏi nhưng lệch nghĩa thì. Đáp án B là bẫy Yes/No đối với câu hỏi Where.",
-             "where did he go = check his calendar/schedule"),
-
             ("ETS2024_01", "Part 5", 101,
              "Customer service representatives must speak ___ and politely when handling client inquiries.",
              "clear", "clearly", "clearness", "cleared", "B",
@@ -400,6 +390,9 @@ def seed_everything():
     from scripts.ingest_authentic_drills import ingest_authentic_drills
 
     ingest_authentic_drills()
+    from scripts.ingest_authentic_listening_test01 import ingest as ingest_listening_test01
+
+    ingest_listening_test01()
 
 
 def database_is_empty() -> bool:
