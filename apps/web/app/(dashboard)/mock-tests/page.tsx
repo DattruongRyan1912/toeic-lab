@@ -70,14 +70,12 @@ function MockTestsContent() {
   let questionsPath: string | null = null;
   if (pageMode === "smart") questionsPath = "/practice/smart?count=15";
   else if (pageMode === "review") questionsPath = "/practice/review-queue?limit=30";
-  else if (test) {
-    questionsPath = lesson
-      ? `/tests/${encodeURIComponent(test.test_id)}/questions?lesson=${lesson}`
-      : `/tests/${encodeURIComponent(test.test_id)}/questions${part ? `?part=${encodeURIComponent(part)}` : ""}`;
+  else if (lesson) {
+    questionsPath = `/knowledge/lessons/${lesson}/drill`;
+  } else if (test) {
+    questionsPath = `/tests/${encodeURIComponent(test.test_id)}/questions${part ? `?part=${encodeURIComponent(part)}` : ""}`;
   }
   const questions = useApi<PracticeQuestion[]>(questionsPath);
-  // Lesson drills also include personalized AI questions of that lesson
-  const aiLesson = useApi<PracticeQuestion[]>(pageMode === "practice" && lesson && test?.test_id !== "AI_PRACTICE" ? `/tests/AI_PRACTICE/questions?lesson=${lesson}` : null);
 
   const setMode = (mode: PageMode) => {
     setSession(0);
@@ -101,15 +99,14 @@ function MockTestsContent() {
   if (tests.error) return <ErrorState message={tests.error} onRetry={tests.reload} />;
   if (tests.loading || !tests.data) return <LoadingState label="Đang tải ngân hàng đề..." />;
 
-  const extra = (aiLesson.data ?? []).filter((q) => !(questions.data ?? []).some((x) => x.id === q.id));
-  const list: PracticeQuestion[] = [...(questions.data ?? []), ...extra];
+  const list: PracticeQuestion[] = questions.data ?? [];
   const limit = list.length ? timeLimitFor(list) : 0;
   const quizMode: PracticeMode = pageMode === "practice" ? "practice" : pageMode;
   const title =
     pageMode === "smart" ? "Luyện thông minh (cá nhân hoá)"
       : pageMode === "review" ? "Ôn câu sai đến hạn"
         : pageMode === "exam" ? `Thi thật bấm giờ • ${part ?? ""}`
-          : lesson ? `Chuyên đề Bài ${String(lesson).padStart(2, "0")}` : `${test?.name ?? ""} • ${part ?? ""}`;
+          : lesson ? `Luyện Phản Xạ Chuyên Đề: Bài ${String(lesson).padStart(2, "0")}` : `${test?.name ?? ""} • ${part ?? ""}`;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -153,7 +150,7 @@ function MockTestsContent() {
 
           <Card className="relative overflow-hidden border-blue-200 bg-gradient-to-r from-blue-50/80 via-white to-white dark:border-blue-500/30 dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900">
             <CardHeader>
-              {(pageMode === "practice" || pageMode === "exam") && (
+              {!lesson && (pageMode === "practice" || pageMode === "exam") && (
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   {tests.data.map((item) => (
                     <button
@@ -175,9 +172,9 @@ function MockTestsContent() {
               <CardTitle className="text-2xl font-bold text-slate-900 dark:text-white">{title}</CardTitle>
               {lesson && pageMode === "practice" ? (
                 <p className="mt-1 flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  Gồm câu trong ngân hàng đề và câu luyện AI tạo riêng cho bạn thuộc chuyên đề này.
+                  Bộ câu hỏi rèn phản xạ chuyên sâu độc lập (Nguồn chuẩn Hackers TOEIC & ETS Grammar Drills).
                   <Link href="/mock-tests" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
-                    <X className="h-3 w-3" aria-hidden="true" /> Bỏ lọc
+                    <X className="h-3 w-3" aria-hidden="true" /> Quay lại chọn đề
                   </Link>
                 </p>
               ) : (pageMode === "practice" || pageMode === "exam") && (

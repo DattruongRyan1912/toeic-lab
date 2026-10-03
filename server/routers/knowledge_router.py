@@ -14,6 +14,7 @@ from server.schemas import (
     LessonProgressRead,
     LessonProgressUpdate,
     ParaphrasePairRead,
+    QuestionRead,
 )
 from server.services import activity, curriculum, insights
 from server.routers.test_router import serialize_question
@@ -69,16 +70,36 @@ def list_syntax_lessons(user_id: int = Depends(current_user_id), db: Session = D
 @router.get("/lessons/{lesson_no}", response_model=KnowledgeLessonDetail)
 def get_syntax_lesson(lesson_no: int, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
     lesson = _require_lesson(db, lesson_no)
-    questions = [
-        serialize_question(question)
-        for question in db.query(TestQuestion).order_by(TestQuestion.test_id, TestQuestion.question_no)
-        if curriculum.classify_question(question)["lesson_number"] == lesson_no
-    ]
+    drill_id = f"DRILL_LESSON_{lesson_no:02d}"
+    drill_query = db.query(TestQuestion).filter_by(test_id=drill_id).order_by(TestQuestion.question_no.asc()).all()
+    if drill_query:
+        questions = [serialize_question(q) for q in drill_query]
+    else:
+        questions = [
+            serialize_question(question)
+            for question in db.query(TestQuestion).order_by(TestQuestion.test_id, TestQuestion.question_no)
+            if curriculum.classify_question(question)["lesson_number"] == lesson_no
+        ]
     notes = db.query(LessonNote).filter_by(user_id=user_id, lesson_number=lesson_no).order_by(LessonNote.id.desc()).all()
     progress = db.query(LessonProgress).filter_by(user_id=user_id, lesson_number=lesson_no).first()
     data = _serialize_lesson(lesson, insights.lesson_stats(db, user_id))
     data.update(content_md=lesson.content_md, questions=questions, notes=notes, progress=_progress_dict(progress, lesson_no))
     return data
+
+
+@router.get("/lessons/{lesson_no}/drill", response_model=List[QuestionRead])
+def get_syntax_lesson_drill(lesson_no: int, db: Session = Depends(get_db)):
+    """Fetch dedicated authentic drill questions for this grammar lesson (sourced from Hackers & ETS Drills)."""
+    _require_lesson(db, lesson_no)
+    drill_id = f"DRILL_LESSON_{lesson_no:02d}"
+    questions = db.query(TestQuestion).filter_by(test_id=drill_id).order_by(TestQuestion.question_no.asc()).all()
+    if not questions:
+        # Fallback to questions classified for this lesson
+        questions = [
+            q for q in db.query(TestQuestion).order_by(TestQuestion.test_id, TestQuestion.question_no)
+            if curriculum.classify_question(q)["lesson_number"] == lesson_no
+        ]
+    return [serialize_question(q) for q in questions]
 
 
 @router.post("/lessons/{lesson_no}/progress", response_model=LessonProgressRead)

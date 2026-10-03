@@ -338,6 +338,7 @@ export interface MockTestItem {
   publisher?: string | null;
   total_questions?: number | null;
   available_questions: number;
+  category?: "mock" | "drill" | string | null;
   parts: Record<string, number>;
 }
 

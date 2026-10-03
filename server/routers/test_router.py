@@ -55,9 +55,19 @@ def calculate_score(
 
 
 @router.get("", response_model=List[MockTestRead])
-def list_mock_tests(db: Session = Depends(get_db)):
+def list_mock_tests(
+    category: Optional[str] = Query("mock", description="Loại đề: mock (đề thi thử), drill (bài tập chuyên đề), all (tất cả)"),
+    db: Session = Depends(get_db),
+):
+    query = db.query(MockTest)
+    if category == "mock":
+        query = query.filter((MockTest.category != "drill") | (MockTest.category.is_(None)))
+        query = query.filter(~MockTest.test_id.like("DRILL_%"))
+    elif category == "drill":
+        query = query.filter((MockTest.category == "drill") | (MockTest.test_id.like("DRILL_%")))
+
     result = []
-    for test in db.query(MockTest).order_by(MockTest.year.desc(), MockTest.test_id.asc()).all():
+    for test in query.order_by(MockTest.year.desc(), MockTest.test_id.asc()).all():
         parts = Counter(part for (part,) in db.query(TestQuestion.part).filter_by(test_id=test.test_id))
         result.append(
             {
@@ -68,6 +78,7 @@ def list_mock_tests(db: Session = Depends(get_db)):
                 "publisher": test.publisher,
                 "total_questions": test.total_questions,
                 "available_questions": sum(parts.values()),
+                "category": test.category or ("drill" if test.test_id.startswith("DRILL_") else "mock"),
                 "parts": dict(sorted(parts.items())),
             }
         )

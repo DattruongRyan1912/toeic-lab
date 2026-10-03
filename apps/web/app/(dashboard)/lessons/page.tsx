@@ -75,10 +75,10 @@ function LessonDetailPanel({ number }: { number: number }) {
         )}
 
         <div className="flex flex-wrap gap-3">
-          {stats.question_count > 0 && (
+          {(lesson.questions.length > 0 || stats.question_count > 0) && (
             <Link href={`/mock-tests?lesson=${number}`}>
               <Button className="flex cursor-pointer items-center gap-2 bg-blue-600 text-white hover:bg-blue-500">
-                <Play className="h-4 w-4 fill-white" aria-hidden="true" /> Luyện {stats.question_count} câu của chuyên đề
+                <Play className="h-4 w-4 fill-white" aria-hidden="true" /> Rèn phản xạ chuyên sâu ({lesson.questions.length || stats.question_count} câu)
               </Button>
             </Link>
           )}
@@ -100,7 +100,7 @@ function LessonDetailPanel({ number }: { number: number }) {
         {lesson.questions.length > 0 && (
           <div className="space-y-3">
             <h3 className="flex items-center gap-1.5 text-xs font-bold text-purple-700 uppercase dark:text-purple-400">
-              <BookOpen className="h-4 w-4" aria-hidden="true" /> Câu hỏi thuộc chuyên đề ({lesson.questions.length})
+              <BookOpen className="h-4 w-4" aria-hidden="true" /> Kho bài tập rèn phản xạ chuyên sâu ({lesson.questions.length} câu) • Hackers & ETS Drills
             </h3>
             {lesson.questions.slice(0, 6).map((q) => (
               <details key={q.id} className="group rounded-xl border border-slate-200 p-4 dark:border-slate-700">

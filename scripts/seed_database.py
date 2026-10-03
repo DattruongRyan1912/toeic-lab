@@ -389,7 +389,7 @@ def seed_all():
 
 
 def seed_everything():
-    """Base seed + expanded corpus (30 Part 5 questions, 60 flashcards).
+    """Base seed + expanded corpus + authentic topic drill bank.
 
     Idempotent, but re-running it re-adds seed flashcards the learner deleted.
     """
@@ -397,6 +397,9 @@ def seed_everything():
     from scripts import expand_corpus_data
 
     expand_corpus_data.main()
+    from scripts.ingest_authentic_drills import ingest_authentic_drills
+
+    ingest_authentic_drills()
 
 
 def database_is_empty() -> bool:

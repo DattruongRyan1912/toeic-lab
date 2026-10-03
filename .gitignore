@@ -21,6 +21,8 @@ server/data/backups/
 server/data/*.db-journal
 server/data/*.db-wal
 server/data/*.db-shm
+server/data/*.bak*
+server/data/*.db.bak*
 server/toeic_data.db
 
 # Local inputs for the legacy HTML generators (scripts/build_full_frontend.py, update_frontend_corpus.py)

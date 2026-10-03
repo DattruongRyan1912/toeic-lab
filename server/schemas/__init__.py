@@ -148,6 +148,7 @@ class MockTestRead(BaseModel):
     publisher: Optional[str] = None
     total_questions: Optional[int] = None
     available_questions: int
+    category: Optional[str] = "mock"
     parts: Dict[str, int]
 
 

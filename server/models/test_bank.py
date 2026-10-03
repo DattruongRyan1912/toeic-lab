@@ -16,6 +16,7 @@ class MockTest(Base):
     year = Column(Integer, default=2024)
     publisher = Column(String(50), default="ETS")  # ETS, Hackers, YBM, AI
     total_questions = Column(Integer, default=200)
+    category = Column(String(20), default="mock", nullable=True)  # mock | drill
 
     # Relationships
     questions = relationship("TestQuestion", back_populates="test", cascade="all, delete-orphan")
