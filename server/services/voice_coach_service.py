@@ -351,11 +351,11 @@ async def evaluate_vocab_pronunciation(
                 expected_ipa=target_ipa,
             )
         try:
-            raw_reply = await agent.complete_text(
+            result = await agent.complete_text_result(
                 text_prompt,
                 system_prompt="Bạn là giám khảo ngữ âm TOEIC chuẩn quốc tế. Luôn trả về duy nhất 1 JSON hợp lệ.",
             )
-            parsed = agent.extract_json_object(raw_reply)
+            parsed = agent.extract_json_object(result.reply)
             if parsed and "score" in parsed:
                 fb = parsed.get("feedback") or {}
                 default_score = 78 if is_guidance else 70
@@ -379,8 +379,8 @@ async def evaluate_vocab_pronunciation(
                         "stress": str(fb.get("stress", "Chú ý trọng âm chính của từ.")),
                         "tips": str(fb.get("tips", "Luyện nghe lại phát âm mẫu và nhại theo từng âm tiết.")),
                     },
-                    "provider": status.get("provider", "deepseek"),
-                    "model": status.get("model", "deepseek-flash"),
+                    "provider": result.provider,
+                    "model": result.model or status.get("model", "deepseek-flash"),
                     "is_guidance_fallback": is_guidance,
                 }
         except Exception as exc:
@@ -760,18 +760,18 @@ async def evaluate_shadowing_speech(
                 cues_text=cues_text,
             )
         try:
-            raw_reply = await agent.complete_text(
+            result = await agent.complete_text_result(
                 text_prompt,
                 system_prompt="Bạn là giám khảo ngữ âm TOEIC độc lập. Luôn trả về DUY NHẤT một JSON hợp lệ.",
             )
-            parsed = agent.extract_json_object(raw_reply)
+            parsed = agent.extract_json_object(result.reply)
             if parsed and "overall_score" in parsed:
                 return _normalize_shadowing_response(
                     parsed,
                     clean_target,
                     clean_target if is_guidance else recognized,
-                    status.get("provider", "deepseek"),
-                    status.get("model", "deepseek-flash"),
+                    result.provider,
+                    result.model or status.get("model", "deepseek-flash"),
                     is_guidance_fallback=is_guidance,
                 )
         except Exception as exc:
@@ -847,10 +847,13 @@ async def process_voice_turn(
                 "model": audio_provider.model if audio_provider else status.get("model", "gemini-3.5-flash"),
             }
         except Exception as exc:
-            logger.warning("AI voice multimodal turn failed, falling back to offline: %s", exc)
-            simulated = _offline_turn_reply(scenario, user_transcript or "I am practicing speaking English.")
-            simulated["audio_url"] = _make_audio_url(simulated["spoken_reply"], accent)
-            return simulated
+            logger.warning("AI voice multimodal turn failed: %s", exc)
+            if user_transcript and user_transcript.strip() and user_transcript.strip() != "[Không bắt được âm thanh rõ ràng]":
+                logger.info("Falling back from audio to text turn processing with priority chain...")
+            else:
+                simulated = _offline_turn_reply(scenario, user_transcript or "I am practicing speaking English.")
+                simulated["audio_url"] = _make_audio_url(simulated["spoken_reply"], accent)
+                return simulated
 
     # Case 2: Text transcript input
     transcript = (user_transcript or "").strip()
@@ -870,8 +873,8 @@ async def process_voice_turn(
         return simulated
 
     try:
-        raw_reply = await agent.complete_text(prompt, system_prompt=system_prompt)
-        parsed = agent.extract_json_object(raw_reply)
+        result = await agent.complete_text_result(prompt, system_prompt=system_prompt)
+        parsed = agent.extract_json_object(result.reply)
         if not parsed or not parsed.get("spoken_reply"):
             raise ValueError("Không trích xuất được JSON hợp lệ từ AI")
 
@@ -893,8 +896,8 @@ async def process_voice_turn(
                 "pronunciation_tips": str(feedback_dict.get("pronunciation_tips", "")),
                 "acoustic_notes": None,
             },
-            "provider": status.get("provider", "gemini"),
-            "model": status.get("model", "gemini-2.5-flash"),
+            "provider": result.provider,
+            "model": result.model or status.get("model", "gemini-flash-latest"),
         }
     except Exception as exc:
         logger.warning("AI voice processing failed, falling back to offline: %s", exc)

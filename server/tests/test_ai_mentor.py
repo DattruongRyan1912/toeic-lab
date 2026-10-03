@@ -91,8 +91,60 @@ def test_openai_compatible_tool_loop_dedupes_flashcards(client, seeded, monkeypa
     assert client.get("/api/flashcards/summary").json()["total_cards"] == 5
 
 
+def test_gemini_prioritized_over_deepseek_by_default(client, seeded, monkeypatch):
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "gemini-test-key")
+    monkeypatch.setattr(config, "DEEPSEEK_API_KEY", "deepseek-test-key")
+    monkeypatch.setattr(config, "AI_PROVIDER", "auto")
+
+    status = client.get("/api/ai/status").json()
+    assert status["provider"] == "gemini"
+    assert status["configured_providers"] == ["gemini", "deepseek"]
+    assert status["fallback_providers"] == ["deepseek"]
+
+
+def test_gemini_failure_seamlessly_falls_back_to_deepseek(client, seeded, monkeypatch):
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "gemini-test-key")
+    monkeypatch.setattr(config, "DEEPSEEK_API_KEY", "deepseek-test-key")
+    monkeypatch.setattr(config, "AI_PROVIDER", "auto")
+
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url_str = str(request.url)
+        calls.append(url_str)
+        if "generativelanguage.googleapis.com" in url_str:
+            # Simulate Gemini quota exceeded / rate limit 429
+            return httpx.Response(429, json={"error": {"code": 429, "message": "Resource has been exhausted"}})
+        if "deepseek" in url_str or request.url.path.endswith("/chat/completions"):
+            # DeepSeek fallback succeeds
+            return httpx.Response(
+                200,
+                json={
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "Chào bạn! Đây là câu trả lời được xử lý dự phòng qua DeepSeek.",
+                            }
+                        }
+                    ]
+                },
+            )
+        return httpx.Response(404)
+
+    use_mock_transport(monkeypatch, handler)
+
+    data = client.post("/api/ai/chat", json={"message": "Xin chào AI Mentor"}).json()
+    assert data["provider"] == "deepseek"
+    assert "DeepSeek" in data["reply"]
+    # Verify Gemini was attempted first, then DeepSeek
+    assert any("generativelanguage.googleapis.com" in c for c in calls)
+    assert any("chat/completions" in c for c in calls)
+
+
 def test_provider_failure_falls_back_to_offline_mentor(client, seeded, monkeypatch):
     monkeypatch.setattr(config, "GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(config, "DEEPSEEK_API_KEY", "")
     use_mock_transport(monkeypatch, lambda request: httpx.Response(500, json={"error": "boom"}))
     data = client.post("/api/ai/chat", json={"message": "Hôm nay tôi nên học gì?"}).json()
     assert data["provider"] == "offline" and "HTTP 500" in data["reply"] and "Kế hoạch hôm nay" in data["reply"]
@@ -220,5 +272,56 @@ def test_voice_coach_audio_turn_multimodal(client, seeded):
     assert "user_transcript" in data
     assert "audio_url" in data
     assert "acoustic_notes" in data["feedback"]
+
+
+def test_vocab_pronunciation_falls_back_to_deepseek(client, seeded, monkeypatch):
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "gemini-test-key")
+    monkeypatch.setattr(config, "DEEPSEEK_API_KEY", "deepseek-test-key")
+    monkeypatch.setattr(config, "AI_PROVIDER", "auto")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        url_str = str(request.url)
+        if "generativelanguage.googleapis.com" in url_str:
+            # Gemini fails with 500
+            return httpx.Response(500, json={"error": "Gemini internal error"})
+        if "deepseek" in url_str or request.url.path.endswith("/chat/completions"):
+            # DeepSeek returns valid JSON response for pronunciation
+            reply = json.dumps({
+                "word": "accommodate",
+                "score": 92,
+                "recognized_text": "accommodate",
+                "recognized_ipa": "/əˈkɑːmədeɪt/",
+                "expected_ipa": "/əˈkɑːmədeɪt/",
+                "is_accurate": True,
+                "feedback": {
+                    "vowels": "Âm chuẩn xác.",
+                    "consonants": "Bật âm tốt.",
+                    "stress": "Nhấn đúng trọng âm 2.",
+                    "tips": "Tiếp tục duy trì phong độ.",
+                }
+            })
+            return httpx.Response(
+                200,
+                json={"choices": [{"message": {"role": "assistant", "content": reply}}]},
+            )
+        return httpx.Response(404)
+
+    use_mock_transport(monkeypatch, handler)
+
+    fake_audio = "data:audio/webm;base64,GkXfo59ChoEBQveBAULygQ8UA8G7UxEkEVO"
+    res = client.post(
+        "/api/ai/pronounce-vocab",
+        json={
+            "word": "accommodate",
+            "audio_base64": fake_audio,
+            "user_transcript": "accommodate",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["word"] == "accommodate"
+    assert data["score"] == 92
+    assert data["provider"] == "deepseek"
+
 
 

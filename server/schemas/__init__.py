@@ -757,8 +757,11 @@ class AIStatus(BaseModel):
     provider: str
     model: Optional[str] = None
     vision: bool
+    audio: bool = False
+    audio_model: Optional[str] = None
     offline: bool
     configured_providers: List[str]
+    fallback_providers: List[str] = []
 
 
 class AIActionRead(BaseModel):

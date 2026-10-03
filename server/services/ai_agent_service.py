@@ -83,16 +83,40 @@ def _configured_providers() -> dict:
     return providers
 
 
-def resolve_provider() -> Optional[ProviderInfo]:
+def get_provider_priority_chain() -> list[ProviderInfo]:
+    """Returns the ordered list of configured AI providers.
+
+    Priority order in auto mode:
+    1. gemini (primary for all text & multimodal capabilities)
+    2. deepseek (first fallback)
+    3. openai (second fallback)
+
+    If a specific AI_PROVIDER is configured in environment, that provider is placed first,
+    followed by the remaining configured providers in fallback order.
+    """
     providers = _configured_providers()
-    if config.AI_PROVIDER in providers:
-        return providers[config.AI_PROVIDER]
-    if config.AI_PROVIDER not in ("", "auto") and config.AI_PROVIDER not in providers:
-        logger.warning("AI_PROVIDER=%s has no API key, falling back to auto", config.AI_PROVIDER)
-    for name in ("gemini", "deepseek", "openai"):
-        if name in providers:
-            return providers[name]
-    return None
+    if not providers:
+        return []
+
+    preferred = (config.AI_PROVIDER or "").strip().lower()
+    order = ["gemini", "deepseek", "openai"]
+
+    if preferred not in ("", "auto") and preferred in providers:
+        chain_names = [preferred] + [name for name in order if name != preferred]
+    else:
+        if preferred not in ("", "auto") and preferred not in providers:
+            logger.warning(
+                "AI_PROVIDER=%s has no API key, falling back to priority chain (gemini -> deepseek -> openai)",
+                preferred,
+            )
+        chain_names = order
+
+    return [providers[name] for name in chain_names if name in providers]
+
+
+def resolve_provider() -> Optional[ProviderInfo]:
+    chain = get_provider_priority_chain()
+    return chain[0] if chain else None
 
 
 def resolve_audio_provider() -> Optional[ProviderInfo]:
@@ -107,7 +131,8 @@ def resolve_audio_provider() -> Optional[ProviderInfo]:
 
 
 def provider_status() -> dict:
-    provider = resolve_provider()
+    chain = get_provider_priority_chain()
+    provider = chain[0] if chain else None
     audio_prov = resolve_audio_provider()
     return {
         "provider": provider.name if provider else "offline",
@@ -116,7 +141,8 @@ def provider_status() -> dict:
         "audio": audio_prov is not None,
         "audio_model": audio_prov.model if audio_prov else None,
         "offline": provider is None,
-        "configured_providers": list(_configured_providers()),
+        "configured_providers": [p.name for p in chain],
+        "fallback_providers": [p.name for p in chain[1:]],
     }
 
 
@@ -184,15 +210,31 @@ async def run_agent(
     tool_executor: Optional[ToolExecutor] = None,
     max_rounds: int = 6,
 ) -> AgentResult:
-    provider = resolve_provider()
-    if provider is None:
+    chain = get_provider_priority_chain()
+    if not chain:
         raise LLMError("Chưa cấu hình API key cho AI provider")
-    try:
-        if provider.name == "gemini":
-            return await _run_gemini(provider, system_prompt, history, message, image_base64, tool_executor, max_rounds)
-        return await _run_openai_compatible(provider, system_prompt, history, message, image_base64, tool_executor, max_rounds)
-    except httpx.HTTPError as exc:
-        raise LLMError(f"Không kết nối được {provider.name}: {exc.__class__.__name__}") from exc
+
+    errors: list[str] = []
+    for idx, provider in enumerate(chain):
+        try:
+            if provider.name == "gemini":
+                return await _run_gemini(
+                    provider, system_prompt, history, message, image_base64, tool_executor, max_rounds
+                )
+            return await _run_openai_compatible(
+                provider, system_prompt, history, message, image_base64, tool_executor, max_rounds
+            )
+        except (LLMError, httpx.HTTPError) as exc:
+            msg = f"{provider.name} thất bại ({exc.__class__.__name__}: {exc})"
+            errors.append(msg)
+            if idx < len(chain) - 1:
+                next_provider = chain[idx + 1]
+                logger.warning("%s. Đang chuyển sang provider dự phòng '%s'...", msg, next_provider.name)
+                continue
+            logger.error("Tất cả AI providers trong priority chain đều thất bại: %s", " | ".join(errors))
+            raise LLMError(f"Tất cả AI providers đều lỗi: {' | '.join(errors)}") from exc
+
+    raise LLMError("Không có AI provider nào khả dụng")
 
 
 async def _run_gemini(provider, system_prompt, history, message, image_base64, tool_executor, max_rounds) -> AgentResult:
@@ -252,7 +294,7 @@ async def _run_gemini(provider, system_prompt, history, message, image_base64, t
                         responses.append({"functionResponse": function_response})
                     contents.append({"role": "user", "parts": responses})
                 return AgentResult(_summarize_actions(actions), actions, provider.name, active_model)
-            except LLMError as exc:
+            except (LLMError, httpx.HTTPError) as exc:
                 if model_idx == len(candidate_models) - 1:
                     raise
                 logger.warning("Gemini model %s failed (%s), trying fallback...", active_model, exc)
@@ -324,8 +366,12 @@ def _summarize_actions(actions: list) -> str:
     return "Đã thực hiện:\n" + "\n".join(f"- {a.get('message', a.get('tool'))}" for a in actions)
 
 
+async def complete_text_result(prompt: str, system_prompt: str = VOCAB_SYSTEM_PROMPT) -> AgentResult:
+    return await run_agent(system_prompt=system_prompt, history=[], message=prompt, tool_executor=None, max_rounds=1)
+
+
 async def complete_text(prompt: str, system_prompt: str = VOCAB_SYSTEM_PROMPT) -> str:
-    result = await run_agent(system_prompt=system_prompt, history=[], message=prompt, tool_executor=None, max_rounds=1)
+    result = await complete_text_result(prompt, system_prompt=system_prompt)
     return result.reply
 
 

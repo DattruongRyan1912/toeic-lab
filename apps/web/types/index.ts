@@ -639,8 +639,11 @@ export interface AIStatus {
   provider: string;
   model?: string | null;
   vision: boolean;
+  audio?: boolean;
+  audio_model?: string | null;
   offline: boolean;
   configured_providers: string[];
+  fallback_providers?: string[];
 }
 
 export interface HealthStatus {
