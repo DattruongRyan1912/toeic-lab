@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { LogIn, UserPlus, AlertCircle } from "lucide-react";
+import { LogIn, UserPlus, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,11 +31,13 @@ export function AuthModal() {
   // Login inputs
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Register inputs
   const [regUsername, setRegUsername] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [showRegPassword, setShowRegPassword] = useState(false);
   const [regDisplayName, setRegDisplayName] = useState("");
   const [regTargetScore, setRegTargetScore] = useState(800);
 
@@ -157,15 +159,32 @@ export function AuthModal() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="login-pw" className="text-xs font-semibold">Mật khẩu</Label>
-                <Input
-                  id="login-pw"
-                  type="password"
-                  placeholder="••••••••"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="login-pw"
+                    type={showLoginPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    autoComplete="current-password"
+                    className="pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowLoginPassword((prev) => !prev)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    aria-label={showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    title={showLoginPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showLoginPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <Button type="submit" disabled={loading} className="w-full cursor-pointer bg-blue-600 hover:bg-blue-500 text-white font-semibold">
@@ -215,14 +234,31 @@ export function AuthModal() {
 
               <div className="space-y-1">
                 <Label htmlFor="reg-pw" className="text-xs font-semibold">Mật khẩu (tối thiểu 6 ký tự) *</Label>
-                <Input
-                  id="reg-pw"
-                  type="password"
-                  placeholder="••••••••"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="reg-pw"
+                    type={showRegPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowRegPassword((prev) => !prev)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                    aria-label={showRegPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                    title={showRegPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  >
+                    {showRegPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1.5 pt-1">
