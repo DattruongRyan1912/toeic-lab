@@ -393,6 +393,12 @@ def seed_everything():
     from scripts.ingest_authentic_listening_test01 import ingest as ingest_listening_test01
 
     ingest_listening_test01()
+    from scripts.ingest_authentic_reading_test01 import ingest as ingest_reading_test01
+
+    ingest_reading_test01()
+    from scripts.normalize_flashcards_business import normalize as normalize_flashcards
+
+    normalize_flashcards()
 
 
 def database_is_empty() -> bool:

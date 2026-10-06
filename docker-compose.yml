@@ -2,7 +2,7 @@
 #   cp -n .env.example .env      # optional: AI keys, Telegram, CORS...
 #   docker compose up -d --build
 # Web: http://localhost:3005  •  API docs: http://localhost:8000/docs  •  Legacy UI: http://localhost:8000/legacy/
-# No authentication yet: keep these ports private (API_BIND/WEB_BIND=127.0.0.1 behind a reverse proxy with auth).
+# Configurable binds: API_BIND/WEB_BIND (default 0.0.0.0 or 127.0.0.1 for reverse proxy)
 services:
   toeic-lab-app:
     build:
