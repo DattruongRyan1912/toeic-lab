@@ -1,11 +1,14 @@
 # 🎯 TOEIC Lab — Nền Tảng Tự Học TOEIC 800 - 900+ Cho Kỹ Sư Phần Mềm
 
+[![Live App](https://img.shields.io/badge/Live%20App-toeic.truongquocdat.id.vn-0070f3?logo=googlechrome&logoColor=white)](https://toeic.truongquocdat.id.vn)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI%200.115+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js%2016-black?logo=next.js&logoColor=white)](https://nextjs.org)
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python&logoColor=white)](https://python.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+> 🌐 **Domain Website Chính Thức**: [https://toeic.truongquocdat.id.vn](https://toeic.truongquocdat.id.vn)
 
 **TOEIC Lab** là nền tảng tự học và luyện thi TOEIC Listening & Reading toàn diện hướng tới mục tiêu **750+ đến 900+** được thiết kế chuyên biệt cho Kỹ sư Phần mềm (Software Engineers / Backend Developers). Hệ thống kết hợp giữa phương pháp học khoa học (**Spaced Repetition SM-2**, **Root Cause Analysis 5 mã lỗi**, **Dictation & Shadowing**) và kiến trúc web full-stack hiện đại (**FastAPI + Next.js 16 + SQLite**).
 
@@ -42,6 +45,7 @@
                          ┌─────────────────────────────────────────┐         │
                          │          Next.js 16 (apps/web)          │         │
                          │    • App Router • Turbopack • Base UI   │         │
+                         │    • Live: toeic.truongquocdat.id.vn    │         │
                          │    • Port :3005 (Local) / :18160 (VPS)  │         │
                          └────────────────────┬────────────────────┘         │
                                               │                              │
