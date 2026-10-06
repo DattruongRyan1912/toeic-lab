@@ -3,8 +3,10 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Bot, Maximize2, Minus, RotateCcw, X } from "lucide-react";
+import { Bot, Lock, LogIn, Maximize2, Minus, RotateCcw, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ChatComposer, ChatThread, SuggestionChips } from "@/components/mentor/chat";
+import { useAuthStore } from "@/lib/auth-store";
 import { PROVIDER_LABELS, useLearnerStore } from "@/lib/learner-store";
 import { useMentorStore } from "@/lib/mentor-store";
 import { cn } from "@/lib/utils";
@@ -23,17 +25,27 @@ export function AiCopilotWidget() {
   const { messages, sending, suggestions, widgetOpen, widgetMinimized, loadHistory, send, clear, setWidgetOpen, setWidgetMinimized } =
     useMentorStore();
   const aiStatus = useLearnerStore((state) => state.aiStatus);
+  const user = useAuthStore((state) => state.user);
+  const openLogin = useAuthStore((state) => state.openLogin);
+  const openRegister = useAuthStore((state) => state.openRegister);
+
+  const isAuth = Boolean(user);
 
   useEffect(() => {
-    if (widgetOpen) void loadHistory();
-  }, [widgetOpen, loadHistory]);
+    if (widgetOpen && isAuth) void loadHistory();
+  }, [widgetOpen, isAuth, loadHistory]);
 
   if (pathname.startsWith("/mentor")) return null; // the full page already shows the same conversation
 
   const providerLabel = aiStatus ? `${PROVIDER_LABELS[aiStatus.provider] ?? aiStatus.provider}${aiStatus.model ? ` · ${aiStatus.model}` : ""}` : "Đang kết nối...";
   const chips = suggestions.length ? suggestions : pagePrompts(pathname);
-  const ask = (text: string, options?: { imageBase64?: string | null }) =>
+  const ask = (text: string, options?: { imageBase64?: string | null }) => {
+    if (!isAuth) {
+      openLogin();
+      return;
+    }
     void send(text, { pageContext: pathname, imageBase64: options?.imageBase64 ?? null });
+  };
 
   if (!widgetOpen) {
     return (
@@ -73,7 +85,7 @@ export function AiCopilotWidget() {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {!widgetMinimized && (
+          {!widgetMinimized && isAuth && (
             <button type="button" onClick={() => void clear()} className="cursor-pointer rounded-lg p-1.5 text-slate-500 transition hover:bg-slate-200/60 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-700/50 dark:hover:text-slate-200" aria-label="Xóa lịch sử trò chuyện">
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
@@ -89,14 +101,67 @@ export function AiCopilotWidget() {
 
       {!widgetMinimized && (
         <>
-          <div className="flex-1 overflow-y-auto p-4">
-            <ChatThread messages={messages} sending={sending} compact />
+          <div className="flex-1 overflow-y-auto p-4 flex flex-col">
+            {!isAuth ? (
+              <div className="flex flex-1 flex-col items-center justify-center p-4 text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  <Lock className="h-6 w-6" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Đăng nhập để sử dụng AI Mentor
+                </h4>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-w-[260px]">
+                  Để AI phân tích điểm yếu, ghi nhớ câu sai và đồng hành cùng bạn suốt lộ trình, vui lòng đăng nhập tài khoản.
+                </p>
+                <div className="mt-4 flex w-full max-w-[240px] flex-col gap-2">
+                  <Button
+                    onClick={() => {
+                      setWidgetOpen(false);
+                      openLogin();
+                    }}
+                    className="w-full cursor-pointer bg-blue-600 text-xs font-semibold text-white shadow-xs hover:bg-blue-500"
+                  >
+                    <LogIn className="mr-1.5 h-3.5 w-3.5" /> Đăng nhập ngay
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setWidgetOpen(false);
+                      openRegister();
+                    }}
+                    className="w-full cursor-pointer text-xs"
+                  >
+                    Tạo tài khoản mới
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <ChatThread messages={messages} sending={sending} compact />
+            )}
           </div>
           <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800/80 dark:bg-slate-900/60">
-            <SuggestionChips items={chips} disabled={sending} onPick={(value) => ask(value)} />
+            <SuggestionChips
+              items={chips}
+              disabled={sending || !isAuth}
+              onPick={(value) => {
+                if (isAuth) ask(value);
+                else {
+                  setWidgetOpen(false);
+                  openLogin();
+                }
+              }}
+            />
           </div>
           <div className="shrink-0 border-t border-slate-200 bg-white p-3 dark:border-slate-800/80 dark:bg-slate-900/90">
-            <ChatComposer onSend={ask} sending={sending} allowImage={Boolean(aiStatus?.vision)} compact />
+            <ChatComposer
+              onSend={ask}
+              sending={sending}
+              disabled={!isAuth}
+              onClick={!isAuth ? () => { setWidgetOpen(false); openLogin(); } : undefined}
+              allowImage={Boolean(aiStatus?.vision) && isAuth}
+              compact
+              placeholder={isAuth ? "Hỏi về câu hỏi, từ vựng..." : "🔒 Vui lòng đăng nhập để gửi tin nhắn..."}
+            />
           </div>
         </>
       )}

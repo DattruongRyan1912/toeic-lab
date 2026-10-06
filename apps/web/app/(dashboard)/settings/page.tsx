@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, Check, KeyRound, Loader2, Mic, Settings, Sliders, Trash2, UserRound, Volume2 } from "lucide-react";
+import { Bell, Check, KeyRound, Loader2, Lock, LogIn, Mic, Settings, Sliders, Trash2, UserRound, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { MicTestDialog } from "@/components/mic-test-dialog";
 import { AiAgentCard } from "@/components/settings/ai-agent-card";
 import { MemoriesCard } from "@/components/settings/memories-card";
 import { PersonalizationCard } from "@/components/settings/personalization-card";
+import { useAuthStore } from "@/lib/auth-store";
 import { api, errorMessage } from "@/lib/api";
 import { speak } from "@/lib/audio";
 import { formatDate } from "@/lib/format";
@@ -42,10 +43,17 @@ function ProfileCard({ profile, onSaved }: { profile: UserProfile; onSaved: (p: 
     daily_goal_minutes: String(profile.daily_goal_minutes),
   });
   const [saving, setSaving] = useState(false);
+  const authUser = useAuthStore((state) => state.user);
+  const openLogin = useAuthStore((state) => state.openLogin);
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
   const save = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!authUser) {
+      toast.add({ title: "Yêu cầu đăng nhập", description: "Vui lòng đăng nhập tài khoản để lưu hồ sơ học viên.", type: "error" });
+      openLogin();
+      return;
+    }
     setSaving(true);
     try {
       const updated = await api<UserProfile>("/users/me", {
@@ -309,6 +317,8 @@ function RemindersCard({ telegram }: { telegram: boolean | undefined }) {
   const [message, setMessage] = useState("Đến giờ ôn thẻ SRS và chữa Sổ lỗi rồi!");
   const [type, setType] = useState<StudyReminder["reminder_type"]>("daily_study");
   const [busy, setBusy] = useState(false);
+  const authUser = useAuthStore((state) => state.user);
+  const openLogin = useAuthStore((state) => state.openLogin);
 
   const run = async (action: () => Promise<void>, failTitle: string) => {
     setBusy(true);
@@ -323,6 +333,11 @@ function RemindersCard({ telegram }: { telegram: boolean | undefined }) {
 
   const add = (event: React.FormEvent) => {
     event.preventDefault();
+    if (!authUser) {
+      toast.add({ title: "Yêu cầu đăng nhập", description: "Vui lòng đăng nhập tài khoản để đặt lịch nhắc học.", type: "error" });
+      openLogin();
+      return;
+    }
     void run(async () => {
       const created = await api<StudyReminder>("/reminders", { method: "POST", json: { scheduled_time: time, message: message.trim(), reminder_type: type } });
       reminders.mutate((prev) => [...(prev ?? []), created].sort((a, b) => a.scheduled_time.localeCompare(b.scheduled_time)));
@@ -407,6 +422,9 @@ export default function SettingsPage() {
   const profile = useApi<UserProfile>("/learner/profile");
   const health = useApi<HealthStatus>("/health");
   const loaded = Boolean(profile.data);
+  const authUser = useAuthStore((state) => state.user);
+  const openLogin = useAuthStore((state) => state.openLogin);
+  const openRegister = useAuthStore((state) => state.openRegister);
 
   // Deep links such as /settings#personalization: scroll once the cards are rendered.
   useEffect(() => {
@@ -422,6 +440,28 @@ export default function SettingsPage() {
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Hồ sơ & cá nhân hoá, trí nhớ và quyền của AI Mentor, giọng đọc ETS, lịch nhắc học.</p>
       </div>
+
+      {!authUser && (
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500 text-white">
+              <Lock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-amber-900 dark:text-amber-100">Bạn đang ở chế độ xem trước (Chưa đăng nhập)</p>
+              <p className="text-xs text-amber-800/80 dark:text-amber-300">Vui lòng đăng nhập để lưu hồ sơ cá nhân, đặt mục tiêu điểm số và quản lý lịch nhắc học.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Button size="sm" onClick={openLogin} className="cursor-pointer bg-blue-600 text-xs font-semibold text-white hover:bg-blue-500 shadow-xs">
+              <LogIn className="mr-1 h-3.5 w-3.5" /> Đăng nhập
+            </Button>
+            <Button size="sm" variant="outline" onClick={openRegister} className="cursor-pointer text-xs">
+              Đăng ký
+            </Button>
+          </div>
+        </div>
+      )}
       {profile.error ? (
         <ErrorState message={profile.error} onRetry={profile.reload} />
       ) : !profile.data ? (

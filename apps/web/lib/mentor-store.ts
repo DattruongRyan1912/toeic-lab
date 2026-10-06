@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { api, errorMessage } from "@/lib/api";
+import { api, errorMessage, getAuthToken } from "@/lib/api";
 import { refreshLearner } from "@/lib/learner-store";
 import type { AIAction, AIActionLog, AIChatResponse, AIHistoryMessage } from "@/types";
 
@@ -64,6 +64,20 @@ export const useMentorStore = create<MentorState>((set, get) => ({
   send: async (message, options = {}) => {
     const text = message.trim();
     if (!text || get().sending) return;
+    if (!getAuthToken()) {
+      set((state) => ({
+        messages: [
+          ...state.messages,
+          {
+            id: nextId(),
+            role: "assistant",
+            content: "🔒 **Yêu cầu đăng nhập**: Vui lòng đăng nhập tài khoản để trò chuyện và nhận phân tích cá nhân hóa từ AI Mentor.",
+            error: true,
+          },
+        ],
+      }));
+      return;
+    }
     set((state) => ({
       sending: true,
       suggestions: [],
@@ -119,6 +133,10 @@ let historyPromise: Promise<void> | null = null;
 async function loadHistoryOnce(): Promise<void> {
   const { getState: get, setState: set } = useMentorStore;
   if (get().historyLoaded) return;
+  if (!getAuthToken()) {
+    set({ historyLoaded: false, messages: [] });
+    return;
+  }
   set({ historyLoaded: true });
   try {
     const [history, log] = await Promise.all([
@@ -138,6 +156,13 @@ async function loadHistoryOnce(): Promise<void> {
 
 /** Open the floating mentor and ask a question with optional grounding (question pointer / page). */
 export function askMentor(prompt: string, options: SendOptions = {}): void {
+  const token = getAuthToken();
+  if (!token) {
+    import("@/lib/auth-store").then(({ useAuthStore }) => {
+      useAuthStore.getState().openLogin();
+    });
+    return;
+  }
   const store = useMentorStore.getState();
   store.setWidgetOpen(true);
   void store.loadHistory().then(() => useMentorStore.getState().send(prompt, options));

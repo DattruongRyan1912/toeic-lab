@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, require_learner_user_id
 from server.models import LearnerMemory
 from server.schemas import (
     ActivityPing,
@@ -40,12 +40,12 @@ def get_profile(user_id: int = Depends(current_user_id), db: Session = Depends(g
 
 
 @router.patch("/profile", response_model=UserRead)
-def update_profile(payload: UserUpdate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def update_profile(payload: UserUpdate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     return _apply_profile(db, user_id, payload.model_dump(exclude_unset=True))
 
 
 @router.post("/onboarding")
-def onboarding(payload: OnboardingRequest, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def onboarding(payload: OnboardingRequest, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     """First-run personalization: profile + baseline + schedule; self-reported weaknesses become AI memories."""
     data = payload.model_dump(exclude={"weak_areas"})
     user = profile_service.get_user(db, user_id)
@@ -135,7 +135,7 @@ def list_memories(user_id: int = Depends(current_user_id), db: Session = Depends
 
 
 @router.post("/memories", response_model=LearnerMemoryRead, status_code=201)
-def create_memory(payload: LearnerMemoryCreate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def create_memory(payload: LearnerMemoryCreate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     insights.get_or_create_user(db, user_id)
     memory = LearnerMemory(user_id=user_id, category=payload.category, content=payload.content.strip(), pinned=payload.pinned, source="user")
     db.add(memory)
@@ -145,7 +145,7 @@ def create_memory(payload: LearnerMemoryCreate, user_id: int = Depends(current_u
 
 
 @router.patch("/memories/{memory_id}", response_model=LearnerMemoryRead)
-def update_memory(memory_id: int, payload: LearnerMemoryUpdate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def update_memory(memory_id: int, payload: LearnerMemoryUpdate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     memory = _owned_memory(db, memory_id, user_id)
     for key, value in payload.model_dump(exclude_unset=True).items():
         if value is not None:
@@ -157,7 +157,7 @@ def update_memory(memory_id: int, payload: LearnerMemoryUpdate, user_id: int = D
 
 
 @router.delete("/memories/{memory_id}")
-def delete_memory(memory_id: int, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def delete_memory(memory_id: int, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     db.delete(_owned_memory(db, memory_id, user_id))
     db.commit()
     return {"status": "deleted", "id": memory_id}

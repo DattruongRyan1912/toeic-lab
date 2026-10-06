@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, require_learner_user_id
 from server.models import StudyReminder
 from server.schemas import StudyReminderCreate, StudyReminderRead, StudyReminderUpdate
 
@@ -24,7 +24,7 @@ def list_reminders(user_id: int = Depends(current_user_id), db: Session = Depend
 
 
 @router.post("", response_model=StudyReminderRead, status_code=201)
-def create_reminder(payload: StudyReminderCreate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def create_reminder(payload: StudyReminderCreate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     reminder = StudyReminder(user_id=user_id, is_active=True, **payload.model_dump())
     db.add(reminder)
     db.commit()
@@ -36,7 +36,7 @@ def create_reminder(payload: StudyReminderCreate, user_id: int = Depends(current
 def update_reminder(
     reminder_id: int,
     payload: StudyReminderUpdate,
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     reminder = _get_owned(db, reminder_id, user_id)
@@ -49,7 +49,7 @@ def update_reminder(
 
 
 @router.delete("/{reminder_id}")
-def delete_reminder(reminder_id: int, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def delete_reminder(reminder_id: int, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     db.delete(_get_owned(db, reminder_id, user_id))
     db.commit()
     return {"status": "deleted", "id": reminder_id}

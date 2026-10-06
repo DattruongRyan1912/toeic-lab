@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { api, getAuthToken, setAuthToken } from "@/lib/api";
 import { refreshLearner } from "@/lib/learner-store";
+import { useMentorStore } from "@/lib/mentor-store";
 import type { AuthResponse, AuthUser } from "@/types";
 
 interface RegisterPayload {
@@ -66,6 +67,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     setAuthToken(res.access_token);
     set({ user: res.user, token: res.access_token, isAuthModalOpen: false });
+    useMentorStore.setState({ messages: [], historyLoaded: false });
+    void useMentorStore.getState().loadHistory();
     void refreshLearner();
     return res.user;
   },
@@ -83,6 +86,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
     setAuthToken(res.access_token);
     set({ user: res.user, token: res.access_token, isAuthModalOpen: false });
+    useMentorStore.setState({ messages: [], historyLoaded: false });
+    void useMentorStore.getState().loadHistory();
     void refreshLearner();
     return res.user;
   },
@@ -95,6 +100,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     setAuthToken(null);
     set({ user: null, token: null });
+    useMentorStore.setState({ messages: [], historyLoaded: false });
     void refreshLearner();
   },
 }));

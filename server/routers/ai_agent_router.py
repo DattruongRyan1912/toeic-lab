@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from server import config
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, require_learner_user_id
 from server.models import AIMessage
 from server.schemas import (
     AIActionRead,
@@ -46,7 +46,7 @@ def list_tools():
 @router.get("/history", response_model=List[AIMessageRead])
 def chat_history(
     limit: int = Query(50, ge=1, le=500),
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     rows = (
@@ -67,7 +67,7 @@ def chat_history(
 
 
 @router.delete("/history")
-def clear_history(user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def clear_history(user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     deleted = db.query(AIMessage).filter(AIMessage.user_id == user_id).delete()
     db.commit()
     return {"status": "cleared", "deleted": deleted}
@@ -76,7 +76,7 @@ def clear_history(user_id: int = Depends(current_user_id), db: Session = Depends
 @router.get("/actions", response_model=List[AIActionRead])
 def list_actions(
     limit: int = Query(50, ge=1, le=200),
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     """Audit trail of every data change made through agent tools (AI mentor or one-click suggestions)."""
@@ -84,7 +84,7 @@ def list_actions(
 
 
 @router.post("/actions/{action_id}/undo")
-def undo_action(action_id: int, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def undo_action(action_id: int, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     try:
         return agent_tools.undo_action(db, user_id, action_id)
     except agent_tools.ToolError as exc:
@@ -93,7 +93,7 @@ def undo_action(action_id: int, user_id: int = Depends(current_user_id), db: Ses
 
 
 @router.post("/actions/execute")
-def execute_tool(payload: AIToolExecuteRequest, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def execute_tool(payload: AIToolExecuteRequest, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     """Run one tool directly (one-click coach suggestions). Same validation, audit and undo as the AI."""
     if payload.tool not in agent_tools.REGISTRY:
         raise HTTPException(status_code=404, detail=f"Công cụ không tồn tại: {payload.tool}")
@@ -107,7 +107,7 @@ def execute_tool(payload: AIToolExecuteRequest, user_id: int = Depends(current_u
 @router.post("/chat", response_model=AIChatResponse)
 async def chat_with_ai_mentor(
     payload: AIChatRequest,
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     target_user_id = user_id if user_id != config.DEFAULT_USER_ID else (payload.user_id or user_id)
@@ -170,7 +170,10 @@ async def chat_with_ai_mentor(
 
 
 @router.post("/voice-coach/start", response_model=VoiceCoachStartResponse)
-def voice_coach_start(payload: VoiceCoachStartRequest):
+def voice_coach_start(
+    payload: VoiceCoachStartRequest,
+    user_id: int = Depends(require_learner_user_id),
+):
     """Bắt đầu phiên đàm thoại giọng nói 1-1 theo kịch bản."""
     return voice_coach_service.start_voice_session(
         scenario=payload.scenario,
@@ -181,7 +184,7 @@ def voice_coach_start(payload: VoiceCoachStartRequest):
 @router.post("/voice-coach/turn", response_model=VoiceCoachTurnResponse)
 async def voice_coach_turn(
     payload: VoiceCoachTurnRequest,
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     """Xử lý một lượt phát biểu của học viên (qua text hoặc audio trực tiếp), đối đáp và chấm điểm."""
@@ -201,7 +204,7 @@ async def voice_coach_turn(
 @router.post("/pronounce-vocab", response_model=VocabPronounceResponse)
 async def pronounce_vocab(
     payload: VocabPronounceRequest,
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     """Lắng nghe đoạn thu âm giọng đọc và đánh giá chi tiết độ chính xác khi phát âm từ vựng."""

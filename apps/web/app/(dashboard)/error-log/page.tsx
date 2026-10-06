@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Bot, Download, Filter, Loader2, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Bot, Download, Filter, Loader2, Lock, LogIn, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 import { ErrorState, LoadingState } from "@/components/states";
 import { api, errorMessage } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 import { ERROR_TYPES, SOURCE_LABELS, STATUS_LABELS, STATUS_STYLES, formatDate, lessonHref } from "@/lib/format";
 import { refreshLearner, useLearnerStore } from "@/lib/learner-store";
 import { askMentor } from "@/lib/mentor-store";
@@ -335,11 +336,18 @@ function ErrorRow({ log, onChanged, onDeleted }: { log: ErrorLogEntry; onChanged
 
 function ErrorLogContent() {
   const searchParams = useSearchParams();
-  const logs = useApi<ErrorLogEntry[]>("/error-logs");
-  const tests = useApi<MockTestItem[]>("/tests");
+  const authUser = useAuthStore((state) => state.user);
+  const authLoading = useAuthStore((state) => state.loading);
+  const openLogin = useAuthStore((state) => state.openLogin);
+  const openRegister = useAuthStore((state) => state.openRegister);
+  const isAuth = Boolean(authUser);
+
+  const logs = useApi<ErrorLogEntry[]>(isAuth ? "/error-logs" : null);
+  const tests = useApi<MockTestItem[]>(isAuth ? "/tests" : null);
   const [typeFilter, setTypeFilter] = useState(searchParams.get("type")?.toUpperCase() ?? "ALL");
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "open");
   const [sourceFilter, setSourceFilter] = useState(searchParams.get("source") ?? "all");
+  const dueCount = useLearnerStore((state) => state.stats?.error_reviews_due ?? 0);
 
   const changed = (updated: ErrorLogEntry) => {
     logs.mutate((prev) => prev?.map((l) => (l.id === updated.id ? updated : l)));
@@ -354,6 +362,47 @@ function ErrorLogContent() {
     void refreshLearner();
   };
 
+  if (!authLoading && !isAuth) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-6">
+        <div className="flex flex-col justify-between gap-4 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50/80 via-white to-amber-50/60 p-6 md:flex-row md:items-center md:p-8 dark:border-red-500/20 dark:from-red-950/40 dark:via-slate-900 dark:to-amber-950/40">
+          <div>
+            <span className="rounded-full border border-red-200 bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700 dark:border-red-500/30 dark:bg-red-500/20 dark:text-red-400">
+              DATA-DRIVEN ERROR LOG
+            </span>
+            <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Sổ Tay Lỗi Sai (RCA)</h1>
+            <p className="mt-1 max-w-2xl text-sm text-slate-600 dark:text-slate-400">
+              Phân tích nguyên nhân gốc (Root Cause Analysis), quản lý câu sai và tự động kích hoạt lịch ôn ngắt quãng 1 → 3 → 7 ngày.
+            </p>
+          </div>
+        </div>
+
+        <Card className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/70 p-8 text-center sm:p-12 dark:border-slate-700/80 dark:bg-slate-800/40">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-red-600 to-amber-600 text-white shadow-lg shadow-red-500/25">
+            <Lock className="h-8 w-8" />
+          </div>
+          <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-red-300 bg-red-50 px-3 py-1 text-xs font-semibold text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+            🔒 Yêu cầu đăng nhập tài khoản
+          </span>
+          <h3 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Đăng nhập để xem và quản lý Sổ lỗi cá nhân
+          </h3>
+          <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
+            Mỗi học viên có một kho dữ liệu câu sai riêng biệt. Vui lòng đăng nhập để hệ thống tự động ghi nhận câu sai khi làm đề thi, gắn mã RCA và tính toán chu kỳ ôn tập Spaced Repetition.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button onClick={openLogin} className="cursor-pointer bg-red-600 px-5 text-xs font-semibold text-white shadow-xs hover:bg-red-500">
+              <LogIn className="mr-1.5 h-4 w-4" /> Đăng nhập ngay
+            </Button>
+            <Button variant="outline" onClick={openRegister} className="cursor-pointer text-xs font-medium">
+              Tạo tài khoản mới
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   const all = logs.data ?? [];
   const filtered = all.filter(
     (l) =>
@@ -362,7 +411,6 @@ function ErrorLogContent() {
       (sourceFilter === "all" || (l.source ?? "manual") === sourceFilter),
   );
   const openCount = all.filter((l) => l.status !== "mastered").length;
-  const dueCount = useLearnerStore((state) => state.stats?.error_reviews_due ?? 0);
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">

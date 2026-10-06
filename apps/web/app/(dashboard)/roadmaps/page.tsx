@@ -12,6 +12,7 @@ import { toast } from "@/components/ui/toast";
 import { ErrorState, LoadingState } from "@/components/states";
 import { WeeklyPlan } from "@/components/plan/weekly-plan";
 import { api, errorMessage } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 import { formatDate, lessonHref, lessonNumbersIn } from "@/lib/format";
 import { refreshLearner, useLearnerStore } from "@/lib/learner-store";
 import { useApi } from "@/lib/use-api";
@@ -34,6 +35,8 @@ function phaseRange(phase: number, totalWeeks: number): string {
 export default function RoadmapsPage() {
   const roadmap = useApi<Roadmap>("/roadmaps");
   const targetScore = useLearnerStore((state) => state.stats?.target_score);
+  const authUser = useAuthStore((state) => state.user);
+  const openLogin = useAuthStore((state) => state.openLogin);
   const [savingId, setSavingId] = useState<number | null>(null);
   const [startDraft, setStartDraft] = useState<string | null>(null);
   const [savingStart, setSavingStart] = useState(false);
@@ -43,6 +46,11 @@ export default function RoadmapsPage() {
   const data = roadmap.data;
 
   const toggle = async (task: SprintTask) => {
+    if (!authUser) {
+      toast.add({ title: "Yêu cầu đăng nhập", description: "Vui lòng đăng nhập tài khoản để đánh dấu hoàn thành nhiệm vụ.", type: "error" });
+      openLogin();
+      return;
+    }
     setSavingId(task.id);
     try {
       const updated = await api<SprintTask>(`/roadmaps/tasks/${task.id}`, { method: "PATCH", json: { is_completed: !task.is_completed } });
@@ -62,6 +70,11 @@ export default function RoadmapsPage() {
 
   const saveStart = async () => {
     if (!startDraft) return;
+    if (!authUser) {
+      toast.add({ title: "Yêu cầu đăng nhập", description: "Vui lòng đăng nhập tài khoản để thay đổi ngày bắt đầu lộ trình.", type: "error" });
+      openLogin();
+      return;
+    }
     setSavingStart(true);
     try {
       const updated = await api<Roadmap>("/roadmaps", { method: "PATCH", json: { start_date: startDraft } });

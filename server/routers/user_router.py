@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, require_learner_user_id
 from server.schemas import UserRead, UserUpdate
 from server.services import profile_service
 
@@ -15,7 +15,7 @@ def get_me(user_id: int = Depends(current_user_id), db: Session = Depends(get_db
 
 
 @router.patch("/me", response_model=UserRead)
-def update_me(payload: UserUpdate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def update_me(payload: UserUpdate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     """Same rules as /api/learner/profile: exam date rescales the roadmap, planning inputs rebuild the plan."""
     user = profile_service.get_user(db, user_id)
     try:

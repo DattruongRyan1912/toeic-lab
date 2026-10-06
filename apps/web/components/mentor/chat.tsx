@@ -223,12 +223,16 @@ export function ChatComposer({
   allowImage = false,
   placeholder = "Hỏi về câu hỏi, từ vựng hoặc ngữ pháp...",
   compact = false,
+  disabled = false,
+  onClick,
 }: {
   onSend: (text: string, options?: SendOptions) => void;
   sending: boolean;
   allowImage?: boolean;
   placeholder?: string;
   compact?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
 }) {
   const [text, setText] = useState("");
   const [image, setImage] = useState<{ name: string; data: string } | null>(null);
@@ -236,6 +240,10 @@ export function ChatComposer({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const submit = () => {
+    if (disabled) {
+      onClick?.();
+      return;
+    }
     const value = text.trim() || (image ? "Phân tích câu hỏi trong ảnh đính kèm" : "");
     if (!value || sending) return;
     onSend(value, { imageBase64: image?.data ?? null });
@@ -254,7 +262,7 @@ export function ChatComposer({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" onClick={disabled ? onClick : undefined}>
       {(image || imageError) && (
         <div className="flex items-center gap-2 text-[11px] text-slate-600 dark:text-slate-400">
           {image && (
@@ -283,7 +291,7 @@ export function ChatComposer({
               variant="outline"
               size={compact ? "icon-sm" : "icon"}
               onClick={() => fileRef.current?.click()}
-              disabled={sending}
+              disabled={sending || disabled}
               aria-label="Đính kèm ảnh đề thi"
               className="shrink-0 cursor-pointer"
             >
@@ -306,15 +314,18 @@ export function ChatComposer({
           }}
           rows={1}
           placeholder={placeholder}
-          disabled={sending}
+          disabled={sending || disabled}
+          onClick={disabled ? onClick : undefined}
           className={cn(
             "field-sizing-content max-h-32 min-h-9 flex-1 resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-slate-900 outline-none placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:border-slate-700/70 dark:bg-slate-800/80 dark:text-slate-100",
+            disabled && "cursor-pointer bg-slate-100/70 dark:bg-slate-900/40",
             compact ? "text-xs" : "text-sm",
           )}
         />
         <Button
           type="submit"
-          disabled={sending || (!text.trim() && !image)}
+          disabled={!disabled && (sending || (!text.trim() && !image))}
+          onClick={disabled ? onClick : undefined}
           className={cn("shrink-0 cursor-pointer bg-blue-600 text-white hover:bg-blue-500", compact ? "h-9 px-3" : "h-10 px-4")}
           aria-label="Gửi"
         >

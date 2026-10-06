@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, CalendarDays, Check, GraduationCap, Loader2, Sparkles, Target } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, Check, GraduationCap, Loader2, Lock, LogIn, Sparkles, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { toast } from "@/components/ui/toast";
 import { ErrorState, LoadingState } from "@/components/states";
 import { Chip, PARTS, StylePicker, WEEKDAYS, localToday, toggled } from "@/components/personalization/fields";
 import { api, errorMessage } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 import { refreshLearner } from "@/lib/learner-store";
 import { useApi } from "@/lib/use-api";
 import { cn } from "@/lib/utils";
@@ -295,7 +296,41 @@ function Wizard({ profile }: { profile: UserProfile }) {
 }
 
 export default function OnboardingPage() {
-  const profile = useApi<UserProfile>("/learner/profile");
+  const authUser = useAuthStore((state) => state.user);
+  const authLoading = useAuthStore((state) => state.loading);
+  const openLogin = useAuthStore((state) => state.openLogin);
+  const openRegister = useAuthStore((state) => state.openRegister);
+  const profile = useApi<UserProfile>(authUser ? "/learner/profile" : null);
+
+  if (!authLoading && !authUser) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-6 py-6">
+        <Card className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white/70 p-8 text-center sm:p-12 dark:border-slate-700/80 dark:bg-slate-800/40">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25">
+            <Lock className="h-8 w-8" />
+          </div>
+          <span className="mb-2 inline-flex items-center gap-1 rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-800 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300">
+            🔒 Yêu cầu tài khoản học viên
+          </span>
+          <h2 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Cá nhân hoá Lộ Trình Ôn Thi TOEIC
+          </h2>
+          <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
+            Để thiết lập lộ trình ôn luyện chuẩn cho riêng bạn (mục tiêu điểm, ngày thi, số buổi học/tuần và các chuyên đề trọng tâm), vui lòng đăng nhập hoặc tạo tài khoản.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button onClick={openLogin} className="cursor-pointer bg-blue-600 px-5 text-xs font-semibold text-white shadow-xs hover:bg-blue-500">
+              <LogIn className="mr-1.5 h-4 w-4" /> Đăng nhập ngay
+            </Button>
+            <Button variant="outline" onClick={openRegister} className="cursor-pointer text-xs font-medium">
+              Tạo tài khoản mới
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   if (profile.error) return <ErrorState message={profile.error} onRetry={profile.reload} />;
   if (!profile.data) return <LoadingState label="Đang tải hồ sơ..." />;
   return <Wizard profile={profile.data} />;

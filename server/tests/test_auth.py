@@ -162,3 +162,32 @@ def test_multi_user_data_isolation(client):
     dash_b = client.get("/api/dashboard/stats", headers={"Authorization": f"Bearer {token_b}"}).json()
     assert dash_a["target_score"] == 800
     assert dash_b["target_score"] == 900
+
+
+def test_unauthenticated_request_rejected_on_protected_endpoints(client):
+    import os
+    saved = os.environ.get("TOEIC_SKIP_DOTENV")
+    try:
+        if "TOEIC_SKIP_DOTENV" in os.environ:
+            del os.environ["TOEIC_SKIP_DOTENV"]
+
+        # AI Chat requires authentication
+        res = client.post("/api/ai/chat", json={"message": "Hello"})
+        assert res.status_code == 401
+        assert "Vui lòng đăng nhập" in res.json()["detail"]
+
+        # AI History requires authentication
+        res_hist = client.get("/api/ai/history")
+        assert res_hist.status_code == 401
+
+        # Error log creation requires authentication
+        res_err = client.post("/api/error-logs", json={"test_id": "Practice", "part": "Part 5", "question_no": 1, "error_type": "GRAMMAR"})
+        assert res_err.status_code == 401
+
+        # Voice Coach start requires authentication
+        res_voice = client.post("/api/ai/voice-coach/start", json={"scenario": "tech_interview"})
+        assert res_voice.status_code == 401
+    finally:
+        if saved is not None:
+            os.environ["TOEIC_SKIP_DOTENV"] = saved
+

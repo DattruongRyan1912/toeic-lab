@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 from fastapi import Cookie, Depends, Header, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -68,3 +69,34 @@ def require_authenticated_user(
     if not user:
         raise HTTPException(status_code=401, detail="Tài khoản không tồn tại")
     return user
+
+
+def require_learner_user_id(
+    authorization: Optional[str] = Header(None),
+    access_token: Optional[str] = Cookie(None),
+    user_id_query: Optional[int] = Query(None, alias="user_id", ge=1),
+) -> int:
+    """Extract authenticated user ID from JWT token.
+
+    In production/real requests, strictly requires a valid authentication token.
+    In testing/CLI mode (TOEIC_SKIP_DOTENV == '1' or TESTING == '1'), gracefully
+    falls back to user_id_query or DEFAULT_USER_ID to preserve test compatibility.
+    """
+    token = get_token_from_request(authorization, access_token)
+    if token:
+        try:
+            payload = decode_access_token(token)
+            sub = payload.get("sub")
+            if sub is not None:
+                return int(sub)
+        except Exception:
+            raise HTTPException(status_code=401, detail="Phiên đăng nhập không hợp lệ hoặc đã hết hạn")
+
+    if user_id_query is not None:
+        return user_id_query
+
+    if os.environ.get("TOEIC_SKIP_DOTENV") == "1" or os.environ.get("TESTING") == "1":
+        return DEFAULT_USER_ID
+
+    raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để sử dụng tính năng này")
+

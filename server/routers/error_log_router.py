@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, require_learner_user_id
 from server.models import ErrorLog, TestQuestion
 from server.schemas import ErrorLogCreate, ErrorLogRead, ErrorLogUpdate
 from server.services import error_log_service, insights
@@ -24,7 +24,7 @@ def list_error_logs(
     error_type: Optional[str] = Query(None),
     status: Optional[str] = Query(None, pattern="^(unresolved|reviewed|mastered)$"),
     source: Optional[str] = Query(None, pattern="^(manual|mock_test|ai_mentor)$"),
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     query = db.query(ErrorLog).filter_by(user_id=user_id)
@@ -38,7 +38,7 @@ def list_error_logs(
 
 
 @router.post("", response_model=ErrorLogRead, status_code=201)
-def create_error_log(payload: ErrorLogCreate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def create_error_log(payload: ErrorLogCreate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     fields = payload.model_dump()
     question = None
     if payload.question_id:
@@ -60,7 +60,7 @@ def create_error_log(payload: ErrorLogCreate, user_id: int = Depends(current_use
 def update_error_log(
     error_id: int,
     payload: ErrorLogUpdate,
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     log = _get_owned(db, error_id, user_id)
@@ -85,7 +85,7 @@ def update_error_log(
 def update_error_status(
     error_id: int,
     status: str = Query(..., pattern="^(unresolved|reviewed|mastered)$"),
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     """Kept for the legacy UI; equivalent to PATCH /{error_id} with {"status": ...}."""
@@ -98,7 +98,7 @@ def update_error_status(
 
 
 @router.delete("/{error_id}")
-def delete_error_log(error_id: int, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def delete_error_log(error_id: int, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     log = _get_owned(db, error_id, user_id)
     db.delete(log)
     db.commit()
