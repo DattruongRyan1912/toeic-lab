@@ -10,6 +10,7 @@ import { api, errorMessage } from "@/lib/api";
 import { speak } from "@/lib/audio";
 import { ipa } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { renderHighlightedSentence } from "@/lib/vocab-utils";
 import type { FlashcardItem } from "@/types";
 import { PronounceDialog } from "./pronounce-dialog";
 
@@ -129,7 +130,7 @@ export function WordListTable({ words, onDeleted, onStudyCategory }: WordListTab
                 {item.example_sentence && (
                   <div className="mt-1.5 rounded-lg border border-slate-100 bg-slate-50/80 p-2 text-xs dark:border-slate-800 dark:bg-slate-800/40">
                     <p className="font-medium text-slate-700 italic dark:text-slate-300">
-                      &ldquo;{item.example_sentence}&rdquo;
+                      &ldquo;{renderHighlightedSentence(item.example_sentence, item.word)}&rdquo;
                     </p>
                     {item.example_translation && (
                       <p className="mt-1 border-t border-slate-200/60 pt-1 text-slate-500 dark:border-slate-700/50 dark:text-slate-400">

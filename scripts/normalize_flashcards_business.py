@@ -63,6 +63,11 @@ def normalize():
                 continue
             original = card.example_sentence
             sent = original
+            # 1. Clean HTML blank spans and replace with the target word
+            if "<span" in sent or "blank" in sent:
+                sent = re.sub(r"<span class=['\"]blank['\"]>______\s*</span>", card.word, sent, flags=re.IGNORECASE)
+                sent = re.sub(r"<span[^>]*>.*?</span>", card.word, sent, flags=re.IGNORECASE)
+                sent = re.sub(r"<[^>]+>", "", sent)
 
             for old_term, new_term in IT_REPLACEMENTS:
                 if old_term in sent.lower():

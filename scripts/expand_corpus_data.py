@@ -459,7 +459,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "doanh thu, tiền thu nhập của công ty",
         "collocations": "annual revenue, generate revenue, gross revenue",
         "paraphrase_pair": "revenue = turnover = income = earnings",
-        "example_sentence": "The tech company reported a 15% increase in annual <span class='blank'>______</span> driven by cloud software sales.",
+        "example_sentence": "The tech company reported a 15% increase in annual revenue driven by cloud software sales.",
         "audio_word_url": "audio/words/revenue.mp3",
         "audio_sentence_url": "audio/sentences/sentence_21.mp3"
     },
@@ -472,7 +472,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "sự thâm hụt ngân sách",
         "collocations": "budget deficit, trade deficit, reduce the deficit",
         "paraphrase_pair": "deficit = shortfall = shortage",
-        "example_sentence": "The finance director introduced spending cuts to eliminate the operating budget <span class='blank'>______</span>.",
+        "example_sentence": "The finance director introduced spending cuts to eliminate the operating budget deficit.",
         "audio_word_url": "audio/words/deficit.mp3",
         "audio_sentence_url": "audio/sentences/sentence_22.mp3"
     },
@@ -485,7 +485,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "sự sáp nhập doanh nghiệp",
         "collocations": "proposed merger, approve a merger, merger and acquisition",
         "paraphrase_pair": "merger = amalgamation = consolidation",
-        "example_sentence": "The shareholders voted overwhelmingly in favor of the <span class='blank'>______</span> between the two telecom providers.",
+        "example_sentence": "The shareholders voted overwhelmingly in favor of the merger between the two telecom providers.",
         "audio_word_url": "audio/words/merger.mp3",
         "audio_sentence_url": "audio/sentences/sentence_23.mp3"
     },
@@ -498,7 +498,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "sự mua lại, thâu tóm công ty",
         "collocations": "corporate acquisition, complete the acquisition, recent acquisition",
         "paraphrase_pair": "acquisition = takeover = buyout",
-        "example_sentence": "Following the <span class='blank'>______</span> of the startup, our engineering team expanded by thirty engineers.",
+        "example_sentence": "Following the acquisition of the startup, our engineering team expanded by thirty engineers.",
         "audio_word_url": "audio/words/acquisition.mp3",
         "audio_sentence_url": "audio/sentences/sentence_24.mp3"
     },
@@ -511,7 +511,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "thúc đẩy, quảng bá; thăng chức",
         "collocations": "promote a new product, promote brand awareness, promote an employee",
         "paraphrase_pair": "promote = advertise = market = upgrade",
-        "example_sentence": "The marketing agency designed an aggressive campaign to <span class='blank'>______</span> the newly developed mobile banking app.",
+        "example_sentence": "The marketing agency designed an aggressive campaign to promote the newly developed mobile banking app.",
         "audio_word_url": "audio/words/promote.mp3",
         "audio_sentence_url": "audio/sentences/sentence_25.mp3"
     },
@@ -524,7 +524,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "chiến dịch (quảng cáo, tiếp thị)",
         "collocations": "advertising campaign, launch a campaign, promotional campaign",
         "paraphrase_pair": "campaign = drive = initiative = marketing effort",
-        "example_sentence": "The social media marketing <span class='blank'>______</span> generated over one million views in its first week.",
+        "example_sentence": "The social media marketing campaign generated over one million views in its first week.",
         "audio_word_url": "audio/words/campaign.mp3",
         "audio_sentence_url": "audio/sentences/sentence_26.mp3"
     },
@@ -537,7 +537,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "người tiêu dùng",
         "collocations": "consumer demand, consumer satisfaction, protect consumers",
         "paraphrase_pair": "consumer = customer = buyer = purchaser",
-        "example_sentence": "Recent survey findings indicate a sharp shift in <span class='blank'>______</span> preferences toward eco-friendly packaging.",
+        "example_sentence": "Recent survey findings indicate a sharp shift in consumer preferences toward eco-friendly packaging.",
         "audio_word_url": "audio/words/consumer.mp3",
         "audio_sentence_url": "audio/sentences/sentence_27.mp3"
     },
@@ -550,7 +550,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "nhắm mục tiêu vào nhóm đối tượng",
         "collocations": "target an audience, target market, meet sales targets",
         "paraphrase_pair": "target = aim at = focus on",
-        "example_sentence": "The promotional pricing strategy specifically seeks to <span class='blank'>______</span> young software developers and tech startups.",
+        "example_sentence": "The promotional pricing strategy specifically seeks to target young software developers and tech startups.",
         "audio_word_url": "audio/words/target.mp3",
         "audio_sentence_url": "audio/sentences/sentence_28.mp3"
     },
@@ -563,7 +563,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "khởi động, ra mắt sản phẩm mới",
         "collocations": "launch a product, official launch, launch a website",
         "paraphrase_pair": "launch = introduce = release = roll out",
-        "example_sentence": "The tech giant is preparing to <span class='blank'>______</span> its next-generation artificial intelligence platform next month.",
+        "example_sentence": "The tech giant is preparing to launch its next-generation artificial intelligence platform next month.",
         "audio_word_url": "audio/words/launch.mp3",
         "audio_sentence_url": "audio/sentences/sentence_29.mp3"
     },
@@ -576,7 +576,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "khoản thặng dư, dôi dư",
         "collocations": "budget surplus, trade surplus, surplus inventory",
         "paraphrase_pair": "surplus = excess = extra amount",
-        "example_sentence": "Due to disciplined cost controls, the logistics division finished the fiscal year with a considerable cash <span class='blank'>______</span>.",
+        "example_sentence": "Due to disciplined cost controls, the logistics division finished the fiscal year with a considerable cash surplus.",
         "audio_word_url": "audio/words/surplus.mp3",
         "audio_sentence_url": "audio/sentences/sentence_30.mp3"
     },
@@ -589,7 +589,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "cổ tức chi trả cho cổ đông",
         "collocations": "quarterly dividend, pay dividends, increase dividend payouts",
         "paraphrase_pair": "dividend = shareholder distribution = share payout",
-        "example_sentence": "The board resolved to distribute a quarterly cash <span class='blank'>______</span> of fifty cents per common share.",
+        "example_sentence": "The board resolved to distribute a quarterly cash dividend of fifty cents per common share.",
         "audio_word_url": "audio/words/dividend.mp3",
         "audio_sentence_url": "audio/sentences/sentence_31.mp3"
     },
@@ -602,7 +602,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "tái cấu trúc lại tổ chức hoặc nợ",
         "collocations": "restructure the organization, restructure debt, corporate restructuring",
         "paraphrase_pair": "restructure = reorganize = streamline",
-        "example_sentence": "In order to remain competitive, management decided to <span class='blank'>______</span> the product engineering divisions.",
+        "example_sentence": "In order to remain competitive, management decided to restructure the product engineering divisions.",
         "audio_word_url": "audio/words/restructure.mp3",
         "audio_sentence_url": "audio/sentences/sentence_32.mp3"
     },
@@ -615,7 +615,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "chỉ định, bổ nhiệm vào vị trí",
         "collocations": "designate a representative, designated parking area, officially designate",
         "paraphrase_pair": "designate = appoint = assign = name",
-        "example_sentence": "The executive committee will <span class='blank'>______</span> an acting department head during Mr. Adams' absence.",
+        "example_sentence": "The executive committee will designate an acting department head during Mr. Adams' absence.",
         "audio_word_url": "audio/words/designate.mp3",
         "audio_sentence_url": "audio/sentences/sentence_33.mp3"
     },
@@ -628,7 +628,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "biện pháp giải quyết vấn đề, nghị quyết",
         "collocations": "dispute resolution, swift resolution, board resolution",
         "paraphrase_pair": "resolution = settlement = solution = decision",
-        "example_sentence": "Our primary customer support objective is the prompt <span class='blank'>______</span> of all client billing complaints.",
+        "example_sentence": "Our primary customer support objective is the prompt resolution of all client billing complaints.",
         "audio_word_url": "audio/words/resolution.mp3",
         "audio_sentence_url": "audio/sentences/sentence_34.mp3"
     },
@@ -641,7 +641,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "sự hài lòng, thỏa mãn của khách hàng",
         "collocations": "customer satisfaction, guarantee satisfaction, express satisfaction",
         "paraphrase_pair": "satisfaction = contentment = approval",
-        "example_sentence": "High client <span class='blank'>______</span> scores contributed directly to our contract renewal rate reaching 95 percent.",
+        "example_sentence": "High client satisfaction scores contributed directly to our contract renewal rate reaching 95 percent.",
         "audio_word_url": "audio/words/satisfaction.mp3",
         "audio_sentence_url": "audio/sentences/sentence_35.mp3"
     },
@@ -654,7 +654,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "phiếu bảo hành, cam kết bảo hành",
         "collocations": "under warranty, extended warranty, warranty period",
         "paraphrase_pair": "warranty = guarantee = guarantee certificate",
-        "example_sentence": "Please retain your sales receipt to validate the one-year manufacturer <span class='blank'>______</span> on this monitor.",
+        "example_sentence": "Please retain your sales receipt to validate the one-year manufacturer warranty on this monitor.",
         "audio_word_url": "audio/words/warranty.mp3",
         "audio_sentence_url": "audio/sentences/sentence_36.mp3"
     },
@@ -667,7 +667,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "tiền hoàn trả lại",
         "collocations": "full refund, issue a refund, request a refund",
         "paraphrase_pair": "refund = repayment = reimbursement",
-        "example_sentence": "Customers returning unopened merchandise within 14 days will receive a full <span class='blank'>______</span> to their credit card.",
+        "example_sentence": "Customers returning unopened merchandise within 14 days will receive a full refund to their credit card.",
         "audio_word_url": "audio/words/refund.mp3",
         "audio_sentence_url": "audio/sentences/sentence_37.mp3"
     },
@@ -680,7 +680,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "ý kiến đóng góp, phản hồi",
         "collocations": "customer feedback, constructive feedback, solicit feedback",
         "paraphrase_pair": "feedback = comments = input = reviews",
-        "example_sentence": "We genuinely appreciate your valuable <span class='blank'>______</span> as it helps us enhance our API performance.",
+        "example_sentence": "We genuinely appreciate your valuable feedback as it helps us enhance our API performance.",
         "audio_word_url": "audio/words/feedback.mp3",
         "audio_sentence_url": "audio/sentences/sentence_38.mp3"
     },
@@ -693,7 +693,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "thủ tục, quy trình thực hiện",
         "collocations": "standard operating procedure, safety procedure, follow procedures",
         "paraphrase_pair": "procedure = process = method = steps",
-        "example_sentence": "All staff members must adhere strictly to the established emergency evacuation <span class='blank'>______</span>.",
+        "example_sentence": "All staff members must adhere strictly to the established emergency evacuation procedure.",
         "audio_word_url": "audio/words/procedure.mp3",
         "audio_sentence_url": "audio/sentences/sentence_39.mp3"
     },
@@ -706,7 +706,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "giao thức, nghi thức làm việc",
         "collocations": "security protocol, communication protocol, follow protocol",
         "paraphrase_pair": "protocol = rules = standard convention = code",
-        "example_sentence": "The infrastructure team updated the network security <span class='blank'>______</span> to prevent unauthorized remote logins.",
+        "example_sentence": "The infrastructure team updated the network security protocol to prevent unauthorized remote logins.",
         "audio_word_url": "audio/words/protocol.mp3",
         "audio_sentence_url": "audio/sentences/sentence_40.mp3"
     },
@@ -719,7 +719,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "lưu trữ vào kho hồ sơ",
         "collocations": "archive records, digitally archive, archival storage",
         "paraphrase_pair": "archive = store = file away = keep in records",
-        "example_sentence": "The administrative department will <span class='blank'>______</span> all past project contracts onto secure cloud servers.",
+        "example_sentence": "The administrative department will archive all past project contracts onto secure cloud servers.",
         "audio_word_url": "audio/words/archive.mp3",
         "audio_sentence_url": "audio/sentences/sentence_41.mp3"
     },
@@ -732,7 +732,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "hành vi vi phạm hợp đồng hoặc an ninh",
         "collocations": "breach of contract, security breach, commit a breach",
         "paraphrase_pair": "breach = violation = infraction = non-compliance",
-        "example_sentence": "Failing to deliver source code on the agreed date constitutes a direct <span class='blank'>______</span> of contract.",
+        "example_sentence": "Failing to deliver source code on the agreed date constitutes a direct breach of contract.",
         "audio_word_url": "audio/words/breach.mp3",
         "audio_sentence_url": "audio/sentences/sentence_42.mp3"
     },
@@ -745,7 +745,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "có tính ràng buộc về mặt pháp lý",
         "collocations": "legally binding agreement, binding contract, binding decision",
         "paraphrase_pair": "binding = mandatory = enforceable = obligating",
-        "example_sentence": "Once signed by authorized representatives of both parties, the agreement becomes legally <span class='blank'>______</span>.",
+        "example_sentence": "Once signed by authorized representatives of both parties, the agreement becomes legally binding.",
         "audio_word_url": "audio/words/binding.mp3",
         "audio_sentence_url": "audio/sentences/sentence_43.mp3"
     },
@@ -758,7 +758,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "chấm dứt hiệu lực (hợp đồng, việc làm)",
         "collocations": "terminate an agreement, terminate employment, terminate prematurely",
         "paraphrase_pair": "terminate = end = cancel = discontinue",
-        "example_sentence": "Either party reserves the legal right to <span class='blank'>______</span> the contract with thirty days written notice.",
+        "example_sentence": "Either party reserves the legal right to terminate the contract with thirty days written notice.",
         "audio_word_url": "audio/words/terminate.mp3",
         "audio_sentence_url": "audio/sentences/sentence_44.mp3"
     },
@@ -771,7 +771,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "điều khoản trong văn bản hợp đồng",
         "collocations": "confidentiality clause, penalty clause, include a clause",
         "paraphrase_pair": "clause = provision = stipulation = article",
-        "example_sentence": "Please review Section 4 to verify the non-compete <span class='blank'>______</span> before signing the employment contract.",
+        "example_sentence": "Please review Section 4 to verify the non-compete clause before signing the employment contract.",
         "audio_word_url": "audio/words/clause.mp3",
         "audio_sentence_url": "audio/sentences/sentence_45.mp3"
     },
@@ -784,7 +784,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "sự bất đồng, tranh chấp",
         "collocations": "settle a dispute, labor dispute, contractual dispute",
         "paraphrase_pair": "dispute = conflict = disagreement = controversy",
-        "example_sentence": "Both companies agreed to hire an independent mediator to resolve their ongoing intellectual property <span class='blank'>______</span>.",
+        "example_sentence": "Both companies agreed to hire an independent mediator to resolve their ongoing intellectual property dispute.",
         "audio_word_url": "audio/words/dispute.mp3",
         "audio_sentence_url": "audio/sentences/sentence_46.mp3"
     },
@@ -797,7 +797,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "hàng hóa chuyên chở bằng đường biển/hàng không",
         "collocations": "freight charges, air freight, freight forwarder",
         "paraphrase_pair": "freight = cargo = shipment = goods",
-        "example_sentence": "Due to soaring container shipping rates, international <span class='blank'>______</span> charges rose sharply this quarter.",
+        "example_sentence": "Due to soaring container shipping rates, international freight charges rose sharply this quarter.",
         "audio_word_url": "audio/words/freight.mp3",
         "audio_sentence_url": "audio/sentences/sentence_47.mp3"
     },
@@ -810,7 +810,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "kho bãi chứa hàng",
         "collocations": "central warehouse, warehouse inventory, store in a warehouse",
         "paraphrase_pair": "warehouse = storage facility = depot",
-        "example_sentence": "All incoming electrical components are temporarily stored at the central distribution <span class='blank'>______</span>.",
+        "example_sentence": "All incoming electrical components are temporarily stored at the central distribution warehouse.",
         "audio_word_url": "audio/words/warehouse.mp3",
         "audio_sentence_url": "audio/sentences/sentence_48.mp3"
     },
@@ -823,7 +823,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "gửi đi, điều phối đơn hàng",
         "collocations": "dispatch an order, dispatch technicians, prompt dispatch",
         "paraphrase_pair": "dispatch = send out = ship = transmit",
-        "example_sentence": "Our logistics operations team will <span class='blank'>______</span> your hardware package within twenty-four hours of payment.",
+        "example_sentence": "Our logistics operations team will dispatch your hardware package within twenty-four hours of payment.",
         "audio_word_url": "audio/words/dispatch.mp3",
         "audio_sentence_url": "audio/sentences/sentence_49.mp3"
     },
@@ -836,7 +836,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "sự đánh giá hiệu suất công việc",
         "collocations": "performance appraisal, annual appraisal, employee appraisal",
         "paraphrase_pair": "appraisal = evaluation = assessment = review",
-        "example_sentence": "Year-end salary increments are determined strictly based on the annual performance <span class='blank'>______</span>.",
+        "example_sentence": "Year-end salary increments are determined strictly based on the annual performance appraisal.",
         "audio_word_url": "audio/words/appraisal.mp3",
         "audio_sentence_url": "audio/sentences/sentence_50.mp3"
     },
@@ -849,7 +849,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "người hướng dẫn, cố vấn nghề nghiệp",
         "collocations": "assigned mentor, mentor program, career mentor",
         "paraphrase_pair": "mentor = adviser = coach = guide",
-        "example_sentence": "Every junior backend engineer is assigned an experienced senior architect to serve as their professional <span class='blank'>______</span>.",
+        "example_sentence": "Every junior backend engineer is assigned an experienced senior architect to serve as their professional mentor.",
         "audio_word_url": "audio/words/mentor.mp3",
         "audio_sentence_url": "audio/sentences/sentence_51.mp3"
     },
@@ -862,7 +862,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "tỷ lệ luân chuyển nhân sự; doanh số",
         "collocations": "high staff turnover, reduce turnover, employee turnover rate",
         "paraphrase_pair": "turnover = staff attrition = churn rate",
-        "example_sentence": "Human resources introduced hybrid work policies in an effort to curb high developer <span class='blank'>______</span>.",
+        "example_sentence": "Human resources introduced hybrid work policies in an effort to curb high developer turnover.",
         "audio_word_url": "audio/words/turnover.mp3",
         "audio_sentence_url": "audio/sentences/sentence_52.mp3"
     },
@@ -875,7 +875,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "văn bằng, năng lực chuyên môn đạt chuẩn",
         "collocations": "professional qualification, minimum qualifications, possess qualifications",
         "paraphrase_pair": "qualification = credential = certification = capability",
-        "example_sentence": "Candidates must possess relevant engineering <span class='blank'>______</span> and at least three years of microservices experience.",
+        "example_sentence": "Candidates must possess relevant engineering qualification and at least three years of microservices experience.",
         "audio_word_url": "audio/words/qualification.mp3",
         "audio_sentence_url": "audio/sentences/sentence_53.mp3"
     },
@@ -888,7 +888,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "từ chức, xin nghỉ việc",
         "collocations": "resign from one's position, tender resignation, decide to resign",
         "paraphrase_pair": "resign = step down = leave one's post = quit",
-        "example_sentence": "The chief financial officer chose to <span class='blank'>______</span> in order to pursue personal entrepreneurial ventures.",
+        "example_sentence": "The chief financial officer chose to resign in order to pursue personal entrepreneurial ventures.",
         "audio_word_url": "audio/words/resign.mp3",
         "audio_sentence_url": "audio/sentences/sentence_54.mp3"
     },
@@ -901,7 +901,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "cuộc đàm phán, thương lượng hợp đồng",
         "collocations": "contract negotiation, enter negotiations, successful negotiation",
         "paraphrase_pair": "negotiation = discussions = talks = bargaining",
-        "example_sentence": "After weeks of intense <span class='blank'>______</span>, the vendor agreed to lower server rack maintenance fees by 10%.",
+        "example_sentence": "After weeks of intense negotiation, the vendor agreed to lower server rack maintenance fees by 10%.",
         "audio_word_url": "audio/words/negotiation.mp3",
         "audio_sentence_url": "audio/sentences/sentence_55.mp3"
     },
@@ -914,7 +914,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "hóa đơn thanh toán",
         "collocations": "issue an invoice, pay an invoice, itemized invoice",
         "paraphrase_pair": "invoice = bill = payment request = receipt",
-        "example_sentence": "Please verify that the total figure on the supplier's <span class='blank'>______</span> matches the approved purchase order.",
+        "example_sentence": "Please verify that the total figure on the supplier's invoice matches the approved purchase order.",
         "audio_word_url": "audio/words/invoice.mp3",
         "audio_sentence_url": "audio/sentences/sentence_56.mp3"
     },
@@ -927,7 +927,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "đại tu, kiểm tra và nâng cấp toàn bộ",
         "collocations": "major overhaul, overhaul the system, complete overhaul",
         "paraphrase_pair": "overhaul = renovate = revamp = reconstruct",
-        "example_sentence": "The IT director proposed to <span class='blank'>______</span> the legacy authentication system before the product launch.",
+        "example_sentence": "The IT director proposed to overhaul the legacy authentication system before the product launch.",
         "audio_word_url": "audio/words/overhaul.mp3",
         "audio_sentence_url": "audio/sentences/sentence_57.mp3"
     },
@@ -940,7 +940,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "toàn thể nhân viên, nhân sự",
         "collocations": "personnel department, trained personnel, key personnel",
         "paraphrase_pair": "personnel = staff = employees = workforce",
-        "example_sentence": "Only authorized security <span class='blank'>______</span> are permitted to enter the main datacenter server room.",
+        "example_sentence": "Only authorized security personnel are permitted to enter the main datacenter server room.",
         "audio_word_url": "audio/words/personnel.mp3",
         "audio_sentence_url": "audio/sentences/sentence_58.mp3"
     },
@@ -953,7 +953,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "vị trí tuyển dụng còn trống; phòng trống",
         "collocations": "job vacancy, fill a vacancy, current vacancies",
         "paraphrase_pair": "vacancy = opening = job position = available slot",
-        "example_sentence": "The engineering team posted an urgent <span class='blank'>______</span> for a senior distributed systems architect.",
+        "example_sentence": "The engineering team posted an urgent vacancy for a senior distributed systems architect.",
         "audio_word_url": "audio/words/vacancy.mp3",
         "audio_sentence_url": "audio/sentences/sentence_59.mp3"
     },
@@ -966,7 +966,7 @@ ADDITIONAL_FLASHCARDS = [
         "meaning": "tiềm năng, có triển vọng trong tương lai",
         "collocations": "prospective client, prospective buyer, prospective employee",
         "paraphrase_pair": "prospective = potential = future = expected",
-        "example_sentence": "The sales team will host an online demonstration tomorrow for several <span class='blank'>______</span> enterprise clients.",
+        "example_sentence": "The sales team will host an online demonstration tomorrow for several prospective enterprise clients.",
         "audio_word_url": "audio/words/prospective.mp3",
         "audio_sentence_url": "audio/sentences/sentence_60.mp3"
     }

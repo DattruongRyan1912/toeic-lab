@@ -9,6 +9,7 @@ import { api, errorMessage } from "@/lib/api";
 import { speak } from "@/lib/audio";
 import { ipa } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { cleanSentence, renderHighlightedSentence } from "@/lib/vocab-utils";
 import type { FlashcardItem, SrsCard } from "@/types";
 import { PronounceDialog } from "./pronounce-dialog";
 
@@ -280,7 +281,7 @@ export function FlashcardPlayer({
                           type="button"
                           onClick={(event) => {
                             event.stopPropagation();
-                            void play(word.example_sentence);
+                            void play(cleanSentence(word.example_sentence, word.word));
                           }}
                           className="cursor-pointer text-blue-600 hover:text-blue-700 dark:text-blue-400"
                           aria-label="Nghe câu ví dụ"
@@ -308,7 +309,7 @@ export function FlashcardPlayer({
                     </div>
                     <div className="rounded-lg border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900/60">
                       <p className="text-xs font-medium text-slate-800 italic dark:text-slate-200">
-                        &ldquo;{word.example_sentence}&rdquo;
+                        &ldquo;{renderHighlightedSentence(word.example_sentence, word.word)}&rdquo;
                       </p>
                       {exampleTrans && (
                         <p className="mt-1.5 border-t border-slate-100 pt-1.5 text-xs text-slate-600 dark:border-slate-800/80 dark:text-slate-400">
