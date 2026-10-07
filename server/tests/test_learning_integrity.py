@@ -169,3 +169,35 @@ def test_listening_questions_are_not_grammar_lessons(db, seeded):
     db.expire_all()
     assert db.query(models.TestQuestion).filter_by(part="Part 2").first().lesson_number is None
     assert db.query(models.QuestionAttempt).filter_by(part="Part 2").first().lesson_number is None
+
+
+def test_guest_translation_is_not_saved_on_the_shared_card(client, seeded, db, production_mode, monkeypatch):
+    from server.routers import flashcard_router
+
+    async def fake_translate(sentence, keyword=None):
+        return "Bản dịch thử"
+
+    monkeypatch.setattr(flashcard_router, "translate_sentence_to_vi", fake_translate)
+    shown = client.post("/api/flashcards/1/translate-example")
+    assert shown.status_code == 200 and shown.json()["example_translation"] == "Bản dịch thử"
+    db.expire_all()
+    assert db.get(models.Flashcard, 1).example_translation is None
+
+
+def test_parallel_forced_replans_do_not_duplicate_tasks(seeded, db):
+    errors = []
+
+    def replan():
+        try:
+            with SessionLocal() as session:
+                planner.ensure_plan(session, 1, force=True)
+        except Exception as exc:  # pragma: no cover
+            errors.append(exc)
+
+    threads = [threading.Thread(target=replan) for _ in range(3)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    keys = _planner_keys(db)
+    assert errors == [] and keys and len(keys) == len(set(keys))

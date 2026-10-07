@@ -366,6 +366,9 @@ def _day_items(day: date, index: int, settings: Settings, focus: list, srs_due: 
 def generate_plan(db: Session, user_id: int, start: Optional[date] = None, days: int = PLAN_DAYS, report=None) -> list:
     """(Re)build the plan for [start, start+days). Keeps manual marks and items added by the learner / AI."""
     user = insights.get_or_create_user(db, user_id)
+    # Take the learner's row lock before reading the current plan: two concurrent rebuilds (e.g. a double
+    # click on "Lập lại kế hoạch") then run one after the other instead of both inserting the same tasks.
+    db.query(User).filter(User.id == user_id).update({User.plan_generated_on: User.plan_generated_on}, synchronize_session=False)
     start = start or timeutil.local_today()
     settings = adapted_settings(db, user)
     report = report or skills_service.compute(db, user_id)

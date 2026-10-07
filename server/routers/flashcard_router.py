@@ -187,7 +187,12 @@ async def translate_sentence_endpoint(payload: TranslateSentenceRequest):
 
 
 @router.post("/{card_id}/translate-example", response_model=FlashcardRead, dependencies=[Depends(rate_limit.limit_ai)])
-async def translate_flashcard_example(card_id: int, db: Session = Depends(get_db)):
+async def translate_flashcard_example(
+    card_id: int,
+    learner_id: Optional[int] = Depends(optional_learner_id),
+    db: Session = Depends(get_db),
+):
+    """Translate a card's example. Signed-in learners save it on the shared card; guests only see it."""
     card = db.get(Flashcard, card_id)
     if card is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
@@ -201,6 +206,8 @@ async def translate_flashcard_example(card_id: int, db: Session = Depends(get_db
     trans = await translate_sentence_to_vi(card.example_sentence, keyword=card.word)
     if trans is None:  # never store a failure message on a card shared by every learner
         raise HTTPException(status_code=503, detail="AI chưa dịch được câu này, vui lòng thử lại sau.")
+    if learner_id is None:  # guests are read-only: answer without writing to the shared card
+        return FlashcardRead.model_validate(card).model_copy(update={"example_translation": trans})
     card.example_translation = trans
     db.commit()
     db.refresh(card)

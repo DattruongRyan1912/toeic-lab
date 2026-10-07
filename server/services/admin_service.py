@@ -6,6 +6,7 @@ from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
 from server.models import ErrorLog, QuestionAttempt, SRSReviewLog, StudySession, User, UserTestSubmission
+from server.services import error_log_service
 from server.utils.timeutil import utcnow
 
 ROLES = ("learner", "admin")
@@ -137,7 +138,7 @@ def get_user_detail(db: Session, user_id: int) -> dict:
         "submissions": db.query(func.count(UserTestSubmission.id)).filter(UserTestSubmission.user_id == user_id).scalar() or 0,
         "srs_reviews": db.query(func.count(SRSReviewLog.id)).filter(SRSReviewLog.user_id == user_id).scalar() or 0,
         "open_errors": db.query(func.count(ErrorLog.id))
-        .filter(ErrorLog.user_id == user_id, ErrorLog.status != "mastered")
+        .filter(ErrorLog.user_id == user_id, error_log_service.open_filter())
         .scalar()
         or 0,
         "recent_submissions": [

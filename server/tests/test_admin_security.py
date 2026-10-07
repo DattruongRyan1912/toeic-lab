@@ -105,3 +105,38 @@ def test_ai_endpoints_are_rate_limited(client, monkeypatch):
     payload = {"sentence": "We leverage data."}
     codes = [client.post("/api/flashcards/translate-sentence", json=payload).status_code for _ in range(3)]
     assert codes == [200, 200, 429]
+
+
+def test_limiter_table_stays_bounded(monkeypatch):
+    from server.utils import rate_limit
+
+    monkeypatch.setattr(rate_limit, "MAX_KEYS", 50)
+    for index in range(500):  # unique identifiers, as an attacker would send
+        rate_limit.hit("login", f"attacker-{index}", "10/900")
+    assert len(rate_limit._hits) <= 50
+
+
+def test_forwarded_for_is_only_trusted_from_internal_peers(monkeypatch):
+    from starlette.requests import Request
+
+    from server.utils import rate_limit
+
+    def request(peer: str, forwarded: str) -> Request:
+        return Request({"type": "http", "client": (peer, 1234), "headers": [(b"x-forwarded-for", forwarded.encode())]})
+
+    # Through the BFF/proxy on an internal address: only the entry our proxy appended (rightmost) counts.
+    assert rate_limit.client_ip(request("172.18.0.3", "6.6.6.6, 203.0.113.9")) == "203.0.113.9"
+    # Straight from the internet: the header is attacker-controlled and ignored.
+    assert rate_limit.client_ip(request("8.8.8.8", "6.6.6.6")) == "8.8.8.8"
+    monkeypatch.setattr(config, "TRUSTED_PROXY_HOPS", 0)
+    assert rate_limit.client_ip(request("172.18.0.3", "203.0.113.9")) == "172.18.0.3"
+
+
+def test_admin_counts_null_status_errors_as_open(client, admin):
+    from server.models import ErrorLog
+
+    learner = make_user(client, "null_status_learner")
+    with SessionLocal() as db:
+        db.add(ErrorLog(user_id=learner["id"], test_id="Practice", part="Part 5", error_type="GRAMMAR", root_cause="x", status=None))
+        db.commit()
+    assert client.get(f"/api/admin/users/{learner['id']}", headers=admin["headers"]).json()["open_errors"] == 1

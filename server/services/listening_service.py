@@ -41,6 +41,7 @@ _NUMBER_WORDS.update({"thirty": "30", "forty": "40", "fifty": "50", "sixty": "60
 _ORDINALS = dict(zip("first second third fourth fifth sixth seventh eighth ninth tenth".split(),
                      "1st 2nd 3rd 4th 5th 6th 7th 8th 9th 10th".split()))
 _ALIASES = {"cannot": "can't", **_NUMBER_WORDS, **_ORDINALS}
+_NUMBER_GLUE = {"hundred", "and"}  # "Number one hundred (and) five"
 
 # Key phonetics keywords for TOEIC connected speech
 _FLAP_T = {"water", "meeting", "better", "waiting", "city", "computer", "shuttle", "quarter", "party", "hospital"}
@@ -117,8 +118,12 @@ def diff_transcription(learner_text: str, target_transcript: str) -> dict:
     target = word_units(clean_target)
     learner = word_units(clean_learner)
     # ETS clips start with "Number seven." -- not part of the transcript, so it is not counted as extra.
-    if len(learner) >= 2 and learner[0][1] == "number" and learner[1][1].isdigit() and (not target or target[0][1] != "number"):
-        learner = learner[2:]
+    if learner and learner[0][1] == "number" and (not target or target[0][1] != "number"):
+        end = 1
+        while end < len(learner) and (learner[end][1].isdigit() or learner[end][1] in _NUMBER_GLUE):
+            end += 1
+        if end > 1:
+            learner = learner[end:]
 
     matcher = difflib.SequenceMatcher(None, [u[1] for u in target], [u[1] for u in learner], autojunk=False)
     diff_tokens = []

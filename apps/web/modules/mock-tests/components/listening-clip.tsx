@@ -34,13 +34,17 @@ export function ListeningClip({ question, playOnce, played, onPlayed }: Listenin
     return () => audio?.pause(); // leaving the question stops its clip
   }, [question.id]);
 
+  // A clip only counts as heard once playback has really started: a network/codec failure keeps the retry.
   const toggle = async () => {
     if (locked) return;
     if (!authentic) {
-      onPlayed();
+      if (playing) return;
       setPlaying(true);
       try {
         await speak(ttsScript(question));
+        onPlayed();
+      } catch {
+        // speech synthesis unavailable: nothing was heard
       } finally {
         setPlaying(false);
       }
@@ -53,8 +57,12 @@ export function ListeningClip({ question, playOnce, played, onPlayed }: Listenin
       audio.pause();
       return;
     }
-    onPlayed();
-    await audio.play().catch(() => setPlaying(false));
+    try {
+      await audio.play();
+      onPlayed();
+    } catch {
+      setPlaying(false);
+    }
   };
 
   return (

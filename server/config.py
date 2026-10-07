@@ -105,3 +105,6 @@ REMINDER_DISPATCH_ENABLED = _bool("REMINDER_DISPATCH_ENABLED", True)
 RATE_LIMIT_LOGIN = os.getenv("RATE_LIMIT_LOGIN", "10/900")  # per username/email
 RATE_LIMIT_REGISTER = os.getenv("RATE_LIMIT_REGISTER", "5/3600")  # per client IP
 RATE_LIMIT_AI = os.getenv("RATE_LIMIT_AI", "30/600")  # per user (or IP for guests), LLM-backed endpoints
+# Reverse proxies in front of the web app that append the client IP to X-Forwarded-For (Caddy/nginx = 1).
+# 0 = never read the header. Only honoured for requests reaching the API from an internal address.
+TRUSTED_PROXY_HOPS = max(0, _int("TRUSTED_PROXY_HOPS", 1))

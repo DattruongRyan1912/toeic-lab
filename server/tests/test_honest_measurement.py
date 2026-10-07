@@ -85,3 +85,9 @@ def test_planned_rest_days_do_not_break_the_streak():
     week_days = (0, 1, 2, 3, 4, 5)  # Mon-Sat
     assert insights.streak_from(active, monday, study_days=week_days) == 5
     assert insights.streak_from(active, monday) == 0  # without a schedule the rest day breaks it
+
+
+def test_whole_spoken_item_number_is_ignored():
+    for spoken in ("Number twenty-one.", "Number one hundred and five.", "Number 7."):
+        result = listening_service.diff_transcription(f"{spoken} How old is this building?", "How old is this building?")
+        assert result["accuracy"] == 100.0, spoken
