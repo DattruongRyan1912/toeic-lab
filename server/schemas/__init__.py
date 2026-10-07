@@ -1023,6 +1023,9 @@ class AdminUserRow(BaseModel):
     study_minutes_7d: int
     attempts: int
     accuracy: Optional[float] = None
+    ai_plan: str = "default"  # admin | unlimited | custom | default
+    ai_daily_quota: Optional[int] = None  # None = no limit
+    ai_requests_today: int = 0
 
 
 class AdminUserList(BaseModel):
@@ -1055,3 +1058,51 @@ class AdminUserDetail(AdminUserRow):
 class AdminUserUpdate(BaseModel):
     role: Optional[Literal["learner", "admin"]] = None
     is_active: Optional[bool] = None
+    # AI allowance: unlimited, or a custom daily quota; sending ai_daily_quota=null returns to the default plan
+    ai_unlimited: Optional[bool] = None
+    ai_daily_quota: Optional[int] = Field(None, ge=0, le=100_000)
+
+
+class AIQuota(BaseModel):
+    plan: str  # guest | default | custom | unlimited | admin
+    unlimited: bool
+    daily_quota: Optional[int] = None
+    used_today: Optional[int] = None
+    remaining: Optional[int] = None
+
+
+class AdminAIDay(BaseModel):
+    date: date
+    requests: int
+    calls: int
+    tokens: int
+    errors: int
+
+
+class AdminAIKey(BaseModel):
+    alias: str
+    provider: str
+    disabled: bool
+    note: Optional[str] = None
+    cooling_seconds: int
+    ok_24h: int
+    errors_24h: int
+    rate_limited_24h: int
+    last_ok_at: Optional[datetime] = None
+    last_error_at: Optional[datetime] = None
+    last_error: Optional[str] = None
+
+
+class AdminAIOverview(BaseModel):
+    today: AdminAIDay
+    days: List[AdminAIDay]
+    by_endpoint: List[Dict[str, Any]]
+    top_users: List[Dict[str, Any]]
+    keys: List[AdminAIKey]
+    limits: Dict[str, Any]
+    provider: Dict[str, Any]
+
+
+class AdminAIKeyUpdate(BaseModel):
+    disabled: bool
+    note: Optional[str] = Field(None, max_length=200)

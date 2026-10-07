@@ -1,19 +1,21 @@
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from server import config
 from server.database import get_db
-from server.deps import current_user_id, is_test_mode, require_learner_user_id
-from server.models import AIMessage
+from server.deps import current_user_id, is_test_mode, optional_learner_id, require_learner_user_id
+from server.models import AIMessage, User
+from server.utils import rate_limit
 from server.schemas import (
     AIActionRead,
     AIChatRequest,
     AIChatResponse,
     AIMessageRead,
+    AIQuota,
     AIStatus,
     AIToolExecuteRequest,
     AIToolInfo,
@@ -24,9 +26,8 @@ from server.schemas import (
     VocabPronounceRequest,
     VocabPronounceResponse,
 )
-from server.services import activity, agent_tools, insights, learner_context, voice_coach_service
+from server.services import activity, agent_tools, ai_usage, insights, learner_context, voice_coach_service
 from server.services import ai_agent_service as agent
-from server.utils import rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,18 @@ router = APIRouter(prefix="/api/ai", tags=["AI Mentor Copilot"])
 @router.get("/status", response_model=AIStatus)
 def ai_status():
     return agent.provider_status()
+
+
+@router.get("/quota", response_model=AIQuota)
+def ai_quota(
+    request: Request,
+    learner_id: Optional[int] = Depends(optional_learner_id),
+    db: Session = Depends(get_db),
+):
+    """The caller's AI allowance today (admins and unlimited accounts: no limit)."""
+    user = db.get(User, learner_id) if learner_id is not None else None
+    ip = rate_limit.client_ip(request) if user is None else None
+    return ai_usage.allowance(db, user, ip=ip)
 
 
 @router.get("/tools", response_model=List[AIToolInfo])
@@ -105,7 +118,7 @@ def execute_tool(payload: AIToolExecuteRequest, user_id: int = Depends(require_l
     return result
 
 
-@router.post("/chat", response_model=AIChatResponse, dependencies=[Depends(rate_limit.limit_ai)])
+@router.post("/chat", response_model=AIChatResponse, dependencies=[Depends(ai_usage.guard("chat"))])
 async def chat_with_ai_mentor(
     payload: AIChatRequest,
     user_id: int = Depends(require_learner_user_id),
@@ -171,7 +184,7 @@ async def chat_with_ai_mentor(
     )
 
 
-@router.post("/voice-coach/start", response_model=VoiceCoachStartResponse, dependencies=[Depends(rate_limit.limit_ai)])
+@router.post("/voice-coach/start", response_model=VoiceCoachStartResponse, dependencies=[Depends(ai_usage.guard("voice_coach"))])
 def voice_coach_start(
     payload: VoiceCoachStartRequest,
     user_id: int = Depends(require_learner_user_id),
@@ -183,7 +196,7 @@ def voice_coach_start(
     )
 
 
-@router.post("/voice-coach/turn", response_model=VoiceCoachTurnResponse, dependencies=[Depends(rate_limit.limit_ai)])
+@router.post("/voice-coach/turn", response_model=VoiceCoachTurnResponse, dependencies=[Depends(ai_usage.guard("voice_coach"))])
 async def voice_coach_turn(
     payload: VoiceCoachTurnRequest,
     user_id: int = Depends(require_learner_user_id),
@@ -203,7 +216,7 @@ async def voice_coach_turn(
     )
 
 
-@router.post("/pronounce-vocab", response_model=VocabPronounceResponse, dependencies=[Depends(rate_limit.limit_ai)])
+@router.post("/pronounce-vocab", response_model=VocabPronounceResponse, dependencies=[Depends(ai_usage.guard("pronounce"))])
 async def pronounce_vocab(
     payload: VocabPronounceRequest,
     user_id: int = Depends(require_learner_user_id),

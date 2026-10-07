@@ -1,12 +1,14 @@
 """Idempotent data maintenance run at startup (after the additive schema migration)."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from sqlalchemy.orm import Session
 
+from server.database import SessionLocal
 from server.models import ErrorLog, Flashcard, QuestionAttempt, Roadmap, SprintTask, TestQuestion
-from server.services import curriculum, error_log_service, practice_service
+from server.services import ai_usage, curriculum, error_log_service, practice_service
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,7 @@ def run(db: Session) -> dict:
     result = {
         "listening_lessons": detach_listening_from_lessons(db),
         "failed_translations": clear_failed_translations(db),
+        "old_ai_usage_logs": ai_usage.purge_old_logs(db),
         "attempts": practice_service.backfill_attempts(db),
         "roadmaps": backfill_roadmaps(db),
         "error_logs": backfill_error_logs(db),
@@ -80,3 +83,21 @@ def run(db: Session) -> dict:
     if any(result.values()):
         logger.info("Maintenance backfill: %s", result)
     return result
+
+
+async def maintenance_loop(stop: asyncio.Event, interval_seconds: int = 3600) -> None:
+    """Periodic maintenance loop that purges expired logs. Runs hourly."""
+    while not stop.is_set():
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
+        except asyncio.TimeoutError:
+            pass
+        if stop.is_set():
+            break
+        try:
+            with SessionLocal() as db:
+                purged = ai_usage.purge_old_logs(db)
+                if purged:
+                    logger.info("Periodic maintenance: purged %d expired AI usage logs", purged)
+        except Exception:
+            logger.exception("Periodic maintenance task encountered an error")

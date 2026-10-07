@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
-import { api, errorMessage } from "@/lib/api";
+import { api, errorMessage, notifyAiQuotaUpdated } from "@/lib/api";
 import { AudioRecorder } from "@/lib/audio-recorder";
 import { speak, stopSpeaking } from "@/lib/audio";
 import { cn } from "@/lib/utils";
@@ -291,6 +291,7 @@ export function VoiceStudio() {
 
       setMessages((prev) => [...prev, aiReply]);
       playAudio(res.audio_url, res.spoken_reply);
+      notifyAiQuotaUpdated();
     } catch (err: unknown) {
       toast.add({ title: "Lỗi phản hồi từ AI", description: errorMessage(err), type: "error" });
       setState("idle");
@@ -351,6 +352,7 @@ export function VoiceStudio() {
 
       setMessages((prev) => [...prev, aiReply]);
       playAudio(res.audio_url, res.spoken_reply);
+      notifyAiQuotaUpdated();
     } catch (err: unknown) {
       toast.add({ title: "Lỗi phân tích âm thanh từ AI", description: errorMessage(err), type: "error" });
       setState("idle");

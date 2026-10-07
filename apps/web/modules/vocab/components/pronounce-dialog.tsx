@@ -22,7 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { MicTestDialog } from "@/components/mic-test-dialog";
-import { api, errorMessage } from "@/lib/api";
+import { api, errorMessage, notifyAiQuotaUpdated } from "@/lib/api";
 import { AudioRecorder } from "@/lib/audio-recorder";
 import { speak } from "@/lib/audio";
 import { ipa } from "@/lib/format";
@@ -158,6 +158,7 @@ export function PronounceDialog({
         },
       });
       setResult(res);
+      notifyAiQuotaUpdated();
     } catch (err) {
       setError(errorMessage(err));
     } finally {

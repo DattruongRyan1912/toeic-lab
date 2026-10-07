@@ -16,6 +16,7 @@ import json
 import logging
 import re
 import threading
+import time
 from dataclasses import dataclass, field
 from typing import Callable, Optional
 
@@ -24,7 +25,7 @@ from sqlalchemy.orm import Session
 
 from server import config
 from server.models import AIMessage, Flashcard, ParaphrasePair, TestQuestion
-from server.services import agent_tools, curriculum, insights
+from server.services import agent_tools, ai_usage, curriculum, insights
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +81,9 @@ def get_gemini_api_keys(advance: bool = False) -> list[str]:
     with all keys available in the list for failover on rate-limiting (429/403).
     """
     global _gemini_key_index
-    keys = list(getattr(config, "GEMINI_API_KEYS", []))
-    if config.GEMINI_API_KEY and config.GEMINI_API_KEY not in keys:
-        keys.insert(0, config.GEMINI_API_KEY)
-    if not keys:
-        return []
-    if len(keys) == 1:
+    disabled = ai_usage.disabled_aliases()
+    keys = [key for alias, provider, key in ai_usage.key_aliases() if provider == "gemini" and alias not in disabled]
+    if len(keys) <= 1:
         return keys
 
     with _gemini_key_lock:
@@ -93,7 +91,7 @@ def get_gemini_api_keys(advance: bool = False) -> list[str]:
         if advance:
             _gemini_key_index = (_gemini_key_index + 1) % len(keys)
 
-    return keys[start_idx:] + keys[:start_idx]
+    return ai_usage.order_keys("gemini", keys[start_idx:] + keys[:start_idx])
 
 
 def _configured_providers() -> dict:
@@ -101,11 +99,12 @@ def _configured_providers() -> dict:
     gemini_keys = get_gemini_api_keys()
     if gemini_keys:
         providers["gemini"] = ProviderInfo("gemini", config.GEMINI_MODEL, gemini_keys[0], config.GEMINI_BASE_URL, True)
-    if config.DEEPSEEK_API_KEY:
+    disabled = ai_usage.disabled_aliases()
+    if config.DEEPSEEK_API_KEY and "deepseek" not in disabled:
         providers["deepseek"] = ProviderInfo(
             "deepseek", config.DEEPSEEK_MODEL, config.DEEPSEEK_API_KEY, config.DEEPSEEK_BASE_URL, False
         )
-    if config.OPENAI_API_KEY:
+    if config.OPENAI_API_KEY and "openai" not in disabled:
         providers["openai"] = ProviderInfo("openai", config.OPENAI_MODEL, config.OPENAI_API_KEY, config.OPENAI_BASE_URL, True)
     return providers
 
@@ -137,8 +136,19 @@ def get_provider_priority_chain() -> list[ProviderInfo]:
                 preferred,
             )
         chain_names = order
+    available = [providers[name] for name in chain_names if name in providers]
+    if not available:
+        return []
 
-    return [providers[name] for name in chain_names if name in providers]
+    def _is_provider_cooling(name: str) -> bool:
+        if name == "gemini":
+            keys = get_gemini_api_keys(advance=False)
+            return bool(keys and all(ai_usage.cooling_seconds(ai_usage.alias_of("gemini", k) or "") > 0 for k in keys))
+        return ai_usage.cooling_seconds(name) > 0
+
+    ready = [p for p in available if not _is_provider_cooling(p.name)]
+    cooling = [p for p in available if _is_provider_cooling(p.name)]
+    return ready + cooling
 
 
 def resolve_provider() -> Optional[ProviderInfo]:
@@ -204,6 +214,30 @@ ToolExecutor = Callable[[str, dict], dict]
 def _http_client() -> httpx.AsyncClient:
     """Test seam: tests monkeypatch this to inject an httpx.MockTransport."""
     return httpx.AsyncClient(timeout=config.AI_TIMEOUT_SECONDS)
+
+
+async def _post(client: httpx.AsyncClient, provider: str, model: str, key: str, url: str, headers: dict, payload: dict) -> httpx.Response:
+    """POST to a provider and log the call (tokens, latency, outcome) for usage accounting."""
+    alias = ai_usage.alias_of(provider, key)
+    started = time.monotonic()
+    try:
+        resp = await client.post(url, headers=headers, json=payload)
+    except httpx.HTTPError as exc:
+        ai_usage.record(provider, model, alias, "error", latency_ms=round((time.monotonic() - started) * 1000), error=exc.__class__.__name__)
+        raise
+    latency = round((time.monotonic() - started) * 1000)
+    if resp.status_code == 200:
+        try:
+            body = resp.json()
+        except ValueError:
+            body = None
+        ai_usage.record(provider, model, alias, "ok", http_status=200, body=body, latency_ms=latency)
+    else:
+        status = "rate_limited" if resp.status_code in (429, 403) else "error"
+        if status == "rate_limited":
+            ai_usage.cool_down(alias)
+        ai_usage.record(provider, model, alias, status, http_status=resp.status_code, latency_ms=latency, error=resp.text[:150])
+    return resp
 
 
 def split_media(media_base64: str, default_mime: str = "image/jpeg") -> tuple:
@@ -308,7 +342,7 @@ async def _run_gemini(provider, system_prompt, history, message, image_base64, t
                         payload = {**base, "contents": contents}
                         if tool_executor is not None and round_no == max_rounds - 1:
                             payload["toolConfig"] = {"functionCallingConfig": {"mode": "NONE"}}  # force a final text answer
-                        resp = await client.post(url, headers={"x-goog-api-key": active_key}, json=payload)
+                        resp = await _post(client, "gemini", active_model, active_key, url, {"x-goog-api-key": active_key}, payload)
                         if resp.status_code != 200:
                             logger.warning(
                                 "Gemini error %s on key %s/%s (%s): %s",
@@ -388,7 +422,7 @@ async def _run_openai_compatible(provider, system_prompt, history, message, imag
                 payload["tools"] = tools
                 if round_no == max_rounds - 1:
                     payload["tool_choice"] = "none"
-            resp = await client.post(url, headers={"Authorization": f"Bearer {provider.api_key}"}, json=payload)
+            resp = await _post(client, provider.name, provider.model, provider.api_key, url, {"Authorization": f"Bearer {provider.api_key}"}, payload)
             if resp.status_code != 200:
                 logger.warning("%s error %s: %s", provider.name, resp.status_code, resp.text[:500])
                 raise LLMError(f"{provider.name} trả về HTTP {resp.status_code}")
@@ -460,7 +494,7 @@ async def complete_with_audio(prompt: str, audio_base64: str, system_prompt: str
                 for model_name in candidate_models:
                     url = f"{provider.base_url}/models/{model_name}:generateContent"
                     try:
-                        resp = await client.post(url, headers={"x-goog-api-key": active_key}, json=payload)
+                        resp = await _post(client, "gemini", model_name, active_key, url, {"x-goog-api-key": active_key}, payload)
                         if resp.status_code == 200:
                             candidate = (resp.json().get("candidates") or [{}])[0]
                             parts = (candidate.get("content") or {}).get("parts") or []

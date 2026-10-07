@@ -111,3 +111,9 @@ export function qs(params: Record<string, string | number | boolean | null | und
   const text = search.toString();
   return text ? `?${text}` : "";
 }
+
+export function notifyAiQuotaUpdated(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("ai-quota-updated"));
+  }
+}

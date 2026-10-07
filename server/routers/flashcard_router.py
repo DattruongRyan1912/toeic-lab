@@ -20,9 +20,8 @@ from server.schemas import (
     TranslateSentenceResponse,
     UserCardSRSRead,
 )
-from server.services import activity, ai_agent_service, insights, vocab_service
+from server.services import activity, ai_agent_service, ai_usage, insights, vocab_service
 from server.services.srs_service import calculate_sm2_review
-from server.utils import rate_limit
 from server.utils.timeutil import utcnow
 
 router = APIRouter(prefix="/api/flashcards", tags=["Flashcards & SRS"])
@@ -140,7 +139,7 @@ def delete_flashcard(card_id: int, _admin: User = Depends(require_admin), db: Se
     return {"status": "success", "message": f"Đã xóa từ '{word}' khỏi Sổ tay!"}
 
 
-@router.post("/ai-fill", response_model=AIFillVocabResponse, dependencies=[Depends(rate_limit.limit_ai)])
+@router.post("/ai-fill", response_model=AIFillVocabResponse, dependencies=[Depends(ai_usage.guard("ai_fill"))])
 async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_db)):
     word = payload.word.strip()
     existing = vocab_service.find_card(db, word)
@@ -177,7 +176,7 @@ async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_d
     )
 
 
-@router.post("/translate-sentence", response_model=TranslateSentenceResponse, dependencies=[Depends(rate_limit.limit_ai)])
+@router.post("/translate-sentence", response_model=TranslateSentenceResponse, dependencies=[Depends(ai_usage.guard("translate"))])
 async def translate_sentence_endpoint(payload: TranslateSentenceRequest):
     sentence = payload.sentence.strip()
     if not sentence:
@@ -186,7 +185,7 @@ async def translate_sentence_endpoint(payload: TranslateSentenceRequest):
     return TranslateSentenceResponse(sentence=sentence, translation=trans)
 
 
-@router.post("/{card_id}/translate-example", response_model=FlashcardRead, dependencies=[Depends(rate_limit.limit_ai)])
+@router.post("/{card_id}/translate-example", response_model=FlashcardRead, dependencies=[Depends(ai_usage.guard("translate"))])
 async def translate_flashcard_example(
     card_id: int,
     learner_id: Optional[int] = Depends(optional_learner_id),

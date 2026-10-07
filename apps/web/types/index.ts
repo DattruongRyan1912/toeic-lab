@@ -896,6 +896,9 @@ export interface AdminUserRow {
   study_minutes_7d: number;
   attempts: number;
   accuracy: number | null;
+  ai_plan: AIPlan;
+  ai_daily_quota: number | null; // null = no limit
+  ai_requests_today: number;
 }
 
 export interface AdminUserList {
@@ -923,4 +926,47 @@ export interface AdminUserDetail extends AdminUserRow {
   srs_reviews: number;
   open_errors: number;
   recent_submissions: AdminSubmission[];
+}
+
+// --- AI allowance (server/services/ai_usage.py) ---
+export type AIPlan = "guest" | "default" | "custom" | "unlimited" | "admin";
+
+export interface AIQuota {
+  plan: AIPlan;
+  unlimited: boolean;
+  daily_quota: number | null;
+  used_today: number | null;
+  remaining: number | null;
+}
+
+export interface AdminAIDay {
+  date: string;
+  requests: number;
+  calls: number;
+  tokens: number;
+  errors: number;
+}
+
+export interface AdminAIKey {
+  alias: string;
+  provider: string;
+  disabled: boolean;
+  note: string | null;
+  cooling_seconds: number;
+  ok_24h: number;
+  errors_24h: number;
+  rate_limited_24h: number;
+  last_ok_at: string | null;
+  last_error_at: string | null;
+  last_error: string | null;
+}
+
+export interface AdminAIOverview {
+  today: AdminAIDay;
+  days: AdminAIDay[];
+  by_endpoint: { endpoint: string; requests: number }[];
+  top_users: { user_id: number; username: string; requests: number; tokens: number }[];
+  keys: AdminAIKey[];
+  limits: { daily_quota: number; guest_daily_quota: number; burst: string; key_cooldown_seconds: number; retention_days: number };
+  provider: AIStatus;
 }

@@ -108,3 +108,9 @@ RATE_LIMIT_AI = os.getenv("RATE_LIMIT_AI", "30/600")  # per user (or IP for gues
 # Reverse proxies in front of the web app that append the client IP to X-Forwarded-For (Caddy/nginx = 1).
 # 0 = never read the header. Only honoured for requests reaching the API from an internal address.
 TRUSTED_PROXY_HOPS = max(0, _int("TRUSTED_PROXY_HOPS", 1))
+
+# --- AI allowance (admins and accounts an admin marked unlimited are exempt) ---
+AI_DAILY_QUOTA = max(0, _int("AI_DAILY_QUOTA", 40))  # successful AI requests per learner per local day
+AI_GUEST_DAILY_QUOTA = max(0, _int("AI_GUEST_DAILY_QUOTA", 10))  # per guest IP, rolling 24 hours
+AI_KEY_COOLDOWN_SECONDS = max(0, _int("AI_KEY_COOLDOWN_SECONDS", 60))  # skip a key after a 429/403 for this long
+AI_USAGE_RETENTION_DAYS = max(7, _int("AI_USAGE_RETENTION_DAYS", 90))

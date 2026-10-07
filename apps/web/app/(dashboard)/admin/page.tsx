@@ -1,22 +1,80 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, ChevronLeft, ChevronRight, Lock, LockOpen, LogIn, Search, ShieldCheck, ShieldOff, Users } from "lucide-react";
+import { Activity, ChevronLeft, ChevronRight, Lock, LockOpen, LogIn, Search, ShieldCheck, ShieldOff, Sparkles, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
-import { api, errorMessage } from "@/lib/api";
+import { api, errorMessage, notifyAiQuotaUpdated } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { formatDate, percent } from "@/lib/format";
 import { useApi } from "@/lib/use-api";
 import { cn } from "@/lib/utils";
-import type { AdminRole, AdminUserDetail, AdminUserList, AdminUserRow } from "@/types";
+import { AdminAIPanel } from "@/modules/admin/components/ai-panel";
+import type { AdminRole, AdminUserDetail, AdminUserList, AdminUserRow, AIPlan } from "@/types";
 
 const PAGE_SIZE = 50;
 const SELECT = "rounded-lg border border-input bg-transparent p-2 text-xs text-slate-800 dark:bg-input/30 dark:text-slate-200";
+const TAB = "cursor-pointer px-3 py-2 text-xs text-slate-600 data-active:bg-violet-600 data-active:text-white dark:text-slate-400 dark:data-active:text-white";
+const AI_PLAN_LABEL: Record<AIPlan, string> = { admin: "Admin", unlimited: "Không giới hạn", custom: "Hạn mức riêng", default: "Mặc định", guest: "Khách" };
+
+function aiUsage(user: AdminUserRow): string {
+  return `${user.ai_requests_today}/${user.ai_daily_quota ?? "∞"}`;
+}
+
+/** Per-account AI allowance: default plan, a custom daily quota, or unlimited. Admins are always unlimited. */
+function AIAllowanceEditor({ user, onSaved }: { user: AdminUserDetail; onSaved: () => void }) {
+  const initial = user.ai_plan === "unlimited" ? "unlimited" : user.ai_plan === "custom" ? "custom" : "default";
+  const [mode, setMode] = useState<"default" | "custom" | "unlimited">(initial);
+  const [quota, setQuota] = useState(String(user.ai_plan === "custom" ? user.ai_daily_quota ?? "" : ""));
+  const [saving, setSaving] = useState(false);
+
+  if (user.role === "admin") {
+    return <p className="text-xs text-slate-500">Admin luôn dùng AI không giới hạn.</p>;
+  }
+  const save = async () => {
+    const trimmed = quota.trim();
+    const value = Number(trimmed);
+    if (mode === "custom" && (!trimmed || !Number.isInteger(value) || value < 0)) {
+      toast.add({ title: "Hạn mức không hợp lệ", description: "Nhập số lượt nguyên ≥ 0", type: "error" });
+      return;
+    }
+    setSaving(true);
+    try {
+      await api<AdminUserDetail>(`/admin/users/${user.id}`, {
+        method: "PATCH",
+        json: { ai_unlimited: mode === "unlimited", ai_daily_quota: mode === "custom" ? value : null },
+      });
+      toast.add({ title: "Đã cập nhật hạn mức AI", description: `@${user.username}`, type: "success" });
+      onSaved();
+      notifyAiQuotaUpdated();
+    } catch (err) {
+      toast.add({ title: "Không lưu được hạn mức", description: errorMessage(err), type: "error" });
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <select className={SELECT} value={mode} onChange={(e) => setMode(e.target.value as typeof mode)} aria-label="Gói AI">
+        <option value="default">Mặc định</option>
+        <option value="custom">Hạn mức riêng</option>
+        <option value="unlimited">Không giới hạn</option>
+      </select>
+      {mode === "custom" && (
+        <Input type="number" min={0} value={quota} onChange={(e) => setQuota(e.target.value)} className="w-24 text-xs" aria-label="Số lượt AI mỗi ngày" />
+      )}
+      {mode === "custom" && <span className="text-slate-500">lượt/ngày</span>}
+      <Button size="sm" disabled={saving} onClick={() => void save()} className="cursor-pointer text-xs">
+        Lưu
+      </Button>
+    </div>
+  );
+}
 
 function RoleBadge({ role }: { role: string }) {
   const admin = role === "admin";
@@ -59,7 +117,7 @@ function StatTile({ label, value, icon: Icon }: { label: string; value: number |
   );
 }
 
-function UserDetailDialog({ userId, onClose }: { userId: number | null; onClose: () => void }) {
+function UserDetailDialog({ userId, onClose, onChanged }: { userId: number | null; onClose: () => void; onChanged: () => void }) {
   const detail = useApi<AdminUserDetail>(userId === null ? null : `/admin/users/${userId}`);
   const user = detail.data?.id === userId ? detail.data : undefined;
   return (
@@ -101,6 +159,19 @@ function UserDetailDialog({ userId, onClose }: { userId: number | null; onClose:
                 </div>
               ))}
             </dl>
+            <div className="space-y-1.5 rounded-lg border border-slate-200 p-3 dark:border-slate-800">
+              <p className="font-semibold text-slate-700 dark:text-slate-200">
+                Hạn mức AI • {AI_PLAN_LABEL[user.ai_plan]} • hôm nay {aiUsage(user)}
+              </p>
+              <AIAllowanceEditor
+                key={`${user.id}-${user.ai_plan}-${user.ai_daily_quota}`}
+                user={user}
+                onSaved={() => {
+                  detail.reload();
+                  onChanged();
+                }}
+              />
+            </div>
             <div>
               <p className="mb-1.5 font-semibold text-slate-700 dark:text-slate-200">Bài nộp gần nhất</p>
               {user.recent_submissions.length === 0 ? (
@@ -174,7 +245,7 @@ export default function AdminPage() {
     <div>
       <span className="text-[11px] font-semibold tracking-wider text-violet-600 uppercase dark:text-violet-400">Admin Console</span>
       <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl dark:text-white">Quản Trị Hệ Thống</h1>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Quản lý tài khoản học viên: khoá/mở khoá, phân quyền và xem tiến độ học.</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Quản lý tài khoản học viên (khoá/mở khoá, phân quyền, hạn mức AI) và tài nguyên AI của hệ thống.</p>
     </div>
   );
 
@@ -205,139 +276,162 @@ export default function AdminPage() {
     <div className="space-y-6">
       {header}
 
-      {data && (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatTile label="Tổng tài khoản" value={data.summary.total_users} icon={Users} />
-          <StatTile label="Hoạt động 7 ngày" value={data.summary.active_7d} icon={Activity} />
-          <StatTile label="Quản trị viên" value={data.summary.admins} icon={ShieldCheck} />
-          <StatTile label="Đã khoá" value={data.summary.locked} icon={Lock} />
-        </div>
-      )}
+      <Tabs defaultValue="users" className="w-full space-y-6">
+        <TabsList className="h-auto flex-wrap gap-1 border border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
+          <TabsTrigger value="users" className={TAB}>
+            <Users className="h-3.5 w-3.5" aria-hidden="true" /> Người dùng
+          </TabsTrigger>
+          <TabsTrigger value="ai" className={TAB}>
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" /> Tài nguyên AI
+          </TabsTrigger>
+        </TabsList>
 
-      <Card className="border-slate-200 dark:border-slate-800">
-        <CardHeader className="gap-3">
-          <CardTitle className="text-base">Người dùng {data ? `(${data.total})` : ""}</CardTitle>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative min-w-56 flex-1">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm username, email, tên hiển thị..." className="pl-8 text-xs" aria-label="Tìm người dùng" />
+        <TabsContent value="ai">
+          <AdminAIPanel />
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-6">
+          {data && (
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <StatTile label="Tổng tài khoản" value={data.summary.total_users} icon={Users} />
+              <StatTile label="Hoạt động 7 ngày" value={data.summary.active_7d} icon={Activity} />
+              <StatTile label="Quản trị viên" value={data.summary.admins} icon={ShieldCheck} />
+              <StatTile label="Đã khoá" value={data.summary.locked} icon={Lock} />
             </div>
-            <select className={SELECT} value={role} onChange={(e) => { setRole(e.target.value as "" | AdminRole); setOffset(0); }} aria-label="Lọc theo quyền">
-              <option value="">Mọi quyền</option>
-              <option value="learner">Learner</option>
-              <option value="admin">Admin</option>
-            </select>
-            <select className={SELECT} value={status} onChange={(e) => { setStatus(e.target.value as "" | "active" | "locked"); setOffset(0); }} aria-label="Lọc theo trạng thái">
-              <option value="">Mọi trạng thái</option>
-              <option value="active">Hoạt động</option>
-              <option value="locked">Đã khoá</option>
-            </select>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {list.error && !data ? (
-            <ErrorState message={list.error} onRetry={list.reload} />
-          ) : !data ? (
-            <LoadingState />
-          ) : data.items.length === 0 ? (
-            <EmptyState title="Không có người dùng phù hợp" />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left text-xs">
-                <thead className="border-b border-slate-200 text-[10px] tracking-wider text-slate-500 uppercase dark:border-slate-800 dark:text-slate-400">
-                  <tr>
-                    <th className="py-2 pr-3 font-semibold">Người dùng</th>
-                    <th className="py-2 pr-3 font-semibold">Quyền</th>
-                    <th className="py-2 pr-3 font-semibold">Trạng thái</th>
-                    <th className="py-2 pr-3 font-semibold">Hoạt động cuối</th>
-                    <th className="py-2 pr-3 text-right font-semibold">Phút 7 ngày</th>
-                    <th className="py-2 pr-3 text-right font-semibold">Câu / Đúng</th>
-                    <th className="py-2 text-right font-semibold">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {data.items.map((user) => {
-                    const self = user.id === authUser?.id;
-                    const busy = busyId === user.id;
-                    return (
-                      <tr key={user.id} className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40" onClick={() => setSelected(user.id)}>
-                        <td className="py-2.5 pr-3">
-                          <p className="font-semibold text-slate-900 dark:text-white">
-                            {user.display_name} {self && <span className="text-[10px] font-normal text-slate-400">(bạn)</span>}
-                          </p>
-                          <p className="text-slate-500 dark:text-slate-400">
-                            @{user.username} · {user.email ?? "chưa có email"}
-                            {!user.has_password && " · không đăng nhập được"}
-                          </p>
-                        </td>
-                        <td className="py-2.5 pr-3"><RoleBadge role={user.role} /></td>
-                        <td className="py-2.5 pr-3"><StatusBadge active={user.is_active} /></td>
-                        <td className="py-2.5 pr-3 text-slate-600 dark:text-slate-300">{formatDate(user.last_active_at, true)}</td>
-                        <td className="py-2.5 pr-3 text-right tabular-nums">{user.study_minutes_7d}</td>
-                        <td className="py-2.5 pr-3 text-right tabular-nums">
-                          {user.attempts} / {percent(user.accuracy)}
-                        </td>
-                        <td className="py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex justify-end gap-1.5">
-                            <Button
-                              size="xs"
-                              variant="outline"
-                              disabled={self || busy}
-                              className="cursor-pointer"
-                              onClick={() =>
-                                update(
-                                  user,
-                                  { role: user.role === "admin" ? "learner" : "admin" },
-                                  user.role === "admin" ? `Thu hồi quyền admin của @${user.username}?` : `Cấp quyền admin cho @${user.username}?`,
-                                )
-                              }
-                            >
-                              {user.role === "admin" ? <ShieldOff aria-hidden="true" /> : <ShieldCheck aria-hidden="true" />}
-                              {user.role === "admin" ? "Thu hồi admin" : "Cấp admin"}
-                            </Button>
-                            <Button
-                              size="xs"
-                              variant={user.is_active ? "destructive" : "outline"}
-                              disabled={self || busy}
-                              className="cursor-pointer"
-                              onClick={() =>
-                                update(
-                                  user,
-                                  { is_active: !user.is_active },
-                                  user.is_active ? `Khoá @${user.username}? Phiên đăng nhập hiện tại sẽ bị vô hiệu ngay.` : `Mở khoá @${user.username}?`,
-                                )
-                              }
-                            >
-                              {user.is_active ? <Lock aria-hidden="true" /> : <LockOpen aria-hidden="true" />}
-                              {user.is_active ? "Khoá" : "Mở khoá"}
-                            </Button>
-                          </div>
-                        </td>
+          )}
+
+          <Card className="border-slate-200 dark:border-slate-800">
+            <CardHeader className="gap-3">
+              <CardTitle className="text-base">Người dùng {data ? `(${data.total})` : ""}</CardTitle>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative min-w-56 flex-1">
+                  <Search className="pointer-events-none absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm username, email, tên hiển thị..." className="pl-8 text-xs" aria-label="Tìm người dùng" />
+                </div>
+                <select className={SELECT} value={role} onChange={(e) => { setRole(e.target.value as "" | AdminRole); setOffset(0); }} aria-label="Lọc theo quyền">
+                  <option value="">Mọi quyền</option>
+                  <option value="learner">Learner</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <select className={SELECT} value={status} onChange={(e) => { setStatus(e.target.value as "" | "active" | "locked"); setOffset(0); }} aria-label="Lọc theo trạng thái">
+                  <option value="">Mọi trạng thái</option>
+                  <option value="active">Hoạt động</option>
+                  <option value="locked">Đã khoá</option>
+                </select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {list.error && !data ? (
+                <ErrorState message={list.error} onRetry={list.reload} />
+              ) : !data ? (
+                <LoadingState />
+              ) : data.items.length === 0 ? (
+                <EmptyState title="Không có người dùng phù hợp" />
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[840px] text-left text-xs">
+                    <thead className="border-b border-slate-200 text-[10px] tracking-wider text-slate-500 uppercase dark:border-slate-800 dark:text-slate-400">
+                      <tr>
+                        <th className="py-2 pr-3 font-semibold">Người dùng</th>
+                        <th className="py-2 pr-3 font-semibold">Quyền</th>
+                        <th className="py-2 pr-3 font-semibold">Trạng thái</th>
+                        <th className="py-2 pr-3 font-semibold">Hoạt động cuối</th>
+                        <th className="py-2 pr-3 text-right font-semibold">Phút 7 ngày</th>
+                        <th className="py-2 pr-3 text-right font-semibold">Câu / Đúng</th>
+                        <th className="py-2 pr-3 text-right font-semibold">AI hôm nay</th>
+                        <th className="py-2 text-right font-semibold">Thao tác</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {data.items.map((user) => {
+                        const self = user.id === authUser?.id;
+                        const busy = busyId === user.id;
+                        return (
+                          <tr key={user.id} className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40" onClick={() => setSelected(user.id)}>
+                            <td className="py-2.5 pr-3">
+                              <p className="font-semibold text-slate-900 dark:text-white">
+                                {user.display_name} {self && <span className="text-[10px] font-normal text-slate-400">(bạn)</span>}
+                              </p>
+                              <p className="text-slate-500 dark:text-slate-400">
+                                @{user.username} · {user.email ?? "chưa có email"}
+                                {!user.has_password && " · không đăng nhập được"}
+                              </p>
+                            </td>
+                            <td className="py-2.5 pr-3"><RoleBadge role={user.role} /></td>
+                            <td className="py-2.5 pr-3"><StatusBadge active={user.is_active} /></td>
+                            <td className="py-2.5 pr-3 text-slate-600 dark:text-slate-300">{formatDate(user.last_active_at, true)}</td>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">{user.study_minutes_7d}</td>
+                            <td className="py-2.5 pr-3 text-right tabular-nums">
+                              {user.attempts} / {percent(user.accuracy)}
+                            </td>
+                            <td className="py-2.5 pr-3 text-right tabular-nums" title={AI_PLAN_LABEL[user.ai_plan]}>
+                              {aiUsage(user)}
+                              {user.ai_plan !== "default" && <span className="block text-[10px] text-violet-600 dark:text-violet-400">{AI_PLAN_LABEL[user.ai_plan]}</span>}
+                            </td>
+                            <td className="py-2.5 text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex justify-end gap-1.5">
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  disabled={self || busy}
+                                  className="cursor-pointer"
+                                  onClick={() =>
+                                    update(
+                                      user,
+                                      { role: user.role === "admin" ? "learner" : "admin" },
+                                      user.role === "admin" ? `Thu hồi quyền admin của @${user.username}?` : `Cấp quyền admin cho @${user.username}?`,
+                                    )
+                                  }
+                                >
+                                  {user.role === "admin" ? <ShieldOff aria-hidden="true" /> : <ShieldCheck aria-hidden="true" />}
+                                  {user.role === "admin" ? "Thu hồi admin" : "Cấp admin"}
+                                </Button>
+                                <Button
+                                  size="xs"
+                                  variant={user.is_active ? "destructive" : "outline"}
+                                  disabled={self || busy}
+                                  className="cursor-pointer"
+                                  onClick={() =>
+                                    update(
+                                      user,
+                                      { is_active: !user.is_active },
+                                      user.is_active ? `Khoá @${user.username}? Phiên đăng nhập hiện tại sẽ bị vô hiệu ngay.` : `Mở khoá @${user.username}?`,
+                                    )
+                                  }
+                                >
+                                  {user.is_active ? <Lock aria-hidden="true" /> : <LockOpen aria-hidden="true" />}
+                                  {user.is_active ? "Khoá" : "Mở khoá"}
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-          {data && data.total > PAGE_SIZE && (
-            <div className="mt-4 flex items-center justify-end gap-2 text-xs text-slate-500">
-              <span>
-                {offset + 1}–{Math.min(offset + PAGE_SIZE, data.total)} / {data.total}
-              </span>
-              <Button size="icon-sm" variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} aria-label="Trang trước" className="cursor-pointer">
-                <ChevronLeft aria-hidden="true" />
-              </Button>
-              <Button size="icon-sm" variant="outline" disabled={offset + PAGE_SIZE >= data.total} onClick={() => setOffset(offset + PAGE_SIZE)} aria-label="Trang sau" className="cursor-pointer">
-                <ChevronRight aria-hidden="true" />
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              {data && data.total > PAGE_SIZE && (
+                <div className="mt-4 flex items-center justify-end gap-2 text-xs text-slate-500">
+                  <span>
+                    {offset + 1}–{Math.min(offset + PAGE_SIZE, data.total)} / {data.total}
+                  </span>
+                  <Button size="icon-sm" variant="outline" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))} aria-label="Trang trước" className="cursor-pointer">
+                    <ChevronLeft aria-hidden="true" />
+                  </Button>
+                  <Button size="icon-sm" variant="outline" disabled={offset + PAGE_SIZE >= data.total} onClick={() => setOffset(offset + PAGE_SIZE)} aria-label="Trang sau" className="cursor-pointer">
+                    <ChevronRight aria-hidden="true" />
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      <UserDetailDialog userId={selected} onClose={() => setSelected(null)} />
+        </TabsContent>
+      </Tabs>
+
+      <UserDetailDialog userId={selected} onClose={() => setSelected(null)} onChanged={list.reload} />
     </div>
   );
 }

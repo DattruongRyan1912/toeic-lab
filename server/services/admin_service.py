@@ -5,8 +5,9 @@ from typing import Optional
 from sqlalchemy import case, func, or_
 from sqlalchemy.orm import Session
 
-from server.models import ErrorLog, QuestionAttempt, SRSReviewLog, StudySession, User, UserTestSubmission
-from server.services import error_log_service
+from server.models import AIUsageLog, ErrorLog, QuestionAttempt, SRSReviewLog, StudySession, User, UserTestSubmission
+from server.services import ai_usage, error_log_service
+from server.utils import timeutil
 from server.utils.timeutil import utcnow
 
 ROLES = ("learner", "admin")
@@ -40,6 +41,12 @@ def _stats_query(db: Session):
         .group_by(QuestionAttempt.user_id)
         .subquery()
     )
+    ai_today = (
+        db.query(AIUsageLog.user_id.label("user_id"), func.count(func.distinct(AIUsageLog.request_id)).label("requests"))
+        .filter(AIUsageLog.status == "ok", AIUsageLog.created_at >= timeutil.local_day_start_utc(timeutil.local_today()))
+        .group_by(AIUsageLog.user_id)
+        .subquery()
+    )
     query = (
         db.query(
             User,
@@ -48,14 +55,17 @@ def _stats_query(db: Session):
             func.coalesce(sessions.c.study_seconds_7d, 0),
             func.coalesce(attempts.c.attempts, 0),
             func.coalesce(attempts.c.correct, 0),
+            func.coalesce(ai_today.c.requests, 0),
         )
         .outerjoin(sessions, sessions.c.user_id == User.id)
         .outerjoin(attempts, attempts.c.user_id == User.id)
+        .outerjoin(ai_today, ai_today.c.user_id == User.id)
     )
     return query
 
 
-def _row(user: User, last_active_at, study_seconds, study_seconds_7d, attempts, correct) -> dict:
+def _row(user: User, last_active_at, study_seconds, study_seconds_7d, attempts, correct, ai_requests_today=0) -> dict:
+    plan, quota = ai_usage.plan_of(user)
     return {
         "id": user.id,
         "username": user.username,
@@ -72,6 +82,9 @@ def _row(user: User, last_active_at, study_seconds, study_seconds_7d, attempts, 
         "study_minutes_7d": round(study_seconds_7d / 60),
         "attempts": attempts,
         "accuracy": round(correct / attempts, 3) if attempts else None,
+        "ai_plan": plan,
+        "ai_daily_quota": quota,
+        "ai_requests_today": ai_requests_today,
     }
 
 
@@ -157,13 +170,16 @@ def get_user_detail(db: Session, user_id: int) -> dict:
     }
 
 
-def update_user(db: Session, actor: User, user_id: int, role: Optional[str], is_active: Optional[bool]) -> dict:
+def update_user(db: Session, actor: User, user_id: int, role: Optional[str], is_active: Optional[bool], ai: Optional[dict] = None) -> dict:
+    """`ai` holds only the AI fields the admin sent: ai_unlimited (bool) and/or ai_daily_quota (int, or None = default)."""
     user = db.get(User, user_id)
     if user is None:
         raise LookupError("Không tìm thấy người dùng")
     # Self-changes are refused, which also guarantees at least one active admin always remains.
-    if user.id == actor.id:
+    if user.id == actor.id and (role is not None or is_active is not None):
         raise AdminError("Không thể tự đổi quyền hoặc tự khoá tài khoản của chính mình")
+    for key, value in (ai or {}).items():
+        setattr(user, key, value)
     if role is not None:
         if role not in ROLES:
             raise AdminError(f"Role không hợp lệ: {role}")

@@ -3,13 +3,10 @@ import ipaddress
 import threading
 import time
 from collections import deque
-from typing import Optional
 
 from fastapi import HTTPException, Request
 
 from server import config
-from server.deps import get_token_from_request
-from server.utils.security import decode_access_token
 
 MAX_KEYS = 10_000  # keys come from user input (login identifiers): never let the table grow without bound
 
@@ -90,20 +87,6 @@ def client_ip(request: Request) -> str:
     return chain[-hops] if len(chain) >= hops else peer
 
 
-def _caller_key(request: Request) -> str:
-    token: Optional[str] = get_token_from_request(request.headers.get("authorization"), request.cookies.get("access_token"))
-    if token:
-        try:
-            return f"user:{decode_access_token(token)['sub']}"
-        except Exception:
-            pass
-    return f"ip:{client_ip(request)}"
-
-
 def limit_register(request: Request) -> None:
     hit("register", client_ip(request), config.RATE_LIMIT_REGISTER)
 
-
-def limit_ai(request: Request) -> None:
-    """Dependency for endpoints that call an LLM: protects the provider quota."""
-    hit("ai", _caller_key(request), config.RATE_LIMIT_AI)
