@@ -5,7 +5,7 @@ import logging
 
 from sqlalchemy.orm import Session
 
-from server.models import ErrorLog, Roadmap, SprintTask, TestQuestion
+from server.models import ErrorLog, Flashcard, QuestionAttempt, Roadmap, SprintTask, TestQuestion
 from server.services import curriculum, error_log_service, practice_service
 
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ def backfill_error_logs(db: Session) -> int:
             question = questions.get(log.question_id) if log.question_id else None
             if question is not None:
                 log.lesson_number = curriculum.classify_question(question)["lesson_number"]
-            elif log.topic:
+            elif log.topic and log.part not in curriculum.LISTENING_PARTS:
                 log.lesson_number = curriculum.classify_trap(log.topic, log.part).lesson_number
         if log.review_stage is None:
             if log.status == "mastered":
@@ -43,12 +43,35 @@ def backfill_error_logs(db: Session) -> int:
             else:
                 log.review_stage = 0
                 log.next_review_at = log.next_review_at or log.created_at
-        changed += 1
+        changed += db.is_modified(log)
     return changed
+
+
+def detach_listening_from_lessons(db: Session) -> int:
+    """Lessons 01-12 are Part 5/6 grammar: listening rows linked to them skewed lesson mastery and advice."""
+    changed = 0
+    for model in (TestQuestion, QuestionAttempt, ErrorLog):
+        changed += (
+            db.query(model)
+            .filter(model.part.in_(curriculum.LISTENING_PARTS), model.lesson_number.isnot(None))
+            .update({model.lesson_number: None}, synchronize_session=False)
+        )
+    return changed
+
+
+def clear_failed_translations(db: Session) -> int:
+    """Older versions saved the 'translation unavailable' message as a card's translation."""
+    return (
+        db.query(Flashcard)
+        .filter(Flashcard.example_translation == "Bản dịch tự động tạm thời chưa khả dụng.")
+        .update({Flashcard.example_translation: None}, synchronize_session=False)
+    )
 
 
 def run(db: Session) -> dict:
     result = {
+        "listening_lessons": detach_listening_from_lessons(db),
+        "failed_translations": clear_failed_translations(db),
         "attempts": practice_service.backfill_attempts(db),
         "roadmaps": backfill_roadmaps(db),
         "error_logs": backfill_error_logs(db),

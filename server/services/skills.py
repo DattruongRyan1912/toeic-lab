@@ -2,10 +2,13 @@
 
 * Mastery per syntax lesson (Bài 01-12), per TOEIC part and per section: a recency-weighted Beta posterior
   (half-life 14 days) with a prior taken from the onboarding baseline score, so a few answers move the estimate
-  but never to 0% / 100%.
+  but never to 0% / 100%. Only independent evidence counts: the first answer to a question, or a re-answer at
+  least a day later outside the 1-3-7 error review (an immediate retake or a reviewed mistake measures memory
+  of that item, not the skill).
 * Trend (last 7 days vs the 3 weeks before), pace (seconds per question vs a target) and coverage of the bank.
 * Score prediction for the real test (L: Part 1-4, R: Part 5-7 weighted by their question counts) with a range
-  that widens when there is little data, plus honest "basis" (data / baseline / prior).
+  that widens when there is little data, plus honest "basis" (data / partial / baseline / prior) and the share
+  of the test the question bank can measure at all.
 """
 from __future__ import annotations
 
@@ -25,6 +28,7 @@ HALF_LIFE_DAYS = 14.0
 PRIOR_STRENGTH = 2.0
 DEFAULT_PRIOR = 0.55
 CONFIDENCE_K = 3.0
+SPACED_RETRY = timedelta(days=1)  # a re-answer this long after the last counted one is fresh evidence
 STRONG_MASTERY = 0.8
 OK_MASTERY = 0.6
 
@@ -140,23 +144,42 @@ def _status(stat: SkillStat) -> str:
     return "weak"
 
 
+def counted_attempts(attempts: list) -> list:
+    """Attempts that are independent evidence of skill (see module docstring). Expects chronological order."""
+    last_counted: dict = {}
+    counted = []
+    for attempt in attempts:
+        previous = last_counted.get(attempt.question_id)
+        if previous is None:
+            fresh = True
+        else:
+            spaced = attempt.created_at and previous.created_at and attempt.created_at - previous.created_at >= SPACED_RETRY
+            fresh = bool(spaced) and attempt.mode != "review"
+        if fresh:
+            last_counted[attempt.question_id] = attempt
+            counted.append(attempt)
+    return counted
+
+
 def estimate(stat: SkillStat, attempts: list, prior: float, now: datetime) -> SkillStat:
+    """Mastery, confidence and trend use counted attempts only; coverage, latest answers and pace use all of them."""
     stat.prior = prior
     stat.attempts = len(attempts)
     a0, b0 = prior * PRIOR_STRENGTH, (1 - prior) * PRIOR_STRENGTH
     weight_sum = weighted_correct = 0.0
     latest: dict = {}
     recent, older, times = [], [], []
-    for attempt in attempts:
+    for attempt in counted_attempts(attempts):
         age_days = max(0.0, (now - attempt.created_at).total_seconds() / 86400) if attempt.created_at else 0.0
         weight = 0.5 ** (age_days / HALF_LIFE_DAYS)
         weight_sum += weight
         weighted_correct += weight * (1.0 if attempt.is_correct else 0.0)
-        latest[attempt.question_id] = bool(attempt.is_correct)
         if age_days <= 7:
             recent.append(attempt.is_correct)
         elif age_days <= 28:
             older.append(attempt.is_correct)
+    for attempt in attempts:
+        latest[attempt.question_id] = bool(attempt.is_correct)
         if attempt.time_ms and attempt.choice:
             times.append(attempt.time_ms / 1000)
         if stat.last_attempt_at is None or (attempt.created_at and attempt.created_at > stat.last_attempt_at):
@@ -250,13 +273,22 @@ def compute(db: Session, user_id: int, now: Optional[datetime] = None) -> SkillR
 
 # --------------------------------------------------------------------------- prediction
 def predict_score(report: SkillReport, user: Optional[User] = None) -> dict:
+    """Expected scaled score with an honest range.
+
+    Parts with questions in the bank are *measurable*; parts without any (e.g. no Part 3/4/6/7 content yet)
+    can only borrow from the measured parts of the same section, so they never add confidence. The overall
+    confidence is over the whole 200-question test, while "questions needed" only counts what practice can
+    actually improve (the measurable parts).
+    """
     target = (getattr(user, "target_score", None) or 800) if user is not None else 800
     has_baseline = {
         "listening": bool(getattr(user, "baseline_listening", None)) if user is not None else False,
         "reading": bool(getattr(user, "baseline_reading", None)) if user is not None else False,
     }
     result: dict = {}
-    total_conf = 0.0
+    total_conf = measurable_conf = measurable_size = 0.0
+    measured_parts: list = []
+    measurable_parts: list = []
     for section, parts in SECTION_PARTS.items():
         convert = scoring.listening_scaled if section == "listening" else scoring.reading_scaled
         prior = report.priors.get(section, DEFAULT_PRIOR)
@@ -273,8 +305,21 @@ def predict_score(report: SkillReport, user: Optional[User] = None) -> dict:
             low += size * max(0.0, accuracy - spread)
             high += size * min(1.0, accuracy + spread)
             conf += size * confidence
-            breakdown[part] = {"accuracy": round(accuracy, 3), "confidence": round(confidence, 3), "observed": bool(stat.attempts)}
-        basis = "data" if observed else ("baseline" if has_baseline[section] else "prior")
+            measurable = stat.question_count > 0
+            if measurable:
+                measurable_parts.append(part)
+                measurable_size += size
+                measurable_conf += size * confidence
+            if stat.attempts:
+                measured_parts.append(part)
+            breakdown[part] = {
+                "accuracy": round(accuracy, 3), "confidence": round(confidence, 3),
+                "observed": bool(stat.attempts), "measurable": measurable,
+            }
+        if not observed:
+            basis = "baseline" if has_baseline[section] else "prior"
+        else:
+            basis = "data" if len(observed) == len(parts) else "partial"
         result[section] = {
             "expected": convert(round(raw)),
             "low": convert(round(low)),
@@ -289,12 +334,13 @@ def predict_score(report: SkillReport, user: Optional[User] = None) -> dict:
     _, cefr_label, _ = scoring.cefr_for(expected)
     overall_conf = round(total_conf / 200, 3)
     conf_level = "high" if overall_conf >= 0.75 else ("medium" if overall_conf >= 0.40 else "low")
-    if overall_conf >= 0.75:
+    reachable = measurable_conf / measurable_size if measurable_size else 0.0
+    if not measurable_size or reachable >= 0.75:
         needed_questions = 0
     elif report.total_attempts < 40:
         needed_questions = 40 - report.total_attempts
     else:
-        needed_questions = max(5, int((0.75 - overall_conf) * 50))
+        needed_questions = max(5, int((0.75 - reachable) * 50))
     result["total"] = {
         "expected": expected,
         "low": result["listening"]["low"] + result["reading"]["low"],
@@ -304,6 +350,9 @@ def predict_score(report: SkillReport, user: Optional[User] = None) -> dict:
     result["confidence"] = overall_conf
     result["confidence_level"] = conf_level
     result["questions_needed_to_narrow"] = needed_questions
+    result["measured_parts"] = measured_parts
+    result["unmeasurable_parts"] = [p for p in PART_SIZES if p not in measurable_parts]
+    result["coverage"] = round(measurable_size / 200, 3)  # share of the real test the bank can measure
     result["target_score"] = target
     result["target_gap"] = max(0, target - expected)
     return result

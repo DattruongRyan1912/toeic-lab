@@ -142,7 +142,7 @@ def apply(db: Session, user: User, changes: dict, *, replan: bool = True) -> dic
             setattr(user, key, value)
     if not old:
         return old
-    if "exam_date" in old:
+    if "exam_date" in old or "target_score" in old:
         planner.rescale_roadmap(db, user)
     db.commit()
     if replan and PLAN_FIELDS & old.keys():

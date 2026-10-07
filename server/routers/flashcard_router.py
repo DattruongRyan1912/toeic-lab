@@ -6,8 +6,9 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
-from server.models import Flashcard, SRSReviewLog, UserCardSRS
+from server.config import DEFAULT_USER_ID
+from server.deps import current_user_id, optional_learner_id, require_admin, require_learner_user_id
+from server.models import Flashcard, SRSReviewLog, User, UserCardSRS
 from server.schemas import (
     AIFillVocabRequest,
     AIFillVocabResponse,
@@ -21,6 +22,7 @@ from server.schemas import (
 )
 from server.services import activity, ai_agent_service, insights, vocab_service
 from server.services.srs_service import calculate_sm2_review
+from server.utils import rate_limit
 from server.utils.timeutil import utcnow
 
 router = APIRouter(prefix="/api/flashcards", tags=["Flashcards & SRS"])
@@ -43,8 +45,11 @@ Trả về DUY NHẤT một object JSON hợp lệ (không markdown, không văn
 }}"""
 
 
-async def translate_sentence_to_vi(sentence: str, keyword: Optional[str] = None) -> str:
-    """Dịch câu ví dụ tiếng Anh sang tiếng Việt tự nhiên theo chuẩn đề thi TOEIC."""
+TRANSLATION_UNAVAILABLE = "Bản dịch tự động tạm thời chưa khả dụng."
+
+
+async def translate_sentence_to_vi(sentence: str, keyword: Optional[str] = None) -> Optional[str]:
+    """Dịch câu ví dụ tiếng Anh sang tiếng Việt tự nhiên theo chuẩn đề thi TOEIC. None khi AI không dịch được."""
     if ai_agent_service.resolve_provider() is not None:
         prompt = (
             "Dịch câu ví dụ tiếng Anh luyện thi TOEIC sau sang tiếng Việt tự nhiên, chính xác, sát ngữ cảnh thương mại.\n"
@@ -66,7 +71,7 @@ async def translate_sentence_to_vi(sentence: str, keyword: Optional[str] = None)
                 return clean
         except Exception:
             pass
-    return "Bản dịch tự động tạm thời chưa khả dụng."
+    return None
 
 
 @router.get("", response_model=List[FlashcardRead])
@@ -114,7 +119,7 @@ def get_vocab_summary(user_id: int = Depends(current_user_id), db: Session = Dep
 
 
 @router.post("", response_model=FlashcardRead, status_code=status.HTTP_201_CREATED)
-def create_flashcard(payload: FlashcardCreate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def create_flashcard(payload: FlashcardCreate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     try:
         card, created = vocab_service.create_card(db, user_id, payload.model_dump())
     except ValueError as exc:
@@ -125,7 +130,8 @@ def create_flashcard(payload: FlashcardCreate, user_id: int = Depends(current_us
 
 
 @router.delete("/{card_id}")
-def delete_flashcard(card_id: int, db: Session = Depends(get_db)):
+def delete_flashcard(card_id: int, _admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Cards are shared by every learner, so only admins may delete them."""
     card = db.get(Flashcard, card_id)
     if card is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
@@ -134,7 +140,7 @@ def delete_flashcard(card_id: int, db: Session = Depends(get_db)):
     return {"status": "success", "message": f"Đã xóa từ '{word}' khỏi Sổ tay!"}
 
 
-@router.post("/ai-fill", response_model=AIFillVocabResponse)
+@router.post("/ai-fill", response_model=AIFillVocabResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_db)):
     word = payload.word.strip()
     existing = vocab_service.find_card(db, word)
@@ -171,17 +177,22 @@ async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_d
     )
 
 
-@router.post("/translate-sentence", response_model=TranslateSentenceResponse)
+@router.post("/translate-sentence", response_model=TranslateSentenceResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def translate_sentence_endpoint(payload: TranslateSentenceRequest):
     sentence = payload.sentence.strip()
     if not sentence:
         raise HTTPException(status_code=400, detail="Câu không được để trống.")
-    trans = await translate_sentence_to_vi(sentence)
+    trans = await translate_sentence_to_vi(sentence) or TRANSLATION_UNAVAILABLE
     return TranslateSentenceResponse(sentence=sentence, translation=trans)
 
 
-@router.post("/{card_id}/translate-example", response_model=FlashcardRead)
-async def translate_flashcard_example(card_id: int, db: Session = Depends(get_db)):
+@router.post("/{card_id}/translate-example", response_model=FlashcardRead, dependencies=[Depends(rate_limit.limit_ai)])
+async def translate_flashcard_example(
+    card_id: int,
+    learner_id: Optional[int] = Depends(optional_learner_id),
+    db: Session = Depends(get_db),
+):
+    """Translate a card's example. Signed-in learners save it on the shared card; guests only see it."""
     card = db.get(Flashcard, card_id)
     if card is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
@@ -193,6 +204,10 @@ async def translate_flashcard_example(card_id: int, db: Session = Depends(get_db
         raise HTTPException(status_code=400, detail="Thẻ này chưa có câu ví dụ để dịch.")
 
     trans = await translate_sentence_to_vi(card.example_sentence, keyword=card.word)
+    if trans is None:  # never store a failure message on a card shared by every learner
+        raise HTTPException(status_code=503, detail="AI chưa dịch được câu này, vui lòng thử lại sau.")
+    if learner_id is None:  # guests are read-only: answer without writing to the shared card
+        return FlashcardRead.model_validate(card).model_copy(update={"example_translation": trans})
     card.example_translation = trans
     db.commit()
     db.refresh(card)
@@ -216,18 +231,31 @@ def get_due_srs_cards(
 def submit_srs_review(
     card_id: int,
     payload: SRSReviewRequest,
-    user_id: int = Depends(current_user_id),
+    learner_id: Optional[int] = Depends(optional_learner_id),
     db: Session = Depends(get_db),
 ):
+    """Apply an SM-2 review. Guests and early (cram) reviews of cards that are not due leave the schedule alone."""
     if db.get(Flashcard, card_id) is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
+    user_id = learner_id or DEFAULT_USER_ID
     srs = db.query(UserCardSRS).filter_by(user_id=user_id, card_id=card_id).first()
+    if learner_id is None:
+        if srs is None:
+            raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để lưu tiến độ ôn từ vựng")
+        return srs  # guests practise on the demo deck without changing it
     if srs is None:
         srs = UserCardSRS(user_id=user_id, card_id=card_id, state="new", next_review_at=utcnow())
         db.add(srs)
         db.flush()
 
     prev_state = srs.state or "new"
+    if prev_state != "new" and srs.next_review_at and srs.next_review_at >= insights.srs_due_before():
+        # Reviewing ahead of schedule ("Luyện toàn bộ"/cram): count the study time only. Applying SM-2
+        # here would push intervals out (or reset them) from reviews that were not due.
+        activity.track(db, user_id, "srs", activity.card_seconds(payload.duration_ms), items=1, correct=int(payload.rating >= 3))
+        db.commit()
+        return srs
+
     repetition, ease, interval, state, next_review = calculate_sm2_review(
         current_repetition=srs.repetition_count,
         current_ease=srs.ease_factor,

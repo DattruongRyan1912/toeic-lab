@@ -53,6 +53,14 @@ def build(db: Session, user_id: int, end: Optional[date] = None) -> dict:
     )
     minutes = round(sum(by_kind.values()) / 60)
     goal = settings.daily_minutes * planned_days
+    # Judge against what the plan actually asked for: a 300-minute goal is planned as fewer, capped blocks,
+    # and finishing the whole plan must not read as "under 50% of your goal".
+    judged_until = min(end + timedelta(days=1), today)
+    planned_minutes = sum(
+        item["estimated_minutes"] for item in planner.list_items(db, user_id, start, judged_until) if item["status"] != "skipped"
+    ) if judged_until > start else 0
+    if planned_minutes:
+        goal = min(goal, planned_minutes)
 
     # --- practice (this week vs the week before)
     def attempts(since, until):

@@ -1,7 +1,7 @@
 import csv
 
 from server import models
-from scripts import export_anki_csv, seed_database
+from scripts import export_anki_csv, make_admin, seed_database
 from scripts.vocab_rows import BLANK, card_row
 
 
@@ -28,3 +28,16 @@ def test_anki_export_reads_the_learner_vocab(seeded, db, tmp_path):
 def test_card_row_falls_back_when_word_is_absent():
     card = models.Flashcard(category="HR", word="eligible", meaning="đủ điều kiện", example_sentence="Staff qualify for bonuses.")
     assert card_row(card)[0] == f"Staff qualify for bonuses. ({BLANK})"
+
+
+def test_make_admin_grants_and_revokes(client, db):
+    from server.tests.conftest import make_user
+
+    user = make_user(client, "future_admin")
+    assert make_admin.main(["--email", "FUTURE_ADMIN@toeiclab.dev"]) == 0
+    db.expire_all()
+    assert db.get(models.User, user["id"]).role == "admin"
+    assert make_admin.main(["--username", "future_admin", "--revoke"]) == 0
+    db.expire_all()
+    assert db.get(models.User, user["id"]).role == "learner"
+    assert make_admin.main(["--username", "missing_user"]) == 1

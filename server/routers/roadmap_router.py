@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, require_learner_user_id
 from server.models import Roadmap, SprintTask
 from server.schemas import RoadmapRead, RoadmapUpdate, SprintTaskRead, SprintTaskUpdate
 from server.services import insights, planner, skills
@@ -22,7 +22,7 @@ def _read(db: Session, user_id: int, roadmap: Roadmap) -> dict:
     user = insights.get_or_create_user(db, user_id)
     report = skills.compute(db, user_id)
     evidence = planner.milestone_evidence(db, user_id, roadmap, report, skills.predict_score(report, user))
-    return insights.serialize_roadmap(roadmap, evidence)
+    return insights.serialize_roadmap(roadmap, evidence, insights.content_gaps(db, roadmap.tasks))
 
 
 @router.get("", response_model=RoadmapRead)
@@ -31,7 +31,7 @@ def get_user_roadmap(user_id: int = Depends(current_user_id), db: Session = Depe
 
 
 @router.patch("", response_model=RoadmapRead)
-def update_user_roadmap(payload: RoadmapUpdate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def update_user_roadmap(payload: RoadmapUpdate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     roadmap = _require_roadmap(db, user_id)
     changes = payload.model_dump(exclude_unset=True)
     if "start_date" in changes:
@@ -50,7 +50,7 @@ def update_user_roadmap(payload: RoadmapUpdate, user_id: int = Depends(current_u
 def toggle_sprint_task(
     task_id: int,
     payload: SprintTaskUpdate,
-    user_id: int = Depends(current_user_id),
+    user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
     task = (

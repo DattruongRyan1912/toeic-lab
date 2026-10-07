@@ -59,6 +59,13 @@ export function setAuthToken(token: string | null): void {
   }
 }
 
+let unauthorizedHandler: (() => void) | null = null;
+
+/** Called when a guest tries to change data (401 on a non-GET request): the auth store opens the login dialog. */
+export function onGuestWriteBlocked(handler: () => void): void {
+  unauthorizedHandler = handler;
+}
+
 export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
   const { json, headers, body, ...rest } = init;
   const token = getAuthToken();
@@ -83,6 +90,7 @@ export async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
     }
   }
   if (!response.ok) {
+    if (response.status === 401 && !token && (init.method ?? "GET").toUpperCase() !== "GET") unauthorizedHandler?.();
     throw new ApiError(response.status, detailMessage(parsed, `Lỗi HTTP ${response.status}`));
   }
   return parsed as T;

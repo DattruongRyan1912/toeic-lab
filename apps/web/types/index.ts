@@ -82,9 +82,9 @@ export interface SectionPrediction {
   low: number;
   high: number;
   expected_raw: number;
-  basis: "data" | "baseline" | "prior";
+  basis: "data" | "partial" | "baseline" | "prior";
   confidence: number;
-  parts: Record<string, { accuracy: number; confidence: number; observed: boolean }>;
+  parts: Record<string, { accuracy: number; confidence: number; observed: boolean; measurable: boolean }>;
 }
 
 export interface ScorePrediction {
@@ -94,6 +94,9 @@ export interface ScorePrediction {
   confidence: number;
   confidence_level?: "low" | "medium" | "high";
   questions_needed_to_narrow?: number;
+  measured_parts: string[];
+  unmeasurable_parts: string[]; // no questions in the bank yet: their share of the score is extrapolated
+  coverage: number; // share of the 200-question test the bank can measure
   target_score: number;
   target_gap: number;
 }
@@ -168,6 +171,7 @@ export interface PlanWeek {
     new_cards_per_day: number;
     exam_date: string | null;
     days_to_exam: number | null;
+    exam_passed?: string | null; // past exam date: the plan ignores it until a new one is set
     focus_parts: string[];
   };
   focus: FocusLesson[];
@@ -370,7 +374,7 @@ export interface QuestionResult {
 }
 
 export interface QuizSubmitResult {
-  submission_id: number;
+  submission_id: number | null; // null for guests: graded but not saved
   test_id: string;
   part?: string | null;
   lesson_number?: number | null;
@@ -496,12 +500,14 @@ export interface DashboardStats {
     confidence: number;
     confidence_level?: "low" | "medium" | "high";
     questions_needed_to_narrow?: number;
+    coverage?: number | null;
     basis_listening: string;
     basis_reading: string;
   } | null;
   onboarded: boolean;
   exam_date?: string | null;
   days_to_exam?: number | null;
+  exam_passed?: boolean;
   total_attempts: number;
 }
 
@@ -517,6 +523,16 @@ export interface SprintTask {
   source?: string | null;
   auto_met: boolean;
   evidence?: string | null;
+  content_note?: string | null; // the question bank cannot support this milestone yet
+}
+
+export interface RoadmapPhase {
+  phase: number;
+  title: string;
+  focus: string;
+  start_week: number;
+  end_week: number;
+  goal_score: number | null; // interpolated from the onboarding baseline to the target
 }
 
 export interface Roadmap {
@@ -527,6 +543,7 @@ export interface Roadmap {
   exam_date?: string | null;
   current_week: number;
   current_phase: number;
+  phases: RoadmapPhase[];
   start_date: string;
   status: string;
   progress_percent: number;
@@ -583,6 +600,7 @@ export interface Lesson {
   content_html: string;
   is_unlocked: boolean;
   has_full_content: boolean;
+  completed?: boolean;
   stats: LessonStats;
 }
 
@@ -804,15 +822,16 @@ export interface VocabPronounceFeedback {
 
 export interface VocabPronounceResponse {
   word: string;
-  score: number;
+  score: number | null; // null when nothing heard the recording (scored = false)
   recognized_text: string;
   recognized_ipa: string;
   expected_ipa: string;
-  is_accurate: boolean;
+  is_accurate: boolean | null;
   feedback: VocabPronounceFeedback;
   provider: string;
   model?: string | null;
   is_guidance_fallback?: boolean;
+  scored?: boolean;
 }
 
 export interface ShadowingWordFeedback {
@@ -832,11 +851,11 @@ export interface ShadowingEvaluateRequest {
 }
 
 export interface ShadowingEvaluateResponse {
-  overall_score: number;
-  accuracy_score: number;
-  fluency_score: number;
+  overall_score: number | null; // null when neither speech-to-text nor an audio model heard the learner
+  accuracy_score: number | null;
+  fluency_score: number | null;
   recognized_transcript: string;
-  is_passing: boolean;
+  is_passing: boolean | null;
   verdict: string;
   words: ShadowingWordFeedback[];
   connected_speech_feedback?: string | null;
@@ -844,8 +863,64 @@ export interface ShadowingEvaluateResponse {
   provider: string;
   model: string;
   is_guidance_fallback?: boolean;
-  analysis_mode?: "audio_multimodal" | "text_stt" | "guidance" | string;
+  analysis_mode?: "audio_multimodal" | "text_stt" | "unscored" | string;
+  scored?: boolean;
 }
 
 
 
+
+// --- Admin console (server/schemas: AdminUser*) ---
+export type AdminRole = "learner" | "admin";
+
+export interface AdminUserSummary {
+  total_users: number;
+  active_7d: number;
+  admins: number;
+  locked: number;
+}
+
+export interface AdminUserRow {
+  id: number;
+  username: string;
+  email: string | null;
+  display_name: string;
+  role: string;
+  is_active: boolean;
+  has_password: boolean;
+  target_score: number;
+  onboarded: boolean;
+  created_at: string | null;
+  last_active_at: string | null;
+  study_minutes_total: number;
+  study_minutes_7d: number;
+  attempts: number;
+  accuracy: number | null;
+}
+
+export interface AdminUserList {
+  summary: AdminUserSummary;
+  total: number;
+  items: AdminUserRow[];
+}
+
+export interface AdminSubmission {
+  id: number;
+  test_id: string;
+  part: string | null;
+  mode: string | null;
+  correct_count: number | null;
+  total_questions: number | null;
+  total_scaled_score: number | null;
+  submitted_at: string | null;
+}
+
+export interface AdminUserDetail extends AdminUserRow {
+  headline: string | null;
+  exam_date: string | null;
+  daily_goal_minutes: number | null;
+  submissions: number;
+  srs_reviews: number;
+  open_errors: number;
+  recent_submissions: AdminSubmission[];
+}

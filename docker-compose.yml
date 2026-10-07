@@ -28,6 +28,8 @@ services:
       WEB_APP_URL: ${WEB_APP_URL:-http://localhost:3005}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      # JWT signing key; when empty the API generates one and keeps it in server/data/.jwt_secret
+      SECRET_KEY: ${SECRET_KEY:-}
     volumes:
       - ./server:/app/server # live backend code: restart the container after pulling
       - ./server/data:/app/server/data

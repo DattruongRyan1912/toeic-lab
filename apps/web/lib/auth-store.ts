@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { api, getAuthToken, setAuthToken } from "@/lib/api";
+import { api, getAuthToken, onGuestWriteBlocked, setAuthToken } from "@/lib/api";
 import { refreshLearner } from "@/lib/learner-store";
 import { useMentorStore } from "@/lib/mentor-store";
 import type { AuthResponse, AuthUser } from "@/types";
@@ -104,3 +104,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     void refreshLearner();
   },
 }));
+
+// Guests can browse and practise, but saving progress needs an account: offer the login dialog.
+onGuestWriteBlocked(() => useAuthStore.getState().openLogin());

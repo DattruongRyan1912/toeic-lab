@@ -14,10 +14,12 @@ import {
   Layers,
   LayoutDashboard,
   Settings,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/logo";
 import { api } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 import { PROVIDER_LABELS, useLearnerStore } from "@/lib/learner-store";
 import { cn } from "@/lib/utils";
 import type { AIStatus, DashboardStats, HealthStatus } from "@/types";
@@ -49,7 +51,7 @@ export function useBackendHealth() {
   return health;
 }
 
-export function getSidebarNav(stats: DashboardStats | null, aiStatus: AIStatus | null): { studyNav: NavItem[]; toolsNav: NavItem[] } {
+export function getSidebarNav(stats: DashboardStats | null, aiStatus: AIStatus | null, isAdmin = false): { studyNav: NavItem[]; toolsNav: NavItem[] } {
   return {
     studyNav: [
       { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -64,6 +66,7 @@ export function getSidebarNav(stats: DashboardStats | null, aiStatus: AIStatus |
       { label: `Lộ Trình ${stats?.total_weeks ?? 24} Tuần`, href: "/roadmaps", icon: Calendar, badge: stats ? `Tuần ${stats.current_week}` : null },
       { label: "AI Mentor Copilot", href: "/mentor", icon: Bot, badge: aiStatus ? PROVIDER_LABELS[aiStatus.provider] ?? aiStatus.provider : null },
       { label: "Cài Đặt & Hồ Sơ", href: "/settings", icon: Settings },
+      ...(isAdmin ? [{ label: "Quản Trị Hệ Thống", href: "/admin", icon: ShieldCheck, badge: "Admin" }] : []),
     ],
   };
 }
@@ -117,9 +120,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const stats = useLearnerStore((state) => state.stats);
   const aiStatus = useLearnerStore((state) => state.aiStatus);
+  const isAdmin = useAuthStore((state) => state.user?.role === "admin");
   const health = useBackendHealth();
 
-  const { studyNav, toolsNav } = getSidebarNav(stats, aiStatus);
+  const { studyNav, toolsNav } = getSidebarNav(stats, aiStatus, isAdmin);
 
   const online = health?.ok ?? false;
   return (

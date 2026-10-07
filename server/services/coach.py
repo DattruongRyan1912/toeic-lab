@@ -69,7 +69,7 @@ def suggestions(db: Session, user_id: int, ai_online: bool = True, limit: int = 
                 f"Tỉ lệ nhớ 30 ngày chỉ {round(retention['rate'] * 100)}% ({retention['reviews']} lượt ôn) — học ít thẻ mới hơn để nhớ chắc hơn.",
                 75, "tool", "Áp dụng", tool="update_learner_profile", args={"new_cards_per_day": new_value},
             ))
-        elif retention["rate"] > 0.92 and retention["reviews"] >= 30 and per_day < 30:
+        elif retention["rate"] > 0.92 and retention["reviews"] >= 30 and per_day < 30 and insights.srs_counts(db, user_id)["new_total"] > per_day * 7:
             new_value = min(30, per_day + 5)
             items.append(_suggestion(
                 "srs_raise", f"Tăng thẻ mới lên {new_value}/ngày",
@@ -86,14 +86,6 @@ def suggestions(db: Session, user_id: int, ai_online: bool = True, limit: int = 
         ))
 
     if ai_online:
-        for stat in report.weakest_lessons(2, min_attempts=3):
-            if stat.status == "weak" and stat.unseen_questions < 3:
-                items.append(_suggestion(
-                    f"ai_practice_{stat.lesson_number}", f"Tạo câu luyện mới cho {stat.label}",
-                    f"Mastery {skills.percent(stat.mastery)} và chỉ còn {stat.unseen_questions} câu chưa làm — AI tạo 5 câu nhắm đúng bẫy bạn hay sai.",
-                    65, "mentor", "Nhờ AI tạo",
-                    prompt=f"Tôi đang yếu {stat.label} (mastery {skills.percent(stat.mastery)}). Hãy tạo 5 câu luyện Part 5 mới nhắm đúng các bẫy tôi hay sai và lưu vào ngân hàng câu luyện của tôi.",
-                ))
         vocab_errors = (
             db.query(ErrorLog).filter(ErrorLog.user_id == user_id, ErrorLog.error_type == "VOCAB", error_log_service.open_filter()).count()
         )

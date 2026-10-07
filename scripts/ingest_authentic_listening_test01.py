@@ -34,7 +34,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "eating in a picnic area = having a meal outdoors",
         "image_url": "/part1/ets2024_01_q1.jpg",
         "audio_url": "/audio/ets2024_01/part1_q01.mp3",
-        "lesson_number": 1,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -51,7 +51,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "standing in the snow beside a car = positioned next to an automobile outdoors",
         "image_url": "/part1/ets2024_01_q2.jpg",
         "audio_url": "/audio/ets2024_01/part1_q02.mp3",
-        "lesson_number": 1,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -68,7 +68,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "having a conversation = chatting with each other / talking together",
         "image_url": "/part1/ets2024_01_q3.jpg",
         "audio_url": "/audio/ets2024_01/part1_q03.mp3",
-        "lesson_number": 1,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -85,7 +85,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "displayed under a tent = exhibited beneath a canopy shelter",
         "image_url": "/part1/ets2024_01_q4.jpg",
         "audio_url": "/audio/ets2024_01/part1_q04.mp3",
-        "lesson_number": 1,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -102,7 +102,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "computer station set up on a desk = workstation assembled on a table",
         "image_url": "/part1/ets2024_01_q5.jpg",
         "audio_url": "/audio/ets2024_01/part1_q05.mp3",
-        "lesson_number": 1,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -119,7 +119,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "taken off its frame = removed from its hinges/doorframe",
         "image_url": "/part1/ets2024_01_q6.jpg",
         "audio_url": "/audio/ets2024_01/part1_q06.mp3",
-        "lesson_number": 1,
+        "lesson_number": None,
     },
 
     # -------------------------------------------------------------
@@ -140,7 +140,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "how old is this building = the age of the structure",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q07.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -157,7 +157,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "can you come = are you able to attend",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q08.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -174,7 +174,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "submitted a work order = filed a maintenance request",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q09.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -191,7 +191,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "take care of it = handle the task / reach out to the supplier",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q10.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -208,7 +208,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "needed to be fixed = required repair",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q11.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -225,7 +225,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "make a hiring decision = select a candidate",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q12.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -242,7 +242,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "eat here = dine in our cafeteria",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q13.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -259,7 +259,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "send it now = dispatch the contract immediately",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q14.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -276,7 +276,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "rain in the forecast = inclement weather expected",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q15.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -293,7 +293,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "just water = an alternative beverage preference",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q16.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -310,7 +310,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "achieved our sales targets = met the revenue goals",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q17.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -327,7 +327,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "about once a month = monthly business trips",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q18.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -344,7 +344,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "didn't bring boots = unprepared for hiking outdoor trails",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q19.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -361,7 +361,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "booked a hotel = made an accommodation reservation",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q20.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -378,7 +378,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "sold out = no tickets remaining",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q21.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -395,7 +395,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "haven't had the chance = have not had the opportunity yet",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q22.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -412,7 +412,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "still being tested = undergoing product evaluation before launch",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q23.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -429,7 +429,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "decided to drive = renting a car / traveling independently",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q24.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -446,7 +446,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "needed some for a large bouquet = used them for floral arrangement",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q25.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -463,7 +463,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "why don't we go see it = let's watch the movie",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q26.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -480,7 +480,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "organizing one = coordinating a rideshare scheme",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q27.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -497,7 +497,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "sent an email = details provided via message",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q28.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -514,7 +514,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "spring merchandise is arriving = new seasonal stock is coming in",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q29.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -531,7 +531,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "have very limited time = tight schedule / overloaded with work",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q30.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
     {
         "test_id": "ETS2024_01",
@@ -548,7 +548,7 @@ AUTHENTIC_TEST01_LISTENING = [
         "paraphrase_pair": "working with computers = software engineering / IT roles",
         "image_url": None,
         "audio_url": "/audio/ets2024_01/part2_q31.mp3",
-        "lesson_number": 2,
+        "lesson_number": None,
     },
 ]
 

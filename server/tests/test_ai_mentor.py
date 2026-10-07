@@ -41,7 +41,8 @@ def test_gemini_function_calling_uses_question_bank_facts(client, seeded, monkey
             system = body["systemInstruction"]["parts"][0]["text"]
             assert "Đáp án đúng: D" in system and "DỮ LIỆU HỌC VIÊN" in system
             names = [decl["name"] for decl in body["tools"][0]["functionDeclarations"]]
-            assert {"log_error_question", "create_practice_questions", "update_learner_profile", "replan_week"} <= set(names)
+            assert {"log_error_question", "add_lesson_note", "update_learner_profile", "replan_week"} <= set(names)
+            assert not {"create_practice_questions", "create_flashcards_bulk"} & set(names)
             assert all("parameters" not in d or d["parameters"]["properties"] for d in body["tools"][0]["functionDeclarations"])
             call = {
                 "id": "call-1",
@@ -215,8 +216,8 @@ def test_vocab_pronunciation_assessment(client, seeded):
     assert res.status_code == 200
     data = res.json()
     assert data["word"] == "accommodate"
-    assert data["score"] >= 75
-    assert data["is_accurate"] is True
+    # Offline, no transcript: nothing heard the recording, so guidance only and no invented score
+    assert data["scored"] is False and data["score"] is None and data["is_accurate"] is None
     assert "vowels" in data["feedback"]
     assert "consonants" in data["feedback"]
     assert "stress" in data["feedback"]

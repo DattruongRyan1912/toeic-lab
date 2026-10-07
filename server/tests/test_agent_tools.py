@@ -25,10 +25,11 @@ def test_registry_covers_learner_data_and_declarations_are_valid():
     names = set(agent_tools.REGISTRY)
     assert len(names) >= 25
     assert {
-        "update_learner_profile", "remember_learner_fact", "create_flashcards_bulk", "reschedule_flashcard", "log_error_question",
-        "update_error_log", "add_plan_item", "replan_week", "create_practice_questions", "add_lesson_note", "add_paraphrase_pair",
+        "update_learner_profile", "remember_learner_fact", "create_flashcard", "reschedule_flashcard", "log_error_question",
+        "update_error_log", "add_plan_item", "replan_week", "add_lesson_note", "add_paraphrase_pair",
         "schedule_study_reminder", "set_roadmap_task", "get_skill_report", "get_study_plan",
     } <= names
+    assert not {"create_practice_questions", "create_flashcards_bulk"} & names  # no AI-written exam content
     for decl in agent_tools.declarations():
         assert decl["name"] and decl["description"]
         if "parameters" in decl:
@@ -61,13 +62,15 @@ def test_profile_and_memory_tools_are_audited_and_undoable(client, seeded):
 
 
 def test_vocabulary_and_srs_tools(client, seeded, db):
-    bulk = run(client, "create_flashcards_bulk", cards=[
-        {"word": "leverage", "meaning": "tận dụng", "example_sentence": "We leverage data."},
-        {"word": "Postpone", "meaning": "hoãn", "example_sentence": "x"},
-        {"word": "audit", "meaning": "kiểm toán", "example_sentence": "The audit starts on Monday."},
-    ])
-    assert bulk["data"]["created"] == ["leverage", "audit"] and bulk["data"]["skipped"][0]["word"] == "postpone"
-    assert client.get("/api/flashcards/summary").json()["total_cards"] == 7
+    leverage = run(client, "create_flashcard", word="leverage", meaning="tận dụng", example_sentence="We leverage data.")
+    assert run(client, "create_flashcard", word="Postpone", meaning="hoãn", example_sentence="x")["status"] == "exists"
+    assert client.get("/api/flashcards/summary").json()["total_cards"] == 6
+
+    # Cards are shared by every learner: editing or deleting them through the mentor is admin-only.
+    denied = client.post("/api/ai/actions/execute", json={"tool": "delete_flashcard", "args": {"card_id": 1}, "source": "user"})
+    assert denied.status_code == 422 and "quản trị viên" in denied.json()["detail"]
+    db.get(models.User, 1).role = "admin"
+    db.commit()
 
     edited = run(client, "update_flashcard", word="leverage", meaning="tận dụng (đòn bẩy)", ipa="/ˈlevərɪdʒ/")
     card = client.get("/api/flashcards?search=leverage").json()[0]
@@ -84,12 +87,12 @@ def test_vocabulary_and_srs_tools(client, seeded, db):
     assert 1 not in [c["card_id"] for c in client.get("/api/flashcards/due").json()]
 
     deleted = run(client, "delete_flashcard", card_id=1)
-    assert client.get("/api/flashcards/summary").json()["total_cards"] == 6
+    assert client.get("/api/flashcards/summary").json()["total_cards"] == 5
     undo(client, deleted)
     db.expire_all()
     assert db.query(models.UserCardSRS).filter_by(card_id=1).one().state == "review"
     assert db.query(models.SRSReviewLog).filter_by(card_id=1).count() == 1  # history restored too
-    undo(client, bulk)
+    undo(client, leverage)
     assert client.get("/api/flashcards/summary").json()["total_cards"] == 5
 
 
@@ -101,7 +104,7 @@ def test_error_log_plan_and_roadmap_tools(client, seeded):
     assert client.get("/api/dashboard/stats").json()["learning_gaps"] == []
     undo(client, mastered)
     assert client.get("/api/error-logs").json()[0]["status"] == "unresolved"
-    assert client.get("/api/dashboard/stats").json()["learning_gaps"][0]["topic"] == "Bẫy Vị Trí Trạng Từ"
+    assert client.get("/api/dashboard/stats").json()["learning_gaps"][0]["topic"] == "Bài 01: Vị Trí 4 Loại Từ"
     undo(client, logged)
     assert client.get("/api/error-logs").json() == []
 
@@ -131,32 +134,6 @@ def test_error_log_plan_and_roadmap_tools(client, seeded):
     assert client.get("/api/roadmaps").json()["current_week"] == 3
     undo(client, moved_start)
     assert client.get("/api/roadmaps").json()["current_week"] == 1
-
-
-def test_ai_practice_questions_join_the_personal_bank(client, seeded):
-    result = run(client, "create_practice_questions", lesson_number=2, questions=[
-        {"sentence": "___ the delay, the shipment arrived intact.", "choice_a": "Despite", "choice_b": "Although", "choice_c": "Because",
-         "choice_d": "So that", "correct_choice": "A", "explanation": "Despite + cụm danh từ", "trap_tag": "Bẫy Liên Từ vs Giới Từ",
-         "distractor_analysis": "Although/Because cần mệnh đề"},
-        {"sentence": "The meeting was moved ___ the manager was traveling.", "choice_a": "because", "choice_b": "because of",
-         "choice_c": "due to", "choice_d": "despite", "correct_choice": "a", "explanation": "because + mệnh đề"},
-        {"sentence": "No blank here at all, sorry.", "choice_a": "a", "choice_b": "b", "choice_c": "c", "correct_choice": "A", "explanation": "x"},
-    ])
-    assert len(result["data"]["question_ids"]) == 2 and result["data"]["rejected"][0]["reason"] == "thiếu chỗ trống ___"
-    questions = client.get("/api/tests/AI_PRACTICE/questions?lesson=2").json()
-    assert len(questions) == 2 and all(q["source"] == "ai_mentor" and q["lesson_number"] == 2 for q in questions)
-    assert questions[0]["trap_tag"] == "Bẫy Liên Từ vs Giới Từ" and questions[1]["correct_choice"] == "A"
-    assert client.get("/api/knowledge/lessons/2").json()["stats"]["question_count"] == 3
-    assert any(t["test_id"] == "AI_PRACTICE" and t["available_questions"] == 2 for t in client.get("/api/tests").json())
-
-    answered = client.post("/api/practice/submit", json={"answers": [{"question_id": questions[0]["id"], "choice": "B"}]}).json()
-    assert answered["errors_logged"] == 1
-    log = client.get("/api/error-logs").json()[0]
-    assert (log["test_id"], log["lesson_number"], log["topic"]) == ("AI_PRACTICE", 2, "Bẫy Liên Từ vs Giới Từ")
-
-    undo(client, result)
-    assert client.get("/api/tests/AI_PRACTICE/questions").status_code == 404
-    assert client.get("/api/learner/insights").status_code == 200  # history of deleted questions still computes
 
 
 def test_notes_paraphrases_and_reminders_tools(client, seeded):
@@ -199,9 +176,7 @@ def test_llm_reads_skills_then_creates_targeted_content(client, seeded, monkeypa
     client.patch("/api/learner/profile", json={"explanation_style": "socratic"})
     client.post("/api/practice/submit", json={"answers": [{"question_id": seeded[111], "choice": "C"}]})
     calls = []
-    new_question = {"sentence": "___ the outage, the deployment finished on time.", "choice_a": "Despite", "choice_b": "Although",
-                    "choice_c": "Because", "choice_d": "Unless", "correct_choice": "A", "explanation": "Despite + N",
-                    "trap_tag": "Bẫy Liên Từ vs Giới Từ"}
+    note = "Despite/In spite of + N; Although + mệnh đề (S + V)."
 
     def handler(request: httpx.Request) -> httpx.Response:
         body = json.loads(request.content)
@@ -214,20 +189,20 @@ def test_llm_reads_skills_then_creates_targeted_content(client, seeded, monkeypa
             report = body["contents"][-1]["parts"][0]["functionResponse"]["response"]["result"]
             weakest = report["data"]["lessons"][0]["lesson"]
             assert weakest == 2
-            return _gemini([{"functionCall": {"id": "c2", "name": "create_practice_questions",
-                                              "args": {"lesson_number": weakest, "questions": [new_question]}}}])
+            return _gemini([{"functionCall": {"id": "c2", "name": "add_lesson_note",
+                                              "args": {"lesson_number": weakest, "content": note}}}])
         result = body["contents"][-1]["parts"][0]["functionResponse"]["response"]["result"]
         assert result["status"] == "success" and result["undoable"]
-        return _gemini([{"text": "Đã tạo 1 câu luyện Bài 02 cho bạn."}])
+        return _gemini([{"text": "Đã thêm ghi chú Bài 02 cho bạn."}])
 
     monkeypatch.setattr(ai_agent_service, "_http_client", lambda: httpx.AsyncClient(transport=httpx.MockTransport(handler)))
-    data = client.post("/api/ai/chat", json={"message": "Tạo câu luyện cho điểm yếu nhất của tôi"}).json()
-    assert data["reply"].startswith("Đã tạo") and [a["tool"] for a in data["actions_taken"]] == ["get_skill_report", "create_practice_questions"]
+    data = client.post("/api/ai/chat", json={"message": "Ghi lại mẹo cho điểm yếu nhất của tôi"}).json()
+    assert data["reply"].startswith("Đã thêm") and [a["tool"] for a in data["actions_taken"]] == ["get_skill_report", "add_lesson_note"]
     read, write = data["actions_taken"]
     assert "data" not in read and write["undoable"] and write["action_id"]
-    assert len(client.get("/api/tests/AI_PRACTICE/questions?lesson=2").json()) == 1
+    assert [n["content"] for n in client.get("/api/knowledge/lessons/2/notes").json()] == [note]
     undo(client, write)
-    assert client.get("/api/tests/AI_PRACTICE/questions").status_code == 404
+    assert client.get("/api/knowledge/lessons/2/notes").json() == []
 
 
 def test_offline_commands_still_change_data_through_tools(client, seeded):

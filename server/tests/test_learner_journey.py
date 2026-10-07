@@ -88,7 +88,7 @@ def test_two_week_learner_journey(client, seeded, db):
     assert len(logs) == 4 and all(log["status"] == "mastered" for log in logs)  # 1-3-7 day reviews completed
     dash = client.get("/api/dashboard/stats").json()
     assert dash["learning_gaps"] == [] and dash["error_reviews_due"] == 0
-    assert dash["streak_days"] == 6  # Mon-Sat of week 2 (both Sundays were rest days)
+    assert dash["streak_days"] == 12  # Mon-Sat of both weeks: the planned Sunday rest does not break the streak
     minutes = {item["date"]: item["minutes"] for item in final["study_minutes"]}
     assert sum(1 for value in minutes.values() if value > 0) == studied_days == 12
     assert client.get("/api/learner/insights").json()["srs_retention"]["reviews"] > 0

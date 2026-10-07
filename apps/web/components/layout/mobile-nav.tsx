@@ -14,6 +14,7 @@ import {
 import { BrandLogo } from "@/components/brand/logo";
 import { useLearnerStore } from "@/lib/learner-store";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/auth-store";
 import { NavSection, getSidebarNav, useBackendHealth } from "./sidebar";
 
 export function MobileDrawer() {
@@ -22,9 +23,10 @@ export function MobileDrawer() {
   const setMobileNavOpen = useLearnerStore((state) => state.setMobileNavOpen);
   const stats = useLearnerStore((state) => state.stats);
   const aiStatus = useLearnerStore((state) => state.aiStatus);
+  const isAdmin = useAuthStore((state) => state.user?.role === "admin");
   const health = useBackendHealth();
 
-  const { studyNav, toolsNav } = getSidebarNav(stats, aiStatus);
+  const { studyNav, toolsNav } = getSidebarNav(stats, aiStatus, isAdmin);
 
   // Close drawer on route change
   useEffect(() => {

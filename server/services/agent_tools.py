@@ -17,14 +17,12 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from server.models import (
-    AI_PRACTICE_TEST_ID,
     AIActionLog,
     ErrorLog,
     Flashcard,
     KnowledgeLesson,
     LearnerMemory,
     LessonNote,
-    MockTest,
     ParaphrasePair,
     QuestionAttempt,
     Roadmap,
@@ -44,7 +42,6 @@ logger = logging.getLogger(__name__)
 
 MEMORY_CATEGORIES = ("goal", "preference", "struggle", "strength", "context", "other")
 HHMM_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
-MAX_BULK = 20
 
 
 class ToolError(Exception):
@@ -591,35 +588,17 @@ def _create_flashcard(ctx: ToolContext, args: dict) -> Outcome:
     return Outcome(f"Đã thêm '{card.word}' vào bộ thẻ SRS (#{card.id})", data, [op_delete(card)])
 
 
-@_tool("create_flashcards_bulk", f"Thêm nhiều từ vựng một lần (tối đa {MAX_BULK}) — dùng để nạp bộ từ tối ưu theo điểm yếu/chủ đề của học viên.",
-       {"cards": A("Danh sách thẻ", {"type": "object", "properties": CARD_FIELDS, "required": ["word", "meaning", "example_sentence"]})},
-       ["cards"], writes=True, category="vocab")
-def _create_flashcards_bulk(ctx: ToolContext, args: dict) -> Outcome:
-    cards = args.get("cards")
-    if not isinstance(cards, list) or not cards:
-        raise ToolError("Cần danh sách 'cards'")
-    created, skipped, undo = [], [], []
-    for raw in cards[:MAX_BULK]:
-        if not isinstance(raw, dict):
-            continue
-        try:
-            card, is_new = vocab_service.create_card(ctx.db, ctx.user_id, raw)
-        except ValueError as exc:
-            skipped.append({"word": raw.get("word"), "reason": str(exc)})
-            continue
-        if is_new:
-            created.append(card.word)
-            undo.append(op_delete(card))
-        else:
-            skipped.append({"word": card.word, "reason": "đã có"})
-    if not created:
-        return Outcome("Không có từ mới nào được thêm", {"created": [], "skipped": skipped}, status="exists")
-    return Outcome(f"Đã thêm {len(created)} thẻ: {', '.join(created)}", {"created": created, "skipped": skipped}, undo)
+def _require_admin(ctx: ToolContext, action: str) -> None:
+    """Flashcards are shared by every learner: only admins may change or remove them."""
+    user = ctx.db.get(User, ctx.user_id)
+    if user is None or user.role != "admin":
+        raise ToolError(f"Chỉ quản trị viên mới được {action}; bạn có thể dời lịch ôn thẻ bằng reschedule_flashcard.")
 
 
-@_tool("update_flashcard", "Sửa nội dung một thẻ (nghĩa, ví dụ, collocation, paraphrase, IPA...) để dễ nhớ hơn.",
+@_tool("update_flashcard", "Sửa nội dung một thẻ dùng chung (chỉ quản trị viên).",
        {"card_id": I("ID thẻ"), **CARD_FIELDS}, writes=True, category="vocab")
 def _update_flashcard(ctx: ToolContext, args: dict) -> Outcome:
+    _require_admin(ctx, "sửa thẻ dùng chung")
     card = _card(ctx, {k: v for k, v in args.items() if k in ("card_id", "word")})
     fields = {}
     for key in ("meaning", "example_sentence", "example_translation", "category", "collocations", "paraphrase_pair", "word_type"):
@@ -635,9 +614,10 @@ def _update_flashcard(ctx: ToolContext, args: dict) -> Outcome:
     return Outcome(f"Đã sửa thẻ '{card.word}': {', '.join(fields)}", {"card_id": card.id}, undo)
 
 
-@_tool("delete_flashcard", "Xoá một thẻ khỏi Sổ tay (kèm lịch sử ôn). Chỉ dùng khi học viên yêu cầu.",
+@_tool("delete_flashcard", "Xoá một thẻ dùng chung kèm lịch sử ôn (chỉ quản trị viên).",
        {"card_id": I("ID thẻ"), "word": S("Hoặc từ vựng")}, writes=True, category="vocab")
 def _delete_flashcard(ctx: ToolContext, args: dict) -> Outcome:
+    _require_admin(ctx, "xoá thẻ dùng chung")
     card = _card(ctx, args)
     srs_rows = ctx.db.query(UserCardSRS).filter_by(card_id=card.id).all()
     logs = ctx.db.query(SRSReviewLog).filter_by(card_id=card.id).all()
@@ -864,81 +844,6 @@ def _update_roadmap(ctx: ToolContext, args: dict) -> Outcome:
 
 
 # --------------------------------------------------------------------------- write tools: content
-QUESTION_ITEM = {
-    "type": "object",
-    "properties": {
-        "sentence": S("Câu hỏi có chỗ trống '___'"), "choice_a": S("A"), "choice_b": S("B"), "choice_c": S("C"), "choice_d": S("D"),
-        "correct_choice": S("A/B/C/D"), "explanation": S("Vì sao đáp án đúng"), "trap_tag": S("Tên bẫy, ví dụ 'Bẫy Liên Từ vs Giới Từ'"),
-        "distractor_analysis": S("Vì sao các phương án còn lại sai"), "paraphrase_pair": S("Collocation / paraphrase"),
-    },
-    "required": ["sentence", "choice_a", "choice_b", "choice_c", "correct_choice", "explanation"],
-}
-
-
-def _ensure_ai_test(db: Session) -> MockTest:
-    test = db.query(MockTest).filter_by(test_id=AI_PRACTICE_TEST_ID).first()
-    if test is None:
-        test = MockTest(test_id=AI_PRACTICE_TEST_ID, name="Câu luyện cá nhân hoá (AI)", year=timeutil.local_today().year,
-                        publisher="AI Mentor", total_questions=0)
-        db.add(test)
-        db.flush()
-    return test
-
-
-@_tool("create_practice_questions", "Tạo câu luyện MỚI cho một chuyên đề (tối đa 10) dựa trên lỗi của học viên; câu được lưu vào ngân hàng đề cá nhân và vào kế hoạch luyện.",
-       {"lesson_number": I("Chuyên đề 1-12"), "part": S("Mặc định Part 5"), "questions": A("Danh sách câu hỏi", QUESTION_ITEM)},
-       ["lesson_number", "questions"], writes=True, category="content")
-def _create_practice_questions(ctx: ToolContext, args: dict) -> Outcome:
-    lesson = _lesson(args, required=True)
-    part = curriculum.normalize_part(args.get("part")) or "Part 5"
-    items = args.get("questions")
-    if not isinstance(items, list) or not items:
-        raise ToolError("Cần danh sách 'questions'")
-    test = _ensure_ai_test(ctx.db)
-    next_no = (ctx.db.query(func.max(TestQuestion.question_no)).filter(TestQuestion.test_id == test.test_id).scalar() or 0) + 1
-    created, rejected, undo = [], [], []
-    for raw in items[:10]:
-        if not isinstance(raw, dict):
-            continue
-        sentence = re.sub(r"_{3,}|\.{4,}|\(\s*blank\s*\)", "___", str(raw.get("sentence") or "").strip())
-        choices = {key: str(raw.get(f"choice_{key.lower()}") or "").strip() for key in "ABCD"}
-        choices = {k: v for k, v in choices.items() if v}
-        correct = error_log_service.normalize_choice(raw.get("correct_choice"))
-        problem = None
-        if len(sentence) < 15:
-            problem = "câu quá ngắn"
-        elif part in ("Part 5", "Part 6") and "___" not in sentence:
-            problem = "thiếu chỗ trống ___"
-        elif len(choices) < 3 or len({v.lower() for v in choices.values()}) != len(choices):
-            problem = "cần ≥3 lựa chọn khác nhau"
-        elif correct not in choices:
-            problem = "đáp án đúng không nằm trong các lựa chọn"
-        elif ctx.db.query(TestQuestion.id).filter(TestQuestion.sentence == sentence).first() is not None:
-            problem = "trùng câu đã có"
-        if problem:
-            rejected.append({"sentence": sentence[:80], "reason": problem})
-            continue
-        tag = (str(raw.get("trap_tag") or "").strip("[] ") or f"Bẫy Bài {lesson:02d}")[:100]
-        question = TestQuestion(
-            test_id=test.test_id, part=part, question_no=next_no, sentence=sentence,
-            choice_a=choices.get("A", ""), choice_b=choices.get("B", ""), choice_c=choices.get("C", ""), choice_d=choices.get("D"),
-            correct_choice=correct, explanation=_text(raw, "explanation", max_len=1000),
-            distractor_analysis=f"[{tag}] {str(raw.get('distractor_analysis') or '').strip()}".strip()[:2000],
-            paraphrase_pair=_text(raw, "paraphrase_pair", max_len=300), lesson_number=lesson, source="ai_mentor",
-            created_by_user_id=ctx.user_id, created_at=timeutil.utcnow(),
-        )
-        ctx.db.add(question)
-        ctx.db.flush()
-        next_no += 1
-        created.append(question.id)
-        undo.append(op_delete(question))
-    if not created:
-        raise ToolError("Không câu nào hợp lệ: " + "; ".join(r["reason"] for r in rejected[:3]))
-    test.total_questions = ctx.db.query(TestQuestion).filter(TestQuestion.test_id == test.test_id).count()
-    href = f"/mock-tests?lesson={lesson}"
-    return Outcome(f"Đã tạo {len(created)} câu luyện Bài {lesson:02d} (luyện tại {href})", {"question_ids": created, "rejected": rejected, "href": href}, undo)
-
-
 @_tool("add_lesson_note", "Thêm ghi chú cá nhân vào một chuyên đề (mẹo nhớ, quy tắc rút ra từ lỗi của học viên).",
        {"lesson_number": I("1-12"), "content": S("Nội dung ghi chú (Markdown)")}, ["lesson_number", "content"], writes=True, category="content")
 def _add_lesson_note(ctx: ToolContext, args: dict) -> Outcome:

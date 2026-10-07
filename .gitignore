@@ -30,3 +30,6 @@ server/toeic_data.db
 scratch/
 
 .DS_Store
+
+# Auto-generated JWT signing key (server/config.py) when SECRET_KEY is not set
+server/data/.jwt_secret

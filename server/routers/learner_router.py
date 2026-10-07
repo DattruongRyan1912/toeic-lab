@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id, require_learner_user_id
+from server.deps import current_user_id, optional_learner_id, require_learner_user_id
 from server.models import LearnerMemory
 from server.schemas import (
     ActivityPing,
@@ -108,8 +108,10 @@ def learner_suggestions(user_id: int = Depends(current_user_id), db: Session = D
 
 
 @router.post("/activity")
-def track_activity(payload: ActivityPing, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def track_activity(payload: ActivityPing, user_id: Optional[int] = Depends(optional_learner_id), db: Session = Depends(get_db)):
     """Heartbeat for time spent outside graded activities (lesson pages, listening drills with the in-app timer)."""
+    if user_id is None:
+        return {"status": "ignored", "session_id": None, "duration_seconds": 0}  # guests: nothing is stored
     insights.get_or_create_user(db, user_id)
     session = activity.track(db, user_id, payload.kind, payload.seconds, ref=payload.ref)
     db.commit()

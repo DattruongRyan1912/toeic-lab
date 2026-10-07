@@ -49,7 +49,14 @@ def create_error_log(payload: ErrorLogCreate, user_id: int = Depends(require_lea
         question = error_log_service.find_question(db, payload.test_id, payload.question_no)
     error_log_service.enrich_from_question(fields, question)
     fields["source"] = "manual"
-    log, _ = error_log_service.upsert_error_log(db, user_id, fields, dedupe=False)
+    # One log per question: a second entry for a question already logged re-opens that log with the
+    # learner's own analysis (two logs for one question used to leave one stuck "due" forever).
+    log, status = error_log_service.upsert_error_log(db, user_id, fields, dedupe=bool(fields.get("question_id")))
+    if status != "created":
+        log.error_type = (fields.get("error_type") or log.error_type).upper()
+        log.root_cause = fields.get("root_cause") or log.root_cause
+        log.key_rule_or_paraphrase = fields.get("key_rule_or_paraphrase") or log.key_rule_or_paraphrase
+        log.source = "manual"
     db.commit()
     insights.recompute_learning_gaps(db, user_id)
     db.refresh(log)

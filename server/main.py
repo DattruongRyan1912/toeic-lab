@@ -17,6 +17,7 @@ from sqlalchemy import text
 from server import config
 from server.database import SessionLocal, engine, init_db
 from server.routers import (
+    admin_router,
     ai_agent_router,
     auth_router,
     dashboard_router,
@@ -98,6 +99,7 @@ app.add_middleware(
 
 for module in (
     auth_router,
+    admin_router,
     dashboard_router,
     user_router,
     roadmap_router,

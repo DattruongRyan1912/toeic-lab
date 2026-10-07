@@ -153,8 +153,16 @@ export default function DashboardPage() {
               </span>
               {stats.days_to_exam != null && (
                 <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-0.5 text-[11px] font-semibold text-red-700 dark:border-red-500/30 dark:bg-red-500/15 dark:text-red-300">
-                  Còn {stats.days_to_exam} ngày thi
+                  {stats.days_to_exam === 0 ? "Hôm nay thi — chúc bạn thi tốt!" : `Còn ${stats.days_to_exam} ngày thi`}
                 </span>
+              )}
+              {stats.exam_passed && (
+                <Link
+                  href="/settings#personalization"
+                  className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800 hover:underline dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300"
+                >
+                  Ngày thi đã qua — đặt ngày thi mới
+                </Link>
               )}
               {stats.headline && (
                 <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-300">
@@ -227,7 +235,7 @@ export default function DashboardPage() {
                     : predicted.basis_reading === "prior"
                       ? " (chưa có dữ liệu)"
                       : ""
-                }`
+                }${predicted.coverage != null && predicted.coverage < 1 ? ` • đề đo được ${Math.round(predicted.coverage * 100)}%` : ""}`
               : "Làm bài luyện để có dự đoán"
           }
           icon={Target}

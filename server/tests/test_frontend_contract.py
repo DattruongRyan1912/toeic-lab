@@ -47,7 +47,8 @@ def test_payloads_match_frontend_types(client, seeded):
     keys(insights["lessons"][0], "key", "label", "kind", "lesson_number", "part", "attempts", "distinct_questions", "mastery", "confidence",
          "trend", "avg_time_seconds", "target_seconds", "open_errors", "question_count", "status", where="insights.skill")
     prediction = insights["prediction"]
-    keys(prediction, "listening", "reading", "total", "confidence", "target_score", "target_gap", where="prediction")
+    keys(prediction, "listening", "reading", "total", "confidence", "target_score", "target_gap", "coverage", "measured_parts",
+         "unmeasurable_parts", where="prediction")
     keys(prediction["listening"], "expected", "low", "high", "basis", "confidence", where="prediction.listening")
     keys(prediction["total"], "expected", "low", "high", "cefr", where="prediction.total")
     keys(insights["srs_retention"], "reviews", "retained", "rate", where="srs_retention")

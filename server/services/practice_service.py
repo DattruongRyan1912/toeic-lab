@@ -50,8 +50,11 @@ def submit(
     time_spent_seconds: int = 0,
     log_errors: bool = True,
     test_id: Optional[str] = None,
+    persist: bool = True,
 ) -> dict:
-    insights.get_or_create_user(db, user_id)
+    """Grade answers; with persist=False (guests) nothing is written and the demo learner is untouched."""
+    if persist:
+        insights.get_or_create_user(db, user_id)
     mode = mode if mode in MODES else "practice"
     by_id: dict = {}
     for answer in answers:
@@ -68,12 +71,16 @@ def submit(
         raise PracticeError("Có câu hỏi không thuộc đề này" if test_id else "Có câu hỏi không tồn tại")
 
     now = timeutil.utcnow()
-    open_errors = {
-        log.question_id: log
-        for log in db.query(ErrorLog)
-        .filter(ErrorLog.user_id == user_id, ErrorLog.question_id.in_(by_id.keys()), error_log_service.open_filter())
+    logs = (
+        db.query(ErrorLog)
+        .filter(ErrorLog.user_id == user_id, ErrorLog.question_id.in_(by_id.keys()))
         .order_by(ErrorLog.id.asc())
-    }
+        .all()
+        if persist
+        else []
+    )
+    logged_questions = {log.question_id for log in logs}
+    open_errors = {log.question_id: log for log in logs if log.status != "mastered"}
 
     results, stored, attempts, section_counts = [], [], [], {}
     logs_to_link = []
@@ -129,7 +136,10 @@ def submit(
                 created_at=now,
             )
         )
-        if not is_correct and log_errors:
+        # A blank only says "not answered": outside exam mode it is not a mistake, and it never
+        # overwrites the diagnosis of a question the learner already has in the error log.
+        blank_is_mistake = mode == "exam" and question.id not in logged_questions
+        if not is_correct and log_errors and persist and (choice is not None or blank_is_mistake):
             fields = {"user_choice": choice, "error_type": error_type, "root_cause": _root_cause(question, choice), "source": "mock_test"}
             error_log_service.enrich_from_question(fields, question)
             log, status = error_log_service.upsert_error_log(db, user_id, fields, dedupe=True)
@@ -142,13 +152,39 @@ def submit(
     measured = [r["time_ms"] for r in results if r["time_ms"]]
     if not time_spent_seconds and measured:
         time_spent_seconds = round(sum(measured) / 1000)
-    scaled = {section: scoring.estimate_section_scaled(section, c, n) for section, (c, n) in section_counts.items()}
+    scaled = {
+        section: value
+        for section, (c, n) in section_counts.items()
+        if (value := scoring.estimate_section_scaled(section, c, n)) is not None
+    }
     tests = {q.test_id for q in questions}
     parts = {q.part for q in questions}
+    summary = {
+        "submission_id": None,
+        "test_id": next(iter(tests)) if len(tests) == 1 else "MIXED",
+        "part": part or (next(iter(parts)) if len(parts) == 1 else "Mixed"),
+        "mode": mode,
+        "lesson_number": lesson_number,
+        "correct_count": correct_count,
+        "total_questions": total,
+        "unanswered": sum(1 for r in results if r["user_choice"] is None),
+        "accuracy": round(correct_count / total, 4) if total else 0.0,
+        "scaled_listening": scaled.get("listening"),
+        "scaled_reading": scaled.get("reading"),
+        "errors_logged": len(logs_to_link),
+        "reviews_advanced": reviews_advanced,
+        "errors_mastered": errors_mastered,
+        "avg_time_seconds": round(sum(measured) / len(measured) / 1000, 1) if measured else None,
+        "time_spent_seconds": time_spent_seconds,
+        "results": results,
+        "learning_gaps": [],
+    }
+    if not persist:
+        return summary
     submission = UserTestSubmission(
         user_id=user_id,
-        test_id=tests.pop() if len(tests) == 1 else "MIXED",
-        part=part or (next(iter(parts)) if len(parts) == 1 else "Mixed"),
+        test_id=summary["test_id"],
+        part=summary["part"],
         mode=mode,
         lesson_number=lesson_number,
         correct_count=correct_count,
@@ -176,26 +212,7 @@ def submit(
         result["error_log_id"] = log.id
     insights.recompute_learning_gaps(db, user_id)
 
-    return {
-        "submission_id": submission.id,
-        "test_id": submission.test_id,
-        "part": submission.part,
-        "mode": mode,
-        "lesson_number": lesson_number,
-        "correct_count": correct_count,
-        "total_questions": total,
-        "unanswered": sum(1 for r in results if r["user_choice"] is None),
-        "accuracy": round(correct_count / total, 4) if total else 0.0,
-        "scaled_listening": scaled.get("listening"),
-        "scaled_reading": scaled.get("reading"),
-        "errors_logged": len(logs_to_link),
-        "reviews_advanced": reviews_advanced,
-        "errors_mastered": errors_mastered,
-        "avg_time_seconds": round(sum(measured) / len(measured) / 1000, 1) if measured else None,
-        "time_spent_seconds": time_spent_seconds,
-        "results": results,
-        "learning_gaps": insights.open_gaps(db, user_id),
-    }
+    return {**summary, "submission_id": submission.id, "learning_gaps": insights.open_gaps(db, user_id)}
 
 
 # --------------------------------------------------------------------------- personalized sets

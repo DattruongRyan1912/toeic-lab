@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, optional_learner_id, require_learner_user_id
 from server.models import KnowledgeLesson, LessonNote, LessonProgress, ParaphrasePair, TestQuestion
 from server.schemas import (
     KnowledgeLessonDetail,
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/api/knowledge", tags=["Knowledge Vault"])
 EMPTY_STATS = {"question_count": 0, "answered": 0, "correct": 0, "accuracy": None, "open_errors": 0, "status": "not_started"}
 
 
-def _serialize_lesson(lesson: KnowledgeLesson, stats: dict) -> dict:
+def _serialize_lesson(lesson: KnowledgeLesson, stats: dict, completed: bool = False) -> dict:
     return {
         "id": lesson.id,
         "lesson_number": lesson.lesson_number,
@@ -37,6 +37,7 @@ def _serialize_lesson(lesson: KnowledgeLesson, stats: dict) -> dict:
         "is_unlocked": bool(lesson.is_unlocked),
         "has_full_content": bool(lesson.content_md),
         "stats": stats.get(lesson.lesson_number) or EMPTY_STATS,
+        "completed": completed,
     }
 
 
@@ -64,7 +65,12 @@ def _progress_dict(progress: Optional[LessonProgress], lesson_no: int) -> dict:
 def list_syntax_lessons(user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
     stats = insights.lesson_stats(db, user_id)
     lessons = db.query(KnowledgeLesson).order_by(KnowledgeLesson.lesson_number.asc()).all()
-    return [_serialize_lesson(lesson, stats) for lesson in lessons]
+    completed = {
+        number for (number,) in db.query(LessonProgress.lesson_number).filter(
+            LessonProgress.user_id == user_id, LessonProgress.completed_at.isnot(None)
+        )
+    }
+    return [_serialize_lesson(lesson, stats, lesson.lesson_number in completed) for lesson in lessons]
 
 
 @router.get("/lessons/{lesson_no}", response_model=KnowledgeLessonDetail)
@@ -106,11 +112,18 @@ def get_syntax_lesson_drill(lesson_no: int, db: Session = Depends(get_db)):
 def update_lesson_progress(
     lesson_no: int,
     payload: LessonProgressUpdate,
-    user_id: int = Depends(current_user_id),
+    user_id: Optional[int] = Depends(optional_learner_id),
     db: Session = Depends(get_db),
 ):
-    """Reading time (heartbeats from the lesson page) and completion; feeds the plan and study minutes."""
+    """Reading time (heartbeats from the lesson page) and completion; feeds the plan and study minutes.
+
+    Guests: views/heartbeats are not stored; marking a lesson complete asks them to log in.
+    """
     _require_lesson(db, lesson_no)
+    if user_id is None:
+        if payload.event in ("complete", "uncomplete"):
+            raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để lưu tiến độ bài học")
+        return _progress_dict(None, lesson_no)
     insights.get_or_create_user(db, user_id)
     now = timeutil.utcnow()
     progress = db.query(LessonProgress).filter_by(user_id=user_id, lesson_number=lesson_no).first()
@@ -138,7 +151,7 @@ def list_notes(lesson_no: int, user_id: int = Depends(current_user_id), db: Sess
 
 
 @router.post("/lessons/{lesson_no}/notes", response_model=LessonNoteRead, status_code=201)
-def add_note(lesson_no: int, payload: LessonNoteCreate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def add_note(lesson_no: int, payload: LessonNoteCreate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     _require_lesson(db, lesson_no)
     insights.get_or_create_user(db, user_id)
     note = LessonNote(user_id=user_id, lesson_number=lesson_no, content=payload.content.strip(), source="user")
@@ -149,7 +162,7 @@ def add_note(lesson_no: int, payload: LessonNoteCreate, user_id: int = Depends(c
 
 
 @router.delete("/lessons/{lesson_no}/notes/{note_id}")
-def delete_note(lesson_no: int, note_id: int, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def delete_note(lesson_no: int, note_id: int, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     note = db.query(LessonNote).filter_by(id=note_id, user_id=user_id, lesson_number=lesson_no).first()
     if note is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy ghi chú")

@@ -14,6 +14,7 @@ import type { LearnerInsights, SectionPrediction, SkillStat } from "@/types";
 const CARD = "border-slate-200 bg-white dark:border-slate-700/70 dark:bg-slate-800/80";
 const BASIS: Record<SectionPrediction["basis"], string> = {
   data: "từ bài làm của bạn",
+  partial: "từ bài làm, một số Part ngoại suy",
   baseline: "từ điểm đầu vào",
   prior: "ước lượng mặc định",
 };
@@ -98,20 +99,26 @@ export function SkillInsights() {
               <SectionBox label="Listening" data={p.listening} tone="text-blue-600 dark:text-blue-400" />
               <SectionBox label="Reading" data={p.reading} tone="text-purple-600 dark:text-purple-400" />
             </div>
-            {p.confidence_level !== "high" || (p.questions_needed_to_narrow && p.questions_needed_to_narrow > 0) ? (
+            {p.unmeasurable_parts.length > 0 && (
+              <p className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-[11px] text-slate-600 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-300">
+                Ngân hàng đề hiện đo được {Math.round(p.coverage * 100)}% đề thi thật ({p.measured_parts.join(", ") || "chưa có Part nào"} đã có bài làm).{" "}
+                {p.unmeasurable_parts.join(", ")} chưa có câu hỏi nên phần điểm này được ngoại suy, vì vậy khoảng dự đoán còn rộng.
+              </p>
+            )}
+            {p.questions_needed_to_narrow && p.questions_needed_to_narrow > 0 ? (
               <div className="flex items-center justify-between gap-3 rounded-lg border border-purple-200/80 bg-purple-50/70 p-2.5 text-[11px] text-purple-900 dark:border-purple-800/60 dark:bg-purple-950/40 dark:text-purple-200">
                 <span>
-                  Độ tin cậy: <strong className="font-semibold">{p.confidence_level === "low" ? "thấp" : p.confidence_level === "medium" ? "trung bình" : "cao"}</strong> ({Math.round(p.confidence * 100)}%). Cần thêm <strong>{p.questions_needed_to_narrow ?? 10} câu</strong> để thu hẹp khoảng dự đoán.
+                  Độ tin cậy: <strong className="font-semibold">{p.confidence_level === "low" ? "thấp" : p.confidence_level === "medium" ? "trung bình" : "cao"}</strong> ({Math.round(p.confidence * 100)}%). Cần thêm <strong>{p.questions_needed_to_narrow} câu</strong> ở các Part đã có đề để thu hẹp khoảng dự đoán.
                 </span>
                 <Link href="/mock-tests?mode=smart" className="shrink-0 font-semibold text-purple-700 underline hover:text-purple-900 dark:text-purple-300">
                   Luyện thông minh ngay →
                 </Link>
               </div>
-            ) : (
+            ) : p.confidence_level === "high" ? (
               <p className="rounded-lg bg-emerald-50 p-2 text-[11px] text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
                 ✓ Dữ liệu đạt độ tin cậy cao ({Math.round(p.confidence * 100)}% • {data.total_attempts} câu đã làm).
               </p>
-            )}
+            ) : null}
           </CardContent>
         </Card>
 

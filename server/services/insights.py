@@ -6,11 +6,13 @@ reminders read from the same place, so every screen shows the same numbers.
 """
 from __future__ import annotations
 
+import re
 from collections import Counter, defaultdict
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import and_, case, func, or_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from server import config
@@ -79,24 +81,96 @@ def phase_for_week(week: int, total_weeks: Optional[int]) -> int:
     return max(1, min(3, (week - 1) // span + 1))
 
 
+PHASE_INFO = {
+    1: ("Xây nền cú pháp & từ vựng", "12 chuyên đề cú pháp Part 5, Dictation Part 1 & 2, thẻ SRS mỗi ngày."),
+    2: ("Tăng tốc Part 3, 4, 6 & 7", "Shadowing Part 3 & 4, kỹ thuật 3-Pass Scanning cho Part 7."),
+    3: ("Thực chiến đề ETS & bịt Sổ lỗi", "Full test 120 phút, chữa RCA triệt để, tâm lý phòng thi."),
+}
+_PART_MENTION = re.compile(r"Part\s*((?:\d\s*(?:,|&|-|và)?\s*)+)")
+_CARD_COUNT = re.compile(r"(\d{2,4})\s*(?:từ|thẻ)")
+
+
+def content_gaps(db: Session, tasks) -> dict:
+    """task_id -> why the bank cannot support this milestone yet (missing parts, no full test, too few cards)."""
+    parts = {part for (part,) in db.query(TestQuestion.part).distinct() if part}
+    biggest_test = max((count for (_, count) in db.query(TestQuestion.test_id, func.count(TestQuestion.id)).group_by(TestQuestion.test_id)), default=0)
+    cards = db.query(func.count(Flashcard.id)).scalar() or 0
+    gaps = {}
+    for task in tasks:
+        title = task.title or ""
+        wanted = {f"Part {d}" for match in _PART_MENTION.findall(title) for d in re.findall(r"\d", match)}
+        if "Triple Passage" in title:
+            wanted.add("Part 7")
+        missing = sorted(wanted - parts)
+        notes = [f"Chưa có đề {', '.join(missing)}"] if missing else []
+        if ("Full Test" in title or "120 phút" in title) and biggest_test < 200:
+            notes.append("Chưa có đề full 200 câu")
+        count = _CARD_COUNT.search(title) if task.category == "Vocab" else None
+        if count and int(count.group(1)) > cards:
+            notes.append(f"Kho mới có {cards} thẻ")
+        if notes:
+            gaps[task.id] = "; ".join(notes)
+    return gaps
+
+
+def roadmap_phases(roadmap: Roadmap, start_score: Optional[int], target: int) -> list:
+    """Phase cards: week ranges from the (rescaled) milestones themselves, score goals from the learner's own
+    start (onboarding baseline) to target, so nothing on the page is a fixed number."""
+    total = roadmap.total_weeks or 24
+    numbers = sorted({task.phase or 1 for task in roadmap.tasks}) or [1, 2, 3]
+    weeks = {n: [t.week_number for t in roadmap.tasks if (t.phase or 1) == n] for n in numbers}
+    phases = []
+    for index, number in enumerate(numbers):
+        # A phase spans its own (rescaled) milestones up to the next phase's first one; after compressing a
+        # roadmap two phases may share a boundary week rather than hide a milestone outside its phase.
+        start = 1 if index == 0 else min(weeks[number], default=phases[-1]["end_week"] + 1)
+        if index == len(numbers) - 1:
+            end = total
+        else:
+            next_start = min(weeks[numbers[index + 1]], default=total)
+            own_end = max(weeks[number], default=start)
+            end = next_start - 1 if next_start > own_end else own_end
+        title, focus = PHASE_INFO.get(number, (f"Giai đoạn {number}", ""))
+        if start_score is not None and start_score < target:
+            goal = int(round((start_score + (target - start_score) * (index + 1) / len(numbers)) / 5) * 5)
+        else:
+            goal = target if index == len(numbers) - 1 else None
+        phases.append({"phase": number, "title": title, "focus": focus, "start_week": start, "end_week": max(start, end), "goal_score": goal})
+    return phases
+
+
+def learner_phases(roadmap: Roadmap) -> list:
+    user = roadmap.user
+    target = (user.target_score if user is not None else None) or 800
+    has_baseline = user is not None and user.baseline_listening and user.baseline_reading
+    return roadmap_phases(roadmap, user.baseline_listening + user.baseline_reading if has_baseline else None, target)
+
+
+def phase_of_week(phases: list, week: int) -> int:
+    return next((p["phase"] for p in phases if p["start_week"] <= week <= p["end_week"]), phases[-1]["phase"] if phases else 1)
+
+
 def roadmap_progress(roadmap: Roadmap) -> tuple:
     total = len(roadmap.tasks)
     done = sum(1 for task in roadmap.tasks if task.is_completed)
     return done, total, round(done / total * 100) if total else 0
 
 
-def serialize_roadmap(roadmap: Roadmap, evidence: Optional[dict] = None) -> dict:
+def serialize_roadmap(roadmap: Roadmap, evidence: Optional[dict] = None, gaps: Optional[dict] = None) -> dict:
     week = current_week(roadmap)
     done, total, percent = roadmap_progress(roadmap)
     evidence = evidence or {}
+    gaps = gaps or {}
     user = roadmap.user
+    phases = learner_phases(roadmap)
     return {
         "id": roadmap.id,
         "title": roadmap.title,
         "total_weeks": roadmap.total_weeks or 24,
         "base_total_weeks": roadmap.base_total_weeks or roadmap.total_weeks or 24,
         "current_week": week,
-        "current_phase": phase_for_week(week, roadmap.total_weeks),
+        "current_phase": phase_of_week(phases, week),
+        "phases": phases,
         "start_date": roadmap_start(roadmap),
         "exam_date": user.exam_date if user is not None else None,
         "status": roadmap.status or "in_progress",
@@ -116,6 +190,7 @@ def serialize_roadmap(roadmap: Roadmap, evidence: Optional[dict] = None) -> dict
                 "source": task.source or "seed",
                 "auto_met": task.id in evidence,
                 "evidence": evidence.get(task.id),
+                "content_note": gaps.get(task.id),
             }
             for task in roadmap.tasks
         ],
@@ -131,21 +206,31 @@ def ensure_srs_records(db: Session, user_id: int) -> int:
         .filter(UserCardSRS.id.is_(None))
         .all()
     )
+    if not missing:
+        return 0
     now = timeutil.utcnow()
     for (card_id,) in missing:
         db.add(UserCardSRS(user_id=user_id, card_id=card_id, state="new", next_review_at=now))
-    if missing:
+    try:
         db.commit()
+    except IntegrityError:
+        db.rollback()  # a parallel request (vocab page loads summary + due at once) inserted them first
+        return 0
     return len(missing)
 
 
+def srs_due_before() -> datetime:
+    """A card is due today when its review falls before the next local midnight (same day boundary as the plan)."""
+    return timeutil.local_day_start_utc(timeutil.local_today() + timedelta(days=1))
+
+
 def srs_counts(db: Session, user_id: int, category: Optional[str] = None) -> dict:
-    now = timeutil.utcnow()
+    due_before = srs_due_before()
     day_start = timeutil.local_day_start_utc(timeutil.local_today())
     base = db.query(UserCardSRS).join(Flashcard, Flashcard.id == UserCardSRS.card_id).filter(UserCardSRS.user_id == user_id)
     if category and category != "all":
         base = base.filter(Flashcard.category == category)
-    review_due = base.filter(UserCardSRS.state != "new", UserCardSRS.next_review_at <= now).count()
+    review_due = base.filter(UserCardSRS.state != "new", UserCardSRS.next_review_at < due_before).count()
     new_total = base.filter(UserCardSRS.state == "new").count()
     mastered = base.filter(UserCardSRS.state == "mastered").count()
     learning = base.filter(UserCardSRS.state.in_(("learning", "review"))).count()
@@ -180,7 +265,7 @@ def due_queue(
     - mode="new": unlearned new cards only.
     """
     counts = srs_counts(db, user_id, category=category)
-    now = timeutil.utcnow()
+    due_before = srs_due_before()
     base = db.query(UserCardSRS).join(Flashcard, Flashcard.id == UserCardSRS.card_id).filter(UserCardSRS.user_id == user_id)
     if category and category != "all":
         base = base.filter(Flashcard.category == category)
@@ -189,7 +274,7 @@ def due_queue(
         return (
             base.order_by(
                 case(
-                    (and_(UserCardSRS.state != "new", UserCardSRS.next_review_at <= now), 1),
+                    (and_(UserCardSRS.state != "new", UserCardSRS.next_review_at < due_before), 1),
                     (UserCardSRS.state.in_(("learning", "review")), 2),
                     (UserCardSRS.state == "new", 3),
                     else_=4,
@@ -204,7 +289,7 @@ def due_queue(
         return base.filter(UserCardSRS.state == "new").order_by(UserCardSRS.card_id.asc()).limit(limit).all()
 
     reviews = (
-        base.filter(UserCardSRS.state != "new", UserCardSRS.next_review_at <= now)
+        base.filter(UserCardSRS.state != "new", UserCardSRS.next_review_at < due_before)
         .order_by(UserCardSRS.next_review_at.asc())
         .limit(limit)
         .all()
@@ -215,12 +300,12 @@ def due_queue(
 
 
 def category_stats(db: Session, user_id: int) -> list:
-    now = timeutil.utcnow()
+    due_before = srs_due_before()
     results = (
         db.query(
             Flashcard.category,
             func.count(Flashcard.id).label("total"),
-            func.sum(case((and_(UserCardSRS.state != "new", UserCardSRS.next_review_at <= now), 1), else_=0)).label("due"),
+            func.sum(case((and_(UserCardSRS.state != "new", UserCardSRS.next_review_at < due_before), 1), else_=0)).label("due"),
             func.sum(case((UserCardSRS.state == "mastered", 1), else_=0)).label("mastered"),
             func.sum(case((UserCardSRS.state.in_(("learning", "review")), 1), else_=0)).label("learning"),
             func.sum(case((UserCardSRS.state == "new", 1), else_=0)).label("new_cards"),
@@ -277,12 +362,14 @@ def _active_days(activity_counts: dict, minutes: dict) -> set:
     return days | {day for day, seconds in minutes.items() if seconds >= 60}
 
 
-def streak_from(activity_counts: dict, today: date, minutes: Optional[dict] = None) -> int:
+def streak_from(activity_counts: dict, today: date, minutes: Optional[dict] = None, study_days=None) -> int:
+    """Consecutive active days. Planned rest days (not in `study_days`, Mon=0) neither count nor break it."""
     active = _active_days(activity_counts, minutes or {})
+    rest = set(range(7)) - set(study_days) if study_days else set()
     day = today if today in active else today - timedelta(days=1)  # today not studied yet keeps the streak
     streak = 0
-    while day in active:
-        streak += 1
+    while day in active or (day.weekday() in rest and day > today - timedelta(days=366)):
+        streak += day in active
         day -= timedelta(days=1)
     return streak
 
@@ -324,29 +411,34 @@ def severity_for(count: int) -> str:
     return "critical" if count >= 3 else "high" if count == 2 else "medium"
 
 
-def recommendation_for(topic: str, count: int, lesson_number: Optional[int], titles: dict) -> str:
+def recommendation_for(topic: str, count: int, lesson_number: Optional[int], titles: dict, traps: list = ()) -> str:
+    examples = f" (bẫy: {', '.join(traps[:3])})" if traps else ""
     if lesson_number and lesson_number in titles:
-        return f"Ôn {titles[lesson_number]} rồi làm lại {count} câu sai thuộc '{topic}'."
-    return f"Làm lại {count} câu sai thuộc '{topic}', ghi chú paraphrase và nghe/đọc lại đoạn gốc."
+        return f"Ôn {titles[lesson_number]} rồi làm lại {count} câu sai{examples}."
+    return f"Làm lại {count} câu sai nhóm '{topic}'{examples}, ghi chú paraphrase và nghe/đọc lại đoạn gốc."
+
+
+def gap_topic(log: ErrorLog, titles: dict) -> str:
+    """Mistakes add up per syntax lesson (trap tags are almost unique per question), else per part + RCA code."""
+    if log.lesson_number:
+        return titles.get(log.lesson_number) or f"Bài {log.lesson_number:02d}"
+    return f"{log.part or 'Khác'} · {log.error_type or 'TRAP'}"
 
 
 def recompute_learning_gaps(db: Session, user_id: int) -> None:
-    """Gaps are derived data: one row per trap topic that still has open (not mastered) errors."""
-    open_logs = (
-        db.query(ErrorLog)
-        .filter(ErrorLog.user_id == user_id, ErrorLog.topic.isnot(None), _open_error_filter())
-        .all()
-    )
+    """Gaps are derived data: one row per lesson (or part + RCA code) that still has open errors."""
+    open_logs = db.query(ErrorLog).filter(ErrorLog.user_id == user_id, _open_error_filter()).all()
+    titles = lesson_titles(db)
     grouped = defaultdict(list)
     for log in open_logs:
-        grouped[log.topic].append(log)
-    titles = lesson_titles(db)
+        grouped[gap_topic(log, titles)].append(log)
     existing = {gap.topic: gap for gap in db.query(AILearningGap).filter_by(user_id=user_id).all()}
     now = timeutil.utcnow()
     for topic, logs in grouped.items():
         count = len(logs)
         lessons = Counter(log.lesson_number for log in logs if log.lesson_number)
-        lesson = lessons.most_common(1)[0][0] if lessons else curriculum.classify_trap(topic, logs[0].part).lesson_number
+        lesson = lessons.most_common(1)[0][0] if lessons else None
+        traps = list(dict.fromkeys(log.topic for log in logs if log.topic))
         gap = existing.get(topic)
         if gap is None:
             gap = AILearningGap(user_id=user_id, topic=topic)
@@ -354,7 +446,7 @@ def recompute_learning_gaps(db: Session, user_id: int) -> None:
         gap.error_count = count
         gap.severity = severity_for(count)
         gap.lesson_number = lesson
-        gap.ai_recommendation = recommendation_for(topic, count, lesson, titles)
+        gap.ai_recommendation = recommendation_for(topic, count, lesson, titles, traps)
         gap.is_resolved = False
         gap.updated_at = now
     for topic, gap in existing.items():
@@ -436,13 +528,14 @@ def recommended_lesson(db: Session, user_id: int, roadmap=None, report=None) -> 
 
 
 # --------------------------------------------------------------------------- dashboard
-def milestone_task(roadmap) -> Optional[dict]:
+def milestone_task(roadmap, gaps: Optional[dict] = None) -> Optional[dict]:
+    """The next pending milestone the learner can actually work on (content exists in the bank)."""
     if roadmap is None:
         return None
     week = current_week(roadmap)
-    pending = next((t for t in roadmap.tasks if not t.is_completed and t.week_number <= week), None) or next(
-        (t for t in roadmap.tasks if not t.is_completed), None
-    )
+    gaps = gaps or {}
+    open_tasks = [t for t in roadmap.tasks if not t.is_completed and t.id not in gaps]
+    pending = next((t for t in open_tasks if t.week_number <= week), None) or next(iter(open_tasks), None)
     if pending is None:
         return None
     return {
@@ -504,7 +597,7 @@ def build_dashboard(db: Session, user_id: int) -> dict:
 
     plan_today = planner.items_for_day(db, user_id, today)
     tasks = [planner.as_task(item) for item in plan_today if item["status"] != "skipped"]
-    milestone = milestone_task(roadmap)
+    milestone = milestone_task(roadmap, content_gaps(db, roadmap.tasks) if roadmap else None)
     if milestone:
         tasks.append(milestone)
     prediction = skills.predict_score(report, user)
@@ -530,7 +623,7 @@ def build_dashboard(db: Session, user_id: int) -> dict:
         "daily_goal_minutes": user.daily_goal_minutes or 60,
         "current_week": week,
         "total_weeks": total_weeks,
-        "current_phase": phase_for_week(week, total_weeks),
+        "current_phase": phase_of_week(learner_phases(roadmap), week) if roadmap else phase_for_week(week, total_weeks),
         "roadmap_title": roadmap.title if roadmap else None,
         "srs_review_due": srs["review_due"],
         "srs_new_available": srs["new_available"],
@@ -540,7 +633,7 @@ def build_dashboard(db: Session, user_id: int) -> dict:
         "open_errors": open_errors,
         "error_reviews_due": due_reviews,
         "learning_gaps": gaps,
-        "streak_days": streak_from(activity_counts, today, seconds),
+        "streak_days": streak_from(activity_counts, today, seconds, planner.parse_study_days(user.study_days)),
         "activity_week": week_from(activity_counts, today, seconds),
         "study_minutes_today": round(seconds.get(today, 0) / 60),
         "study_minutes_week": round(week_seconds / 60),
@@ -557,12 +650,14 @@ def build_dashboard(db: Session, user_id: int) -> dict:
             "confidence": prediction["confidence"],
             "confidence_level": prediction.get("confidence_level", "low"),
             "questions_needed_to_narrow": prediction.get("questions_needed_to_narrow", 0),
+            "coverage": prediction.get("coverage"),
             "basis_listening": prediction["listening"]["basis"],
             "basis_reading": prediction["reading"]["basis"],
         },
         "onboarded": user.onboarded_at is not None,
         "exam_date": user.exam_date,
         "days_to_exam": planner.days_to_exam(settings),
+        "exam_passed": settings.exam_passed is not None,
         "total_attempts": report.total_attempts,
     }
 

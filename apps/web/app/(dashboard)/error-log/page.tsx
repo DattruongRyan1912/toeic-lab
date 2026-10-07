@@ -347,6 +347,7 @@ function ErrorLogContent() {
   const [typeFilter, setTypeFilter] = useState(searchParams.get("type")?.toUpperCase() ?? "ALL");
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") ?? "open");
   const [sourceFilter, setSourceFilter] = useState(searchParams.get("source") ?? "all");
+  const [lessonFilter, setLessonFilter] = useState(searchParams.get("lesson") ?? "all"); // "?lesson=2" from a lesson page
   const dueCount = useLearnerStore((state) => state.stats?.error_reviews_due ?? 0);
 
   const changed = (updated: ErrorLogEntry) => {
@@ -408,8 +409,12 @@ function ErrorLogContent() {
     (l) =>
       (typeFilter === "ALL" || l.error_type === typeFilter) &&
       (statusFilter === "all" || (statusFilter === "open" ? l.status !== "mastered" : l.status === statusFilter)) &&
-      (sourceFilter === "all" || (l.source ?? "manual") === sourceFilter),
+      (sourceFilter === "all" || (l.source ?? "manual") === sourceFilter) &&
+      (lessonFilter === "all" || String(l.lesson_number ?? "") === lessonFilter),
   );
+  const lessonOptions = [...new Set([...all.map((l) => l.lesson_number), lessonFilter === "all" ? null : Number(lessonFilter)])]
+    .filter((n): n is number => Boolean(n))
+    .sort((a, b) => a - b);
   const openCount = all.filter((l) => l.status !== "mastered").length;
 
   return (
@@ -460,6 +465,15 @@ function ErrorLogContent() {
           <option value="unresolved">Chưa khắc phục</option>
           <option value="reviewed">Đã xem lại</option>
           <option value="mastered">Đã nắm chắc</option>
+        </select>
+        <label className="sr-only" htmlFor="lesson-filter">Lọc chuyên đề</label>
+        <select id="lesson-filter" value={lessonFilter} onChange={(e) => setLessonFilter(e.target.value)} className="rounded-lg border border-slate-200 bg-white p-1.5 text-xs dark:border-slate-700 dark:bg-slate-900">
+          <option value="all">Mọi chuyên đề</option>
+          {lessonOptions.map((n) => (
+            <option key={n} value={String(n)}>
+              Bài {String(n).padStart(2, "0")}
+            </option>
+          ))}
         </select>
         <label className="sr-only" htmlFor="source-filter">Lọc nguồn</label>
         <select id="source-filter" value={sourceFilter} onChange={(e) => setSourceFilter(e.target.value)} className="rounded-lg border border-slate-200 bg-white p-1.5 text-xs dark:border-slate-700 dark:bg-slate-900">

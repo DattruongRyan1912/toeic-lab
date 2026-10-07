@@ -1,5 +1,6 @@
 """Runtime configuration. Values come from environment variables (and the repo-root .env)."""
 import os
+import secrets
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -58,7 +59,21 @@ APP_TIMEZONE = os.getenv("APP_TIMEZONE", "Asia/Ho_Chi_Minh")
 DEFAULT_USER_ID = 1  # single-learner mode until real authentication exists
 
 # --- Authentication ---
-SECRET_KEY = os.getenv("SECRET_KEY", "toeic-lab-jwt-super-secret-key-2026-production")
+def _secret_key() -> str:
+    """SECRET_KEY from the environment, else a random key persisted next to the database (never a shared default)."""
+    value = os.getenv("SECRET_KEY", "").strip()
+    if value:
+        return value
+    key_file = DATA_DIR / ".jwt_secret"
+    if key_file.exists() and key_file.read_text().strip():
+        return key_file.read_text().strip()
+    value = secrets.token_urlsafe(48)
+    key_file.write_text(value)
+    key_file.chmod(0o600)
+    return value
+
+
+SECRET_KEY = _secret_key()
 ACCESS_TOKEN_EXPIRE_DAYS = _int("ACCESS_TOKEN_EXPIRE_DAYS", 30)
 
 # --- Learning rules ---
@@ -85,3 +100,11 @@ AI_HISTORY_TURNS = max(0, _int("AI_HISTORY_TURNS", 8))
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 REMINDER_DISPATCH_ENABLED = _bool("REMINDER_DISPATCH_ENABLED", True)
+
+# --- Rate limits (in-memory, per process): "<max requests>/<window seconds>" ---
+RATE_LIMIT_LOGIN = os.getenv("RATE_LIMIT_LOGIN", "10/900")  # per username/email
+RATE_LIMIT_REGISTER = os.getenv("RATE_LIMIT_REGISTER", "5/3600")  # per client IP
+RATE_LIMIT_AI = os.getenv("RATE_LIMIT_AI", "30/600")  # per user (or IP for guests), LLM-backed endpoints
+# Reverse proxies in front of the web app that append the client IP to X-Forwarded-For (Caddy/nginx = 1).
+# 0 = never read the header. Only honoured for requests reaching the API from an internal address.
+TRUSTED_PROXY_HOPS = max(0, _int("TRUSTED_PROXY_HOPS", 1))

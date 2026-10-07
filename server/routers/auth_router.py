@@ -5,12 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
+from server import config
 from server.config import ACCESS_TOKEN_EXPIRE_DAYS
 from server.database import get_db
 from server.deps import require_authenticated_user
 from server.models import Roadmap, SprintTask, User
 from server.schemas import AuthResponse, AuthUser, LoginRequest, RegisterRequest
 from server.services import insights, planner, scoring
+from server.utils import rate_limit
 from server.utils.security import create_access_token, hash_password, verify_password
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -91,7 +93,12 @@ def _init_user_workspace(db: Session, user: User) -> None:
         pass
 
 
-@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=AuthResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit.limit_register)],
+)
 def register(payload: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     clean_username = payload.username.strip().lower()
     clean_email = payload.email.strip().lower()
@@ -138,21 +145,18 @@ def register(payload: RegisterRequest, response: Response, db: Session = Depends
 @router.post("/login", response_model=AuthResponse)
 def login(payload: LoginRequest, response: Response, db: Session = Depends(get_db)):
     identifier = payload.username_or_email.strip().lower()
+    rate_limit.hit("login", identifier, config.RATE_LIMIT_LOGIN)
     user = (
         db.query(User)
         .filter(or_(func.lower(User.username) == identifier, func.lower(User.email) == identifier))
         .first()
     )
 
-    if not user:
+    # Accounts without a password (e.g. the shared guest learner) cannot be claimed by logging in.
+    if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Tên đăng nhập / email hoặc mật khẩu không chính xác")
-
-    # If the default learner has no password set yet, allow logging in with any password or set it
-    if user.hashed_password is None:
-        user.hashed_password = hash_password(payload.password)
-        db.commit()
-    elif not verify_password(payload.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Tên đăng nhập / email hoặc mật khẩu không chính xác")
+    if user.is_active is False:
+        raise HTTPException(status_code=403, detail="Tài khoản đã bị khoá, vui lòng liên hệ quản trị viên")
 
     # Ensure personal workspace is ready
     _init_user_workspace(db, user)

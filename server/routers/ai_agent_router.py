@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from server import config
 from server.database import get_db
-from server.deps import current_user_id, require_learner_user_id
+from server.deps import current_user_id, is_test_mode, require_learner_user_id
 from server.models import AIMessage
 from server.schemas import (
     AIActionRead,
@@ -26,6 +26,7 @@ from server.schemas import (
 )
 from server.services import activity, agent_tools, insights, learner_context, voice_coach_service
 from server.services import ai_agent_service as agent
+from server.utils import rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -104,13 +105,14 @@ def execute_tool(payload: AIToolExecuteRequest, user_id: int = Depends(require_l
     return result
 
 
-@router.post("/chat", response_model=AIChatResponse)
+@router.post("/chat", response_model=AIChatResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def chat_with_ai_mentor(
     payload: AIChatRequest,
     user_id: int = Depends(require_learner_user_id),
     db: Session = Depends(get_db),
 ):
-    target_user_id = user_id if user_id != config.DEFAULT_USER_ID else (payload.user_id or user_id)
+    # payload.user_id is a test/CLI convenience only; real requests always act on the token owner.
+    target_user_id = (payload.user_id or user_id) if user_id == config.DEFAULT_USER_ID and is_test_mode() else user_id
     insights.get_or_create_user(db, target_user_id)
     question = agent.resolve_question(db, payload.question_id)
     titles = insights.lesson_titles(db)
@@ -169,7 +171,7 @@ async def chat_with_ai_mentor(
     )
 
 
-@router.post("/voice-coach/start", response_model=VoiceCoachStartResponse)
+@router.post("/voice-coach/start", response_model=VoiceCoachStartResponse, dependencies=[Depends(rate_limit.limit_ai)])
 def voice_coach_start(
     payload: VoiceCoachStartRequest,
     user_id: int = Depends(require_learner_user_id),
@@ -181,7 +183,7 @@ def voice_coach_start(
     )
 
 
-@router.post("/voice-coach/turn", response_model=VoiceCoachTurnResponse)
+@router.post("/voice-coach/turn", response_model=VoiceCoachTurnResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def voice_coach_turn(
     payload: VoiceCoachTurnRequest,
     user_id: int = Depends(require_learner_user_id),
@@ -201,7 +203,7 @@ async def voice_coach_turn(
     )
 
 
-@router.post("/pronounce-vocab", response_model=VocabPronounceResponse)
+@router.post("/pronounce-vocab", response_model=VocabPronounceResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def pronounce_vocab(
     payload: VocabPronounceRequest,
     user_id: int = Depends(require_learner_user_id),
