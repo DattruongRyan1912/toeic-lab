@@ -5,7 +5,7 @@ from sqlalchemy import text
 
 from server import models
 from server.database import engine, init_db
-from server.services import reminder_service, scoring
+from server.services import reminder_service
 from server.utils import timeutil
 
 
@@ -104,7 +104,9 @@ def test_flashcard_create_dedupe_delete_and_ai_fill_offline(client, seeded, admi
         json={"word": "Leverage", "meaning": "tận dụng", "example_sentence": "We leverage data.", "ipa": "/ˈlev.ər.ɪdʒ/"},
     )
     assert created.status_code == 201 and created.json()["ipa"] == "ˈlev.ər.ɪdʒ"
-    assert client.get("/api/flashcards/summary").json()["new_cards"] == 6
+    summary = client.get("/api/flashcards/summary").json()
+    assert summary["new_cards"] == 5 and summary["review_due"] == 1  # the learner's own word is studied today
+    assert client.get("/api/flashcards/due").json()[0]["card_id"] == created.json()["id"]
 
     assert client.post("/api/flashcards/ai-fill", json={"word": "synergy"}).status_code == 503
     assert client.post("/api/flashcards/ai-fill", json={"word": "postpone"}).status_code == 409
@@ -117,10 +119,9 @@ def test_flashcard_create_dedupe_delete_and_ai_fill_offline(client, seeded, admi
     assert trans_resp.status_code == 200
     assert "translation" in trans_resp.json()
 
-    # Test card translate-example
-    trans_card = client.post(f"/api/flashcards/{card_id}/translate-example")
-    assert trans_card.status_code == 200
-    assert trans_card.json()["example_translation"] is not None
+    # translate-example without an AI provider: 503 and nothing stored on the shared card
+    assert client.post(f"/api/flashcards/{card_id}/translate-example").status_code == 503
+    assert next(c for c in client.get("/api/flashcards?search=Leverage").json() if c["id"] == card_id)["example_translation"] is None
 
     assert client.delete(f"/api/flashcards/{card_id}").status_code == 401  # shared bank: admins only
     assert client.delete(f"/api/flashcards/{card_id}", headers=admin["headers"]).status_code == 200
@@ -139,15 +140,15 @@ def test_quiz_submission_feeds_error_log_gaps_lessons_and_dashboard(client, seed
     ids = {q["question_no"]: q["id"] for q in questions}
     assert questions[1]["trap_tag"] == "Bẫy Vị Trí Trạng Từ" and questions[1]["lesson_number"] == 1
 
-    result = submit(client, {ids[101]: "B", ids[108]: "B"}, ids.values(), part="Part 5", time_spent_seconds=90)
+    result = submit(client, {ids[101]: "B", ids[108]: "B"}, ids.values(), part="Part 5", time_spent_seconds=90, mode="exam")
     assert (result["correct_count"], result["total_questions"], result["unanswered"], result["errors_logged"]) == (1, 3, 1, 2)
     by_no = {r["question_no"]: r for r in result["results"]}
     assert by_no[108]["error_type"] == "GRAMMAR" and by_no[108]["error_log_id"]
     assert by_no[111]["error_type"] == "TIME" and by_no[111]["user_choice"] is None
-    assert result["scaled_reading"] == scoring.reading_scaled(33)
+    assert result["scaled_reading"] is None  # 3 questions are too few to extrapolate a section score
     assert {gap["topic"]: gap["lesson_number"] for gap in result["learning_gaps"]} == {
-        "Bẫy Vị Trí Trạng Từ": 1,
-        "Bẫy Liên Từ vs Giới Từ": 2,
+        "Bài 01: Vị Trí 4 Loại Từ": 1,  # gaps add up per lesson; trap tags are listed in the recommendation
+        "Bài 02: Liên Từ vs Giới Từ": 2,
     }
 
     logs = client.get("/api/error-logs").json()
@@ -189,7 +190,7 @@ def test_retakes_dedupe_errors_resolve_gaps_and_respect_manual_rca(client, seede
 
     client.patch(f"/api/error-logs/{logs_after[111]['id']}", json={"status": "mastered"})
     topics = [gap["topic"] for gap in client.get("/api/dashboard/stats").json()["learning_gaps"]]
-    assert "Bẫy Liên Từ vs Giới Từ" not in topics and "Bẫy Vị Trí Trạng Từ" in topics
+    assert "Bài 02: Liên Từ vs Giới Từ" not in topics and "Bài 01: Vị Trí 4 Loại Từ" in topics
 
     submit(client, {ids[111]: "B"}, [ids[111]])  # wrong again after mastering -> reopened, not duplicated
     reopened = [log for log in client.get("/api/error-logs").json() if log["question_no"] == 111]
@@ -208,7 +209,8 @@ def test_manual_error_log_is_enriched_from_question_bank(client, seeded):
     assert (data["correct_choice"], data["topic"], data["question_id"], data["user_choice"], data["part"]) == (
         "D", "Bẫy Vị Trí Trạng Từ", seeded[108], "B", "Part 5",
     )
-    assert client.get("/api/dashboard/stats").json()["learning_gaps"][0]["topic"] == "Bẫy Vị Trí Trạng Từ"
+    gap = client.get("/api/dashboard/stats").json()["learning_gaps"][0]
+    assert gap["topic"] == "Bài 01: Vị Trí 4 Loại Từ" and "Bẫy Vị Trí Trạng Từ" in gap["ai_recommendation"]
     base = {"part": "Part 5", "root_cause": "x"}
     assert client.post("/api/error-logs", json={**base, "error_type": "WRONG"}).status_code == 422
     assert client.post("/api/error-logs", json={**base, "error_type": "TRAP", "user_choice": "E"}).status_code == 422

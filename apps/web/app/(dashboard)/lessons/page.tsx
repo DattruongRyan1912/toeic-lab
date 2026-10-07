@@ -47,7 +47,7 @@ function LessonDetailPanel({ number }: { number: number }) {
             <p className="text-lg font-bold text-slate-900 dark:text-white">{stats.question_count}</p>
             <p className="text-[10px] text-slate-500">trong ngân hàng đề</p>
           </div>
-          <Link href="/error-log" className="rounded-lg border border-slate-200 p-2 hover:border-red-300 dark:border-slate-700">
+          <Link href={`/error-log?lesson=${number}`} className="rounded-lg border border-slate-200 p-2 hover:border-red-300 dark:border-slate-700">
             <p className="text-slate-500">Lỗi chưa khắc phục</p>
             <p className={cn("text-lg font-bold", stats.open_errors ? "text-red-500" : "text-slate-900 dark:text-white")}>{stats.open_errors}</p>
             <p className="text-[10px] text-slate-500">trong Sổ lỗi</p>
@@ -113,9 +113,10 @@ function LessonDetailPanel({ number }: { number: number }) {
                     (A) {q.choice_a} • (B) {q.choice_b} • (C) {q.choice_c}
                     {q.choice_d ? ` • (D) ${q.choice_d}` : ""}
                   </p>
-                  <p className="font-semibold text-emerald-600 dark:text-emerald-400">Đáp án: ({q.correct_choice})</p>
-                  {q.explanation && <p>💡 {q.explanation}</p>}
-                  {q.distractor_analysis && <p className="text-amber-700 dark:text-amber-300">⚠️ {q.distractor_analysis}</p>}
+                  {/* These are the drill's own questions: the key and analysis appear after answering in the drill. */}
+                  <Link href={`/mock-tests?lesson=${number}`} className="font-semibold text-blue-600 hover:underline dark:text-blue-400">
+                    Làm trong bài rèn phản xạ để xem đáp án và phân tích bẫy →
+                  </Link>
                 </div>
               </details>
             ))}
@@ -193,6 +194,7 @@ function LessonsContent() {
                   <p className="text-sm leading-snug font-bold text-slate-900 dark:text-white">{lesson.title}</p>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px]">
                     <span className={cn("rounded-full border px-1.5 py-0.5 font-semibold", status.style)}>{status.label}</span>
+                    {lesson.completed && <span className="font-semibold text-emerald-600 dark:text-emerald-400">✓ Học xong</span>}
                     {lesson.stats.answered > 0 && <span className="text-slate-500">{percent(lesson.stats.accuracy)} đúng</span>}
                     {lesson.stats.open_errors > 0 && (
                       <span className="flex items-center gap-0.5 font-semibold text-red-500">

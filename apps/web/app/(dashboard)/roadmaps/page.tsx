@@ -19,18 +19,7 @@ import { useApi } from "@/lib/use-api";
 import { cn } from "@/lib/utils";
 import type { Roadmap, SprintTask } from "@/types";
 
-const PHASES = [
-  { phase: 1, title: "Xây nền cú pháp & 600 từ vựng", focus: "12 chuyên đề cú pháp Part 5 (10-15s/câu), Dictation Part 1 & 2.", goal: "600 - 650 điểm", color: "emerald" },
-  { phase: 2, title: "Tăng tốc Part 3, 4, 6 & 7", focus: "Shadowing Part 3 & 4, kỹ thuật 3-Pass Scanning cho Part 7.", goal: "700 - 750 điểm", color: "blue" },
-  { phase: 3, title: "Thực chiến đề ETS & bịt Sổ lỗi", focus: "Full test 120 phút cuối tuần, chữa RCA triệt để, tâm lý phòng thi.", goal: "800 - 850+", color: "purple" },
-];
 const TAB = "cursor-pointer px-3 py-2 text-xs text-slate-600 data-active:bg-emerald-600 data-active:text-white dark:text-slate-400 dark:data-active:text-white";
-
-function phaseRange(phase: number, totalWeeks: number): string {
-  const span = Math.max(1, Math.round(totalWeeks / 3));
-  const start = (phase - 1) * span + 1;
-  return `Tuần ${start} - ${phase === 3 ? totalWeeks : phase * span}`;
-}
 
 export default function RoadmapsPage() {
   const roadmap = useApi<Roadmap>("/roadmaps");
@@ -89,7 +78,8 @@ export default function RoadmapsPage() {
     }
   };
 
-  const byPhase = PHASES.map((p) => ({ ...p, tasks: data.tasks.filter((t) => t.phase === p.phase) }));
+  // Phase titles, week ranges and score goals come from the API (rescaled with the exam date, goals from the learner's baseline).
+  const byPhase = data.phases.map((p) => ({ ...p, tasks: data.tasks.filter((t) => t.phase === p.phase) }));
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -158,12 +148,13 @@ export default function RoadmapsPage() {
                   )}
                 >
                   <span className="text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                    Phase {p.phase}: {phaseRange(p.phase, data.total_weeks)} {current && "• đang học"}
+                    Phase {p.phase}: Tuần {p.start_week} - {p.end_week} {current && "• đang học"}
                   </span>
                   <h2 className="text-base font-bold text-slate-900 dark:text-white">{p.title}</h2>
                   <p className="text-xs text-slate-600 dark:text-slate-400">{p.focus}</p>
                   <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                    Mục tiêu: {p.goal} • {done}/{p.tasks.length} nhiệm vụ
+                    {p.goal_score ? `Mục tiêu: ${p.goal_score}+ • ` : ""}
+                    {done}/{p.tasks.length} nhiệm vụ
                   </p>
                 </div>
               );
@@ -182,7 +173,7 @@ export default function RoadmapsPage() {
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
                 {p.tasks.map((task) => {
-                  const overdue = !task.is_completed && task.week_number < data.current_week;
+                  const overdue = !task.is_completed && !task.content_note && task.week_number < data.current_week;
                   const thisWeek = task.week_number === data.current_week;
                   const lessons = lessonNumbersIn(task.title);
                   return (
@@ -226,6 +217,11 @@ export default function RoadmapsPage() {
                           {task.completed_at && <span className="font-normal text-slate-500">Xong {formatDate(task.completed_at)}</span>}
                           {task.base_week && task.base_week !== task.week_number && (
                             <span className="font-normal text-slate-400">(tuần {task.base_week} gốc)</span>
+                          )}
+                          {task.content_note && !task.is_completed && (
+                            <span className="rounded-full bg-slate-100 px-2 font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                              ⏳ {task.content_note} — mốc chờ bổ sung học liệu
+                            </span>
                           )}
                           {task.auto_met && !task.is_completed && task.evidence && (
                             <span className="rounded-full bg-emerald-50 px-2 font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">

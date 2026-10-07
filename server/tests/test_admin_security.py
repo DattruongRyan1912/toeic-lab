@@ -1,17 +1,8 @@
 """Admin console API and the security hardening around authentication."""
-import pytest
-
 from server import config
 from server.database import SessionLocal
 from server.models import User
 from server.tests.conftest import make_user
-
-
-@pytest.fixture()
-def production_mode(monkeypatch):
-    """Requests behave as in production: no test-only user_id fallbacks."""
-    monkeypatch.delenv("TOEIC_SKIP_DOTENV", raising=False)
-    monkeypatch.delenv("TESTING", raising=False)
 
 
 def test_admin_routes_require_admin_role(client, admin):

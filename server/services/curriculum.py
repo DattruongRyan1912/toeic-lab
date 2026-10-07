@@ -80,10 +80,13 @@ def classify_trap(tag: Optional[str], part: Optional[str] = None) -> TrapClass:
 def classify_question(question) -> dict:
     """Works with a TestQuestion ORM object (or anything with the same attributes).
 
-    An explicit `lesson_number` on the question (e.g. AI-generated practice) wins over the trap tag.
+    An explicit `lesson_number` on the question wins over the trap tag. Lessons 01-12 are Part 5/6
+    grammar topics, so listening questions (Part 1-4) never map to one.
     """
     tag = extract_trap_tag(getattr(question, "distractor_analysis", None))
     part = getattr(question, "part", None)
+    if part in LISTENING_PARTS:
+        return {"trap_tag": tag, "error_type": classify_trap(tag, part).error_type, "lesson_number": None}
     trap = classify_trap(tag, part)
     explicit = getattr(question, "lesson_number", None)
     if explicit:

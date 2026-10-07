@@ -115,5 +115,12 @@ def make_user(client, username: str, role: str = "learner") -> dict:
 
 
 @pytest.fixture()
+def production_mode(monkeypatch):
+    """Requests behave as in production: no test-only user_id fallbacks, guests are read-only."""
+    monkeypatch.delenv("TOEIC_SKIP_DOTENV", raising=False)
+    monkeypatch.delenv("TESTING", raising=False)
+
+
+@pytest.fixture()
 def admin(client):
     return make_user(client, "site_admin", role="admin")

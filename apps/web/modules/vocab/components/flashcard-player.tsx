@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { ArrowRight, BookOpen, CheckCircle, Languages, Loader2, Mic, RotateCcw, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,13 @@ import type { FlashcardItem, SrsCard } from "@/types";
 import { PronounceDialog } from "./pronounce-dialog";
 
 const RATINGS = [
-  { value: 1, label: "Again", shortHint: "Quên", hint: "Quên — ôn lại ngày mai", style: "bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 dark:border-red-500/30" },
+  { value: 1, label: "Again", shortHint: "Quên", hint: "Quên — gặp lại cuối phiên và ngày mai", style: "bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 dark:border-red-500/30" },
   { value: 2, label: "Hard", shortHint: "Khó", hint: "Nhớ nhưng khó", style: "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30" },
   { value: 3, label: "Good", shortHint: "Nhớ", hint: "Nhớ tốt", style: "bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30" },
   { value: 4, label: "Easy", shortHint: "Rất dễ", hint: "Rất dễ — giãn cách dài", style: "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30" },
 ];
+
+const RELEARN_LIMIT = 2; // an "Again" card comes back at the end of the session (at most twice)
 
 const STATE_LABEL: Record<SrsCard["state"], string> = { new: "Thẻ mới", learning: "Đang học", review: "Ôn tập", mastered: "Đã thuộc" };
 
@@ -34,7 +36,7 @@ interface FlashcardPlayerProps {
 }
 
 export function FlashcardPlayer({
-  queue,
+  queue: initialQueue,
   onReviewed,
   onReload,
   selectedCategory,
@@ -51,6 +53,9 @@ export function FlashcardPlayer({
   const [pronouncingWord, setPronouncingWord] = useState<FlashcardItem | null>(null);
   const [translations, setTranslations] = useState<Record<number, string>>({});
   const [translatingId, setTranslatingId] = useState<number | null>(null);
+  // Forgotten cards are re-shown later in the same session (the server keeps tomorrow as the next due date).
+  const [relearn, setRelearn] = useState<SrsCard[]>([]);
+  const queue = useMemo(() => (relearn.length ? [...initialQueue, ...relearn] : initialQueue), [initialQueue, relearn]);
 
   const card = queue[index];
   const finished = queue.length > 0 && index >= queue.length;
@@ -93,18 +98,20 @@ export function FlashcardPlayer({
       try {
         const durationMs = shownAt.current ? Math.min(Date.now() - shownAt.current, 600_000) : null;
         await api(`/flashcards/${card.card_id}/review`, { method: "POST", json: { rating, duration_ms: durationMs } });
+        const repeat = rating === 1 && queue.filter((c) => c.card_id === card.card_id).length <= RELEARN_LIMIT;
+        if (repeat) setRelearn((prev) => [...prev, card]);
         setReviewed((n) => n + 1);
         setFlipped(false);
         setIndex((i) => i + 1);
         onReviewed();
-        if (index + 1 >= queue.length) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        if (!repeat && index + 1 >= queue.length) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       } catch (error) {
         toast.add({ title: "Chưa lưu được kết quả ôn", description: errorMessage(error), type: "error" });
       } finally {
         setSaving(false);
       }
     },
-    [card, index, queue.length, onReviewed, saving],
+    [card, index, queue, onReviewed, saving],
   );
 
   useEffect(() => {

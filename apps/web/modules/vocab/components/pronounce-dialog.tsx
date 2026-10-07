@@ -545,16 +545,16 @@ export function PronounceDialog({
                   <AlertCircle className="h-5 w-5 text-amber-500" />
                 )}
                 <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {result.is_accurate ? "Phát âm chuẩn xác!" : "Cần điều chỉnh thêm"}
+                  {result.score === null ? "Chưa chấm điểm" : result.is_accurate ? "Phát âm chuẩn xác!" : "Cần điều chỉnh thêm"}
                 </span>
               </div>
               <div
                 className={cn(
                   "rounded-full border px-3 py-1 font-mono text-sm font-black",
-                  getScoreColor(result.score),
+                  result.score === null ? "border-slate-300 text-slate-500" : getScoreColor(result.score),
                 )}
               >
-                {result.score}%
+                {result.score === null ? "—" : `${result.score}%`}
               </div>
             </div>
 
@@ -563,10 +563,10 @@ export function PronounceDialog({
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-2.5 text-xs text-amber-800 dark:text-amber-200 space-y-1 animate-in fade-in">
                 <div className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-300">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
-                  <span>Chế độ Hướng dẫn Ngữ âm mẫu (Không có STT)</span>
+                  <span>Chưa nghe được giọng của bạn (không có STT)</span>
                 </div>
                 <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300">
-                  Trình duyệt này (Opera/PWA) không hỗ trợ dịch giọng nói (Google STT) nên AI chưa trích xuất được âm thanh thực tế. Điểm <strong>78%</strong> là mức tham chiếu. Để AI nghe và chấm điểm trực tiếp theo giọng thật (lên tới 100%), bạn hãy mở qua <strong>Chrome PWA</strong> hoặc <strong>Safari</strong> nhé!
+                  Trình duyệt này không chuyển giọng nói thành chữ và chưa có AI nghe trực tiếp bản thu, nên hệ thống không chấm điểm. Hãy nghe lại bản thu và so với phát âm mẫu, hoặc mở bằng <strong>Chrome</strong> / <strong>Safari</strong> để được chấm theo giọng thật.
                 </p>
               </div>
             )}
@@ -586,7 +586,7 @@ export function PronounceDialog({
                   Bạn thực tế đọc
                 </span>
                 <p className="mt-0.5 font-mono font-bold text-purple-600 dark:text-purple-400">
-                  {result.recognized_ipa}
+                  {result.recognized_ipa || "—"}
                 </p>
               </div>
             </div>

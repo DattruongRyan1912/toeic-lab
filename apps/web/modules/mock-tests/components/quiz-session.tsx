@@ -3,17 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import confetti from "canvas-confetti";
-import { AlertTriangle, ArrowRight, Bot, Check, CheckCircle2, Clock, Image as ImageIcon, Lightbulb, Loader2, RotateCcw, Timer, Volume2, XCircle } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bot, Check, CheckCircle2, Clock, Image as ImageIcon, Lightbulb, Loader2, RotateCcw, Timer, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/components/ui/toast";
 import { api, errorMessage } from "@/lib/api";
-import { speak } from "@/lib/audio";
 import { formatDuration, lessonHref, percent } from "@/lib/format";
 import { askMentor } from "@/lib/mentor-store";
 import { cn } from "@/lib/utils";
 import type { PracticeMode, PracticeQuestion, QuestionResult, QuizSubmitResult } from "@/types";
+import { ListeningClip } from "./listening-clip";
 
 const LISTENING = new Set(["Part 1", "Part 2", "Part 3", "Part 4"]);
 const SECONDS_PER_QUESTION: Record<string, number> = { "Part 2": 25, "Part 5": 30, "Part 6": 40, "Part 7": 60 };
@@ -104,14 +104,30 @@ function ResultScreen({ result, questions, onRestart }: { result: QuizSubmitResu
               <span className="text-[10px] text-slate-500">{result.errors_mastered} câu nắm chắc</span>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
-              <span className="text-xs text-slate-500">Reading ước lượng</span>
-              <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{result.scaled_reading ?? result.scaled_listening ?? "—"}</p>
-              <span className="text-[10px] text-slate-500">ngoại suy từ bộ câu này</span>
+              <span className="text-xs text-slate-500">Điểm quy đổi ước lượng</span>
+              {result.scaled_listening == null && result.scaled_reading == null ? (
+                <>
+                  <p className="text-xl font-bold text-slate-400">—</p>
+                  <span className="text-[10px] text-slate-500">cần ≥ 20 câu cùng phần thi</span>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                    {[result.scaled_listening != null && `L ${result.scaled_listening}`, result.scaled_reading != null && `R ${result.scaled_reading}`].filter(Boolean).join(" • ")}
+                  </p>
+                  <span className="text-[10px] text-slate-500">ngoại suy từ bộ câu này</span>
+                </>
+              )}
             </div>
           </div>
           {slow && part5.length >= 3 && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
               ⏱️ Bạn đang chậm hơn nhịp thi thật. Thử chế độ <Link href="/mock-tests?mode=exam&part=Part%205" className="font-semibold underline">Thi thật bấm giờ</Link>: nhìn trước/sau chỗ trống để loại trừ trong 10 giây.
+            </p>
+          )}
+          {result.submission_id === null && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+              Bạn đang dùng chế độ khách: bài đã được chấm nhưng chưa lưu vào Sổ lỗi, kế hoạch và tiến độ. Đăng nhập để lưu kết quả các lần sau.
             </p>
           )}
           {result.errors_logged > 0 && (
@@ -240,9 +256,10 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [checked, setChecked] = useState<Record<number, boolean>>({});
   const [studyMode, setStudyMode] = useState(!examOnly);
-  const [secondsLeft, setSecondsLeft] = useState(timeLimit);
+  const [clock, setClock] = useState(examOnly ? timeLimit : 0);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<QuizSubmitResult | null>(null);
+  const [played, setPlayed] = useState<Record<number, boolean>>({}); // listening clips already heard
   const timesRef = useRef<Record<number, number>>({});
   const runningRef = useRef<{ id: number; at: number } | null>(null);
   const startRef = useRef(0);
@@ -268,12 +285,14 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
     const running = runningRef.current;
     if (running) times[running.id] = (times[running.id] ?? 0) + (Date.now() - running.at);
     const spent = Math.min(36_000, Math.round((Date.now() - startRef.current) / 1000));
-    const submitMode: PracticeMode = mode === "practice" ? (studyMode ? "study" : "exam") : mode;
+    const submitMode: PracticeMode = mode === "practice" ? (studyMode || Object.values(checked).some(Boolean) ? "study" : "exam") : mode;
+    // In an exam every question counts (blanks included); otherwise only what the learner opened or answered.
+    const graded = submitMode === "exam" ? questions : questions.filter((q) => answers[q.id] || times[q.id] !== undefined);
     try {
       const data = await api<QuizSubmitResult>("/practice/submit", {
         method: "POST",
         json: {
-          answers: questions.map((q) => ({ question_id: q.id, choice: answers[q.id] ?? null, time_ms: times[q.id] ? Math.min(3_600_000, Math.round(times[q.id])) : null })),
+          answers: graded.map((q) => ({ question_id: q.id, choice: answers[q.id] ?? null, time_ms: times[q.id] ? Math.min(3_600_000, Math.round(times[q.id])) : null })),
           mode: submitMode,
           part: lessonNumber ? null : part,
           lesson_number: lessonNumber,
@@ -298,12 +317,18 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
     startRef.current = Date.now();
   }, []);
 
+  // Only exam conditions have a countdown that auto-submits; study/review/smart sets show elapsed time.
+  const timed = mode === "exam" || (mode === "practice" && !studyMode);
   useEffect(() => {
     if (result) return;
     const deadline = Date.now() + timeLimit * 1000;
     const timer = window.setInterval(() => {
+      if (!timed) {
+        setClock(Math.round((Date.now() - startRef.current) / 1000));
+        return;
+      }
       const left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
-      setSecondsLeft(left);
+      setClock(left);
       if (left === 0) {
         window.clearInterval(timer);
         toast.add({ title: "Hết giờ!", description: "Bài làm được nộp tự động.", type: "warning" });
@@ -311,7 +336,7 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
       }
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [timeLimit, result]);
+  }, [timeLimit, result, timed]);
 
   if (!questions.length) {
     return <div className="rounded-xl border border-slate-200 p-12 text-center text-slate-500 dark:border-slate-700">Không có câu hỏi cho bài luyện này.</div>;
@@ -323,11 +348,18 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
   const answer = answers[q.id];
   const isChecked = Boolean(checked[q.id]);
   const isCorrect = answer === q.correct_choice;
+  // Listening parts are answered from the audio: transcripts stay hidden until the answer is checked.
+  const listening = LISTENING.has(q.part);
+  const revealed = !listening || (studyMode && isChecked);
+  const clip = (
+    <ListeningClip question={q} playOnce={timed} played={Boolean(played[q.id])} onPlayed={() => setPlayed((prev) => ({ ...prev, [q.id]: true }))} />
+  );
   const answeredCount = Object.keys(answers).length;
   const isLast = index === total - 1;
 
+  const anyChecked = Object.values(checked).some(Boolean);
   const choose = (key: string) => {
-    if (isChecked && studyMode) return;
+    if (isChecked) return; // the key was revealed: changing the answer would grade a corrected guess
     setAnswers((prev) => ({ ...prev, [q.id]: key }));
   };
 
@@ -346,18 +378,26 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
         <div className="flex items-center gap-2 sm:gap-3">
           <span
             role="timer"
-            aria-label="Thời gian còn lại"
+            aria-label={timed ? "Thời gian còn lại" : "Thời gian đã làm"}
+            title={timed ? "Hết giờ sẽ tự nộp bài" : "Không giới hạn thời gian ở chế độ học"}
             className={cn(
               "flex items-center gap-1.5 rounded-lg border px-2.5 py-1 sm:px-3 font-mono text-xs sm:text-sm",
-              secondsLeft <= 60 ? "border-red-300 text-red-600 dark:border-red-500/40 dark:text-red-400" : "border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300",
+              timed && clock <= 60 ? "border-red-300 text-red-600 dark:border-red-500/40 dark:text-red-400" : "border-slate-200 text-slate-700 dark:border-slate-700 dark:text-slate-300",
             )}
           >
-            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" /> {formatDuration(secondsLeft)}
+            <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" /> {formatDuration(clock)}
           </span>
           {examOnly ? (
             <span className="rounded-lg bg-red-50 px-2 py-1 text-xs font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-300">Thi thật</span>
           ) : (
-            <Button size="sm" variant="ghost" onClick={() => setStudyMode(!studyMode)} className="cursor-pointer text-xs h-8 px-2 sm:px-3">
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={anyChecked}
+              title={anyChecked ? "Đã xem đáp án nên không thể chuyển sang thi thật trong lượt này" : undefined}
+              onClick={() => setStudyMode(!studyMode)}
+              className="cursor-pointer text-xs h-8 px-2 sm:px-3"
+            >
               {studyMode ? "Chế độ: Học & Giải" : "Chế độ: Thi thật"}
             </Button>
           )}
@@ -394,22 +434,7 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
               <span className="flex items-center gap-1.5 text-xs font-bold text-blue-700 dark:text-blue-300">
                 <ImageIcon className="h-4 w-4" /> Bức ảnh Part 1 (Photograph)
               </span>
-              {LISTENING.has(q.part) && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0 cursor-pointer text-xs"
-                  onClick={() => {
-                    const speechText = q.image_url
-                      ? `Question ${q.question_no}. ${choicesOf(q).map((c) => `${c.key}. ${c.text}`).join(" ... ")}`
-                      : `Photograph: ${q.sentence} ... Question ${q.question_no}. ${choicesOf(q).map((c) => `${c.key}. ${c.text}`).join(" ... ")}`;
-                    void speak(speechText);
-                  }}
-                  aria-label="Nghe các lựa chọn"
-                >
-                  <Volume2 className="h-3.5 w-3.5 mr-1" /> Nghe 4 phương án
-                </Button>
-              )}
+              {clip}
             </div>
             {q.image_url ? (
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/5 p-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
@@ -436,19 +461,11 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
             )}
           </div>
         ) : (
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-lg leading-relaxed font-medium text-slate-900 dark:text-slate-100">{q.sentence}</p>
-            {LISTENING.has(q.part) && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 cursor-pointer"
-                onClick={() => void speak(`${q.sentence} ... ${choicesOf(q).map((c) => `${c.key}. ${c.text}`).join(" ... ")}`)}
-                aria-label="Nghe câu hỏi và các lựa chọn"
-              >
-                <Volume2 className="h-4 w-4" /> Nghe
-              </Button>
-            )}
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <p className="text-lg leading-relaxed font-medium text-slate-900 dark:text-slate-100">
+              {revealed ? q.sentence : <span className="text-base text-slate-500 dark:text-slate-400">Nghe câu hỏi và các câu trả lời, rồi chọn đáp án đúng.</span>}
+            </p>
+            {listening && clip}
           </div>
         )}
 
@@ -473,7 +490,7 @@ export function QuizSession({ questions, mode, title, part, lessonNumber, onSubm
               >
                 <span className="flex items-center gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">{choice.key}</span>
-                  <span className="text-base">{choice.text}</span>
+                  <span className="text-base">{revealed ? choice.text : <span className="text-slate-400">Phương án {choice.key}</span>}</span>
                 </span>
                 {isChecked && studyMode && choice.key === q.correct_choice && <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" aria-hidden="true" />}
                 {isChecked && studyMode && selected && choice.key !== q.correct_choice && <XCircle className="h-5 w-5 shrink-0 text-red-500" aria-hidden="true" />}

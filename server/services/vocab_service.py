@@ -54,7 +54,8 @@ def create_card(db: Session, user_id: int, data: dict) -> tuple:
     )
     db.add(card)
     db.flush()
-    db.add(UserCardSRS(user_id=user_id, card_id=card.id, state="new", next_review_at=utcnow()))
+    # The learner chose this word (often from a mistake): study it today instead of after the whole new-card queue.
+    db.add(UserCardSRS(user_id=user_id, card_id=card.id, state="learning", next_review_at=utcnow()))
     db.commit()
     db.refresh(card)
     return card, True

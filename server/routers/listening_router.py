@@ -1,10 +1,11 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import optional_learner_id
+from server.models import TestQuestion
 from server.schemas import (
     DictationCheckRequest,
     DictationCheckResponse,
@@ -33,18 +34,15 @@ def get_listening_exercises(
 @router.post("/check-dictation", response_model=DictationCheckResponse)
 def check_dictation(
     payload: DictationCheckRequest,
-    user_id: int = Depends(current_user_id),
+    user_id: Optional[int] = Depends(optional_learner_id),
     db: Session = Depends(get_db),
 ):
     """Evaluate learner's typed transcription with token-level diff and phonetic cues."""
-    target = payload.target_transcript
+    # The bank question is the reference whenever it exists (Part 2: question + the three responses).
+    q = db.get(TestQuestion, payload.question_id)
+    target = listening_service.dictation_target(q) if q is not None and q.sentence else payload.target_transcript
     if not target:
-        from server.models import TestQuestion
-        from fastapi import HTTPException
-        q = db.query(TestQuestion).filter(TestQuestion.id == payload.question_id).first()
-        if not q or not q.sentence:
-            raise HTTPException(status_code=404, detail="Không tìm thấy câu hỏi luyện nghe")
-        target = q.sentence
+        raise HTTPException(status_code=404, detail="Không tìm thấy câu hỏi luyện nghe")
 
     result = listening_service.diff_transcription(payload.learner_text, target)
     if payload.time_spent_seconds and payload.time_spent_seconds > 0:
@@ -55,7 +53,7 @@ def check_dictation(
 @router.post("/track")
 def track_listening(
     payload: ListeningTrackRequest,
-    user_id: int = Depends(current_user_id),
+    user_id: Optional[int] = Depends(optional_learner_id),
     db: Session = Depends(get_db),
 ):
     """Track listening activity time (adds to daily study minutes for 'listening')."""
@@ -63,11 +61,7 @@ def track_listening(
 
 
 @router.post("/evaluate-shadowing", response_model=ShadowingEvaluateResponse, dependencies=[Depends(rate_limit.limit_ai)])
-async def evaluate_shadowing(
-    payload: ShadowingEvaluateRequest,
-    user_id: int = Depends(current_user_id),
-    db: Session = Depends(get_db),
-):
+async def evaluate_shadowing(payload: ShadowingEvaluateRequest):
     """Evaluate learner's spoken shadowing audio/transcript with AI scoring, word analysis, and coaching tips."""
     from server.services import voice_coach_service
     res = await voice_coach_service.evaluate_shadowing_speech(
@@ -77,5 +71,4 @@ async def evaluate_shadowing(
         phonetic_cues=payload.phonetic_cues,
         accent=payload.accent,
     )
-    listening_service.track_listening_activity(db, user_id, 15)
-    return res
+    return res  # study time is tracked by the page heartbeat, not a flat bonus per evaluation

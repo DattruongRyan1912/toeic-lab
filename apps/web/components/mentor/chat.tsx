@@ -16,7 +16,6 @@ const ACTION_LINKS: Record<string, { href: string; label: string }> = {
   log_error_question: { href: "/error-log", label: "Mở Sổ lỗi" },
   update_error_log: { href: "/error-log", label: "Mở Sổ lỗi" },
   create_flashcard: VOCAB,
-  create_flashcards_bulk: VOCAB,
   update_flashcard: VOCAB,
   reschedule_flashcard: VOCAB,
   add_paraphrase_pair: { href: "/vocab?tab=paraphrases", label: "Xem Paraphrase Vault" },
@@ -29,7 +28,6 @@ const ACTION_LINKS: Record<string, { href: string; label: string }> = {
   update_roadmap: PLAN,
   update_learner_profile: { href: "/settings#personalization", label: "Xem hồ sơ" },
   remember_learner_fact: { href: "/settings#memories", label: "Xem trí nhớ AI" },
-  create_practice_questions: { href: "/mock-tests", label: "Luyện ngay" },
 };
 
 function actionLink(action: AIAction) {

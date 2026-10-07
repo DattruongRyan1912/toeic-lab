@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.deps import current_user_id, require_learner_user_id
 from server.models import StudyPlanItem
 from server.schemas import PlanItemCreate, PlanItemRead, PlanItemUpdate
 from server.services import insights, planner
@@ -30,14 +30,14 @@ def get_week(user_id: int = Depends(current_user_id), db: Session = Depends(get_
 
 
 @router.post("/replan")
-def replan(user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def replan(user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     insights.get_or_create_user(db, user_id)
     planner.ensure_plan(db, user_id, force=True)
     return planner.week_view(db, user_id)
 
 
 @router.post("/items", response_model=PlanItemRead, status_code=201)
-def add_item(payload: PlanItemCreate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def add_item(payload: PlanItemCreate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     today = timeutil.local_today()
     if payload.plan_date < today:
         raise HTTPException(status_code=422, detail="Không thể thêm nhiệm vụ vào ngày đã qua")
@@ -53,7 +53,7 @@ def add_item(payload: PlanItemCreate, user_id: int = Depends(current_user_id), d
 
 
 @router.patch("/items/{item_id}", response_model=PlanItemRead)
-def update_item(item_id: int, payload: PlanItemUpdate, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def update_item(item_id: int, payload: PlanItemUpdate, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     item = _owned(db, item_id, user_id)
     changes = payload.model_dump(exclude_unset=True)
     if changes.get("status"):
@@ -71,7 +71,7 @@ def update_item(item_id: int, payload: PlanItemUpdate, user_id: int = Depends(cu
 
 
 @router.delete("/items/{item_id}")
-def delete_item(item_id: int, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def delete_item(item_id: int, user_id: int = Depends(require_learner_user_id), db: Session = Depends(get_db)):
     item = _owned(db, item_id, user_id)
     if item.source == "planner":
         item.status = "skipped"  # planner items come back on replan; skipping keeps the decision

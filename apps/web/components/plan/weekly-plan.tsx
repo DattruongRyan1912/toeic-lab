@@ -39,7 +39,7 @@ function ListeningTimer({ item, onTracked }: { item: PlanItem; onTracked: () => 
       aria-label={running ? `Dừng tính giờ ${item.title}` : `Bắt đầu tính giờ ${item.title}`}
     >
       {running ? <Pause className="h-3 w-3" aria-hidden="true" /> : <Play className="h-3 w-3" aria-hidden="true" />}
-      {running ? "Đang tính giờ" : "Bắt đầu"}
+      {running ? "Đang tính giờ" : "Nghe ngoài app"}
     </Button>
   );
 }
@@ -102,7 +102,13 @@ function ItemRow({ item, day, onChanged }: { item: PlanItem; day: PlanDay; onCha
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] font-semibold">
             {item.kind === "listening" && day.is_today && !done ? (
-              <ListeningTimer item={item} onTracked={onChanged} />
+              <>
+                {/* Time in the Studio is tracked automatically; the timer is only for listening outside the app. */}
+                <Link href={item.href} className="flex items-center gap-0.5 text-blue-600 hover:underline dark:text-blue-400">
+                  Mở Studio <ChevronRight className="h-3 w-3" aria-hidden="true" />
+                </Link>
+                <ListeningTimer item={item} onTracked={onChanged} />
+              </>
             ) : item.kind === "ai_generate" ? (
               <button type="button" onClick={() => askMentor(item.detail ?? item.title, { pageContext: "/roadmaps" })} className="flex cursor-pointer items-center gap-1 text-purple-600 hover:underline dark:text-purple-400">
                 <Sparkles className="h-3 w-3" aria-hidden="true" /> Nhờ AI làm ngay
@@ -209,7 +215,11 @@ export function WeeklyPlan() {
             </CardTitle>
             <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
               {data.settings.daily_minutes} phút/ngày • {data.settings.new_cards_per_day} thẻ mới/ngày
-              {data.settings.days_to_exam != null ? ` • còn ${data.settings.days_to_exam} ngày đến kỳ thi` : " • chưa đặt ngày thi"}
+              {data.settings.days_to_exam != null
+                ? ` • còn ${data.settings.days_to_exam} ngày đến kỳ thi`
+                : data.settings.exam_passed
+                  ? " • ngày thi đã qua, hãy đặt ngày mới"
+                  : " • chưa đặt ngày thi"}
               {" • "}
               <Link href="/settings#personalization" className="font-semibold text-blue-600 hover:underline dark:text-blue-400">chỉnh</Link>
             </p>

@@ -62,6 +62,25 @@ def current_user_id(
     return DEFAULT_USER_ID
 
 
+def optional_learner_id(
+    authorization: Optional[str] = Header(None),
+    access_token: Optional[str] = Cookie(None),
+    user_id_query: Optional[int] = Query(None, alias="user_id", ge=1, include_in_schema=False),
+    db: Session = Depends(get_db),
+) -> Optional[int]:
+    """Logged-in user ID, or None for a guest whose actions must not be saved.
+
+    Guests share the demo learner (DEFAULT_USER_ID) for reading; letting them write would mix every
+    visitor's progress together. Test/CLI mode keeps the `?user_id=` / DEFAULT_USER_ID fallback.
+    """
+    token = get_token_from_request(authorization, access_token)
+    if token:
+        return _active_user_id(token, db)
+    if is_test_mode():
+        return user_id_query if user_id_query is not None else DEFAULT_USER_ID
+    return None
+
+
 def require_authenticated_user(
     authorization: Optional[str] = Header(None),
     access_token: Optional[str] = Cookie(None),

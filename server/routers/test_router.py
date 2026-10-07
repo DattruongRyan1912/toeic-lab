@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.config import DEFAULT_USER_ID
+from server.deps import current_user_id, optional_learner_id
 from server.models import MockTest, TestQuestion, UserTestSubmission
 from server.schemas import (
     MockTestRead,
@@ -136,7 +137,7 @@ def get_test_question(test_id: str, question_no: int, db: Session = Depends(get_
 def submit_quiz(
     test_id: str,
     payload: QuizSubmitRequest,
-    user_id: int = Depends(current_user_id),
+    user_id: Optional[int] = Depends(optional_learner_id),
     db: Session = Depends(get_db),
 ):
     """Grade a set from one test. Same pipeline as /api/practice/submit (attempts, error log, reviews, study time)."""
@@ -150,8 +151,9 @@ def submit_quiz(
     ]
     try:
         return practice_service.submit(
-            db, user_id, items, mode=payload.mode, part=payload.part, lesson_number=payload.lesson_number,
+            db, user_id or DEFAULT_USER_ID, items, mode=payload.mode, part=payload.part, lesson_number=payload.lesson_number,
             time_spent_seconds=payload.time_spent_seconds, log_errors=payload.log_errors, test_id=test_id,
+            persist=user_id is not None,
         )
     except practice_service.PracticeError as exc:
         db.rollback()

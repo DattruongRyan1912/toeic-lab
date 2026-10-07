@@ -1,6 +1,8 @@
 """Personalization: tracking, skill model, spaced review of mistakes, adaptive plan, coach."""
 from datetime import timedelta
 
+import pytest
+
 from server import models
 from server.utils import timeutil
 
@@ -109,13 +111,21 @@ def test_mastery_uses_baseline_prior_recency_and_feeds_prediction(client, seeded
     baseline_reading = data["prediction"]["reading"]["expected"]
     assert lesson(data, 1)["status"] == "not_started" and lesson(data, 1)["prior"] == data["priors"]["reading"]
 
-    for _ in range(3):
-        submit(client, [{"question_id": seeded[101], "choice": "B"}, {"question_id": seeded[108], "choice": "D"}])
+    answers = [{"question_id": seeded[101], "choice": "B"}, {"question_id": seeded[108], "choice": "D"}]
+    submit(client, answers)
+    first = lesson(client.get("/api/learner/insights").json(), 1)["mastery"]
+    for _ in range(2):  # immediate retakes of the same questions measure memory, not skill
         timeutil.advance(hours=1)
+        submit(client, answers)
+    assert lesson(client.get("/api/learner/insights").json(), 1)["mastery"] == pytest.approx(first, abs=0.02)
+
+    timeutil.advance(days=1)  # a day later the same questions are fresh evidence again
+    submit(client, answers)
     data = client.get("/api/learner/insights").json()
     l1 = lesson(data, 1)
-    assert l1["mastery"] > 0.85 and l1["status"] == "improving"  # only 2 distinct questions: not "strong" yet
-    assert data["prediction"]["reading"]["basis"] == "data"
+    assert l1["mastery"] > first and l1["status"] == "improving"  # only 2 distinct questions: not "strong" yet
+    assert l1["attempts"] == 8
+    assert data["prediction"]["reading"]["basis"] == "partial"  # Part 5 measured, Part 6/7 extrapolated
     assert data["prediction"]["reading"]["expected"] > baseline_reading and data["prediction"]["confidence"] > 0
 
     timeutil.advance(days=120)  # old evidence fades back toward the prior
@@ -199,10 +209,16 @@ def test_plan_shifts_to_timed_mock_tests_near_the_exam(client, seeded):
     response = client.patch("/api/learner/profile", json={"exam_date": (monday + timedelta(days=5)).isoformat(), "study_days": list(range(7))})
     assert response.status_code == 200, response.text
     days = client.get("/api/plan/week").json()["days"]
-    assert not days[6]["items"]  # nothing after the exam
-    kinds = [{i["kind"] for i in d["items"]} for d in days[:6]]
+    assert not days[5]["items"] and not days[6]["items"]  # exam day itself and after: no homework
+    kinds = [{i["kind"] for i in d["items"]} for d in days[:5]]
     assert "mock" in kinds[0] and "lesson" not in set().union(*kinds)
-    assert all("mock" in k and "practice" not in k for k in kinds[2:6])  # last 3 days: daily timed test, no new drills
+    assert all("mock" in k and "practice" not in k for k in kinds[2:5])  # last 3 days: daily timed test, no new drills
+
+    timeutil.set_now(start + timedelta(days=8))  # the exam is now in the past
+    week = client.get("/api/plan/week").json()
+    assert week["settings"]["exam_passed"] == (monday + timedelta(days=5)).isoformat() and week["settings"]["days_to_exam"] is None
+    assert any(day["items"] for day in week["days"])  # planned as if no date was set, instead of an empty week
+    assert client.get("/api/dashboard/stats").json()["exam_passed"] is True
 
 
 def test_coach_suggests_and_executes_audited_actions(client, seeded, db):
@@ -280,21 +296,18 @@ def test_auto_adjust_lightens_the_plan_while_behind(client, seeded):
     assert (week["settings"]["planned_daily_minutes"], week["settings"]["adjustments"], week["settings"]["auto_adjust"]) == (60, [], False)
 
 
-def test_ai_generate_tasks_only_when_ai_is_online_and_once_per_lesson(client, seeded, monkeypatch):
+def test_plan_and_coach_never_ask_ai_to_write_questions(client, seeded, monkeypatch):
+    """AGENTS.md rule 3: practice questions come only from the authentic bank, even when AI is online."""
     from server.services import ai_agent_service
 
     start, _ = next_monday_9am()
     timeutil.set_now(start)
-    client.patch("/api/learner/profile", json={"study_days": [0, 1, 2, 3, 4, 5, 6]})
-    kinds = [i["kind"] for d in client.post("/api/plan/replan").json()["days"] for i in d["items"]]
-    assert "ai_generate" not in kinds  # tests run offline: the learner could not act on it
-
     online = {**ai_agent_service.provider_status(), "offline": False, "provider": "deepseek"}
     monkeypatch.setattr(ai_agent_service, "provider_status", lambda: online)
-    items = [i for d in client.post("/api/plan/replan").json()["days"] for i in d["items"] if i["kind"] == "ai_generate"]
-    assert items, "a weak lesson with a thin question bank should get an AI practice task"
-    lessons = [i["lesson_number"] for i in items]
-    assert len(lessons) == len(set(lessons)) and all(i["href"].startswith("/mentor?prompt=") for i in items)
+    client.patch("/api/learner/profile", json={"study_days": [0, 1, 2, 3, 4, 5, 6]})
+    kinds = [i["kind"] for d in client.post("/api/plan/replan").json()["days"] for i in d["items"]]
+    assert "ai_generate" not in kinds
+    assert not [s for s in client.get("/api/learner/suggestions").json() if s["id"].startswith("ai_practice")]
 
 
 def test_weekly_report_compares_this_week_with_the_previous_one(client, seeded):

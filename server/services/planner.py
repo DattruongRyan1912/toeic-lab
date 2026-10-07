@@ -21,6 +21,7 @@ from datetime import date, timedelta
 from typing import Optional
 from urllib.parse import quote
 
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from server import config
@@ -75,6 +76,7 @@ class Settings:
     focus_parts: tuple
     goal_minutes: int = 0  # the learner's own goal; daily_minutes may be lighter (auto_adjust)
     adjustments: tuple = field(default_factory=tuple)
+    exam_passed: Optional[date] = None  # the profile's exam date is behind us: plan as if none was set
 
 
 BEHIND_COMPLETION = 0.5
@@ -112,14 +114,16 @@ def parse_study_days(value) -> tuple:
 def learner_settings(user: User) -> Settings:
     focus = tuple(p.strip() for p in (user.focus_parts or "").split(",") if p.strip())
     minutes = max(10, min(600, int(user.daily_goal_minutes or 60)))
+    passed = user.exam_date if user.exam_date and user.exam_date < timeutil.local_today() else None
     return Settings(
         daily_minutes=minutes,
         goal_minutes=minutes,
         study_days=parse_study_days(user.study_days),
         new_cards_per_day=insights.new_cards_per_day(user),
-        exam_date=user.exam_date,
+        exam_date=None if passed else user.exam_date,
         target_score=int(user.target_score or 800),
         focus_parts=focus,
+        exam_passed=passed,
     )
 
 
@@ -247,9 +251,9 @@ def short_title(title: str) -> str:
 
 # --------------------------------------------------------------------------- generation
 def _day_items(day: date, index: int, settings: Settings, focus: list, srs_due: Counter, err_due: Counter, report,
-               pool: dict) -> list:
+               pool: dict, used_minutes: int = 0) -> list:
     budget = settings.daily_minutes
-    remaining = budget
+    remaining = budget - used_minutes  # minutes already taken by items kept from the previous plan
     items: list = []
 
     def add(kind: str, title: str, minutes: int, **extra) -> None:
@@ -319,20 +323,6 @@ def _day_items(day: date, index: int, settings: Settings, focus: list, srs_due: 
                 "practice", f"Luyện {count} câu {name}", math.ceil(count * MIN_PER_QUESTION), lesson_number=pick.lesson_number,
                 part="Part 5", target_count=count, reason=pick.reason, priority=2,
             )
-        if (pool.get("ai_online") and pick.lesson_number not in pool["ai_lessons"]
-                and pick.unseen < 3 and pick.status in ("weak", "improving", "not_started") and pick.question_count < 12):
-            pool["ai_lessons"].add(pick.lesson_number)  # one AI request per lesson per plan
-            prompt = (
-                f"Tạo 5 câu luyện Part 5 mới cho {pick.title}, nhắm đúng các bẫy tôi hay sai, "
-                "rồi lưu vào ngân hàng câu luyện của tôi."
-            )
-            items.append(
-                StudyPlanItem(
-                    plan_date=day, kind="ai_generate", title=f"Nhờ AI tạo thêm câu luyện {name}", estimated_minutes=2,
-                    sort_order=len(items), status="pending", source="planner", lesson_number=pick.lesson_number,
-                    detail=prompt, reason=f"Ngân hàng đề chỉ còn {pick.unseen} câu chưa làm cho chuyên đề này", priority=1,
-                )
-            )
 
     # 5) Fill the remaining budget: listening drill, smart mixed set, then a second focus lesson
     listening, reading = report.sections.get("listening"), report.sections.get("reading")
@@ -340,6 +330,8 @@ def _day_items(day: date, index: int, settings: Settings, focus: list, srs_due: 
     if ("Part 7" in settings.focus_parts or "Part 5" in settings.focus_parts) and index % 2 == 0:
         listening_first = False  # reading-focused learners alternate
     options = ["listening", "smart"] if listening_first or pool["bank_total"] < 5 else ["smart", "listening"]
+    if not pool["listening_parts"]:
+        options.remove("listening")  # no listening audio in the bank yet
     if len(focus) > 1 and not final_days:
         options.append("second_focus")
     first_pick = focus[index % len(focus)].lesson_number if focus else None
@@ -347,9 +339,10 @@ def _day_items(day: date, index: int, settings: Settings, focus: list, srs_due: 
         if remaining < 8:
             break
         if option == "listening":
+            parts = " & ".join(p.replace("Part ", "") for p in pool["listening_parts"])
             add(
-                "listening", "Dictation & Shadowing Part 2-3", min(LISTENING_MINUTES, remaining),
-                detail="Bấm 'Bắt đầu' để tính giờ: chép chính tả 10 câu Part 2, shadowing 1 đoạn Part 3",
+                "listening", f"Dictation & Shadowing Part {parts}", min(LISTENING_MINUTES, remaining),
+                detail=f"Mở Listening Studio: chọn đáp án, chép chính tả rồi shadowing câu Part {parts} (thời gian tự được tính)",
                 reason="Listening chưa có đủ dữ liệu luyện trong app" if listening is None or listening.attempts < 5 else "Listening đang yếu hơn Reading",
                 priority=1,
             )
@@ -370,12 +363,6 @@ def _day_items(day: date, index: int, settings: Settings, focus: list, srs_due: 
     return items
 
 
-def _ai_online() -> bool:
-    from server.services import ai_agent_service  # lazy: ai_agent_service → agent_tools → planner
-
-    return not ai_agent_service.provider_status()["offline"]
-
-
 def generate_plan(db: Session, user_id: int, start: Optional[date] = None, days: int = PLAN_DAYS, report=None) -> list:
     """(Re)build the plan for [start, start+days). Keeps manual marks and items added by the learner / AI."""
     user = insights.get_or_create_user(db, user_id)
@@ -392,8 +379,7 @@ def generate_plan(db: Session, user_id: int, start: Optional[date] = None, days:
         "new_cards": counts["new_total"],
         "new_today": counts["new_available"] if start == timeutil.local_today() else settings.new_cards_per_day,
         "bank_total": sum(stat.question_count for stat in report.parts.values()),
-        "ai_online": _ai_online(),
-        "ai_lessons": set(),
+        "listening_parts": [p for p in ("Part 1", "Part 2", "Part 3", "Part 4") if report.parts[p].question_count],
     }
 
     existing = (
@@ -401,22 +387,29 @@ def generate_plan(db: Session, user_id: int, start: Optional[date] = None, days:
         .filter(StudyPlanItem.user_id == user_id, StudyPlanItem.plan_date >= start, StudyPlanItem.plan_date < end)
         .all()
     )
-    kept = []
+    # A pending planner item is only replaced when the learner has not started it: finished or
+    # half-done work (derived from activity) survives a replan and still counts against the budget.
+    progress = derive_progress(db, user_id, existing)
+    kept, used_minutes = [], Counter()
     for item in existing:
-        if item.source == "planner" and (item.status or "pending") == "pending":
+        derived = progress.get(item.id)
+        started = derived is not None and (derived[1] or derived[0] > 0)
+        if item.source == "planner" and (item.status or "pending") == "pending" and not started:
             db.delete(item)
-        else:
-            kept.append(item)
+            continue
+        kept.append(item)
+        if item.source == "planner" and item.status != "skipped":
+            used_minutes[item.plan_date] += item.estimated_minutes or 0
     kept_keys = {(i.plan_date, i.kind, i.lesson_number, i.part) for i in kept}
 
     created, index = [], 0
     for offset in range(days):
         day = start + timedelta(days=offset)
-        if settings.exam_date and day > settings.exam_date:
-            break
+        if settings.exam_date and day >= settings.exam_date:
+            break  # exam day itself is for the exam, not for homework
         if day.weekday() not in settings.study_days:
             continue
-        for item in _day_items(day, index, settings, focus, srs_due, err_due, report, pool):
+        for item in _day_items(day, index, settings, focus, srs_due, err_due, report, pool, used_minutes[day]):
             if (item.plan_date, item.kind, item.lesson_number, item.part) in kept_keys:
                 continue
             item.user_id = user_id
@@ -429,12 +422,30 @@ def generate_plan(db: Session, user_id: int, start: Optional[date] = None, days:
 
 
 def ensure_plan(db: Session, user_id: int, report=None, force: bool = False) -> bool:
-    """Regenerate once per local day (or when forced). Returns True when a new plan was built."""
-    user = insights.get_or_create_user(db, user_id)
-    if force or user.plan_generated_on != timeutil.local_today():
+    """Regenerate once per local day (or when forced). Returns True when a new plan was built.
+
+    The dashboard loads several endpoints in parallel and each may call this: the day is claimed
+    with a conditional UPDATE so only one request builds the plan (no duplicated tasks).
+    """
+    insights.get_or_create_user(db, user_id)
+    if not force:
+        today = timeutil.local_today()
+        claimed = (
+            db.query(User)
+            .filter(User.id == user_id, or_(User.plan_generated_on.is_(None), User.plan_generated_on != today))
+            .update({User.plan_generated_on: today}, synchronize_session=False)
+        )
+        db.commit()
+        if not claimed:
+            return False
+    try:
         generate_plan(db, user_id, report=report)
-        return True
-    return False
+    except Exception:
+        db.rollback()
+        db.query(User).filter(User.id == user_id).update({User.plan_generated_on: None}, synchronize_session=False)
+        db.commit()  # release the claim so the next request retries
+        raise
+    return True
 
 
 # --------------------------------------------------------------------------- progress (derived)
@@ -623,6 +634,7 @@ def week_view(db: Session, user_id: int, report=None) -> dict:
             "new_cards_per_day": settings.new_cards_per_day,
             "exam_date": settings.exam_date,
             "days_to_exam": days_to_exam(settings),
+            "exam_passed": settings.exam_passed,
             "focus_parts": list(settings.focus_parts),
         },
         "focus": [
@@ -664,10 +676,13 @@ def rescale_roadmap(db: Session, user: User) -> Optional[dict]:
         task.base_week = base
         task.week_number = max(1, min(total, math.ceil(base * total / base_total)))
     roadmap.current_week = insights.current_week(roadmap)
+    if _AUTO_TITLE.match(roadmap.title or ""):  # keep a title the learner wrote; refresh the generated one
+        roadmap.title = f"Lộ trình {total} tuần Chinh phục TOEIC {user.target_score or 800}+"
     db.flush()
     return {"total_weeks": total, "base_total_weeks": base_total}
 
 
+_AUTO_TITLE = re.compile(r"^Lộ trình \d+ tuần Chinh phục TOEIC \d+\+$")
 _VOCAB_COUNT = re.compile(r"(\d{2,4})\s*(?:từ|thẻ)")
 _SCORE = re.compile(r"\b(\d{3})\b")
 
@@ -678,6 +693,12 @@ def milestone_evidence(db: Session, user_id: int, roadmap, report, prediction: d
         return {}
     learned = (
         db.query(UserCardSRS).filter(UserCardSRS.user_id == user_id, UserCardSRS.state != "new").count()
+    )
+    best_exam = (
+        db.query(func.max(UserTestSubmission.total_scaled_score))
+        .filter(UserTestSubmission.user_id == user_id, UserTestSubmission.mode == "exam")
+        .scalar()
+        or 0
     )
     evidence = {}
     for task in roadmap.tasks:
@@ -693,10 +714,10 @@ def milestone_evidence(db: Session, user_id: int, roadmap, report, prediction: d
             if match and learned >= int(match.group(1)):
                 evidence[task.id] = f"Đã học {learned} thẻ ≥ {match.group(1)}"
         elif task.category == "Test":
+            # A test milestone is met by sitting a timed test, never by the (extrapolated) prediction.
             scores = [int(x) for x in _SCORE.findall(task.title) if 300 <= int(x) <= 990]
-            expected = prediction["total"]["expected"]
-            if scores and prediction["confidence"] >= 0.25 and expected >= min(scores):
-                evidence[task.id] = f"Điểm dự đoán {expected} ≥ {min(scores)}"
+            if scores and best_exam >= min(scores):
+                evidence[task.id] = f"Bài thi thật bấm giờ đạt {best_exam} ≥ {min(scores)}"
     return evidence
 
 

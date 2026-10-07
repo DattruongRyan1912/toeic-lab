@@ -258,7 +258,7 @@ class LearningGapRead(BaseModel):
 
 
 class QuizSubmitResult(BaseModel):
-    submission_id: int
+    submission_id: Optional[int] = None  # null for guests: graded but not saved
     test_id: str
     part: Optional[str] = None
     lesson_number: Optional[int] = None
@@ -323,6 +323,7 @@ class PredictedScoreBrief(BaseModel):
     basis_reading: str
     confidence_level: Optional[str] = "low"
     questions_needed_to_narrow: Optional[int] = 0
+    coverage: Optional[float] = None  # share of the 200-question test the bank can measure
 
 
 class LessonBrief(BaseModel):
@@ -379,6 +380,7 @@ class DashboardStats(BaseModel):
     onboarded: bool = False
     exam_date: Optional[date] = None
     days_to_exam: Optional[int] = None
+    exam_passed: bool = False  # the exam date is behind us: ask for a new date or the real score
     total_attempts: int = 0
 
 
@@ -395,6 +397,16 @@ class SprintTaskRead(ORMModel):
     source: Optional[str] = None
     auto_met: bool = False
     evidence: Optional[str] = None
+    content_note: Optional[str] = None  # why the question bank cannot support this milestone yet
+
+
+class RoadmapPhase(BaseModel):
+    phase: int
+    title: str
+    focus: str
+    start_week: int
+    end_week: int
+    goal_score: Optional[int] = None
 
 
 class SprintTaskUpdate(BaseModel):
@@ -409,6 +421,7 @@ class RoadmapRead(BaseModel):
     exam_date: Optional[date] = None
     current_week: int
     current_phase: int
+    phases: List[RoadmapPhase] = []
     start_date: date
     status: str
     progress_percent: int
@@ -617,6 +630,7 @@ class KnowledgeLessonRead(BaseModel):
     is_unlocked: bool
     has_full_content: bool
     stats: LessonStats
+    completed: bool = False
 
 
 class LessonNoteRead(ORMModel):
@@ -736,15 +750,16 @@ class VocabPronounceRequest(BaseModel):
 
 class VocabPronounceResponse(BaseModel):
     word: str
-    score: int = Field(..., ge=0, le=100)
+    score: Optional[int] = Field(None, ge=0, le=100)  # None: nothing heard the recording, so no score
     recognized_text: str
     recognized_ipa: str
     expected_ipa: str
-    is_accurate: bool
+    is_accurate: Optional[bool] = None
     feedback: VocabPronounceFeedback
     provider: str
     model: Optional[str] = None
     is_guidance_fallback: bool = False
+    scored: bool = True
 
 
 class AIMessageRead(BaseModel):
@@ -958,18 +973,19 @@ class ShadowingWordFeedback(BaseModel):
 class ShadowingEvaluateRequest(BaseModel):
     exercise_id: Optional[int] = None
     target_sentence: str = Field(..., max_length=2000)
-    audio_base64: Optional[str] = None
+    audio_base64: Optional[str] = Field(None, max_length=15_000_000)  # same cap as the other audio endpoints
     user_transcript: Optional[str] = Field(None, max_length=2000)
     phonetic_cues: Optional[List[str]] = None
     accent: Optional[str] = "US"
 
 
 class ShadowingEvaluateResponse(BaseModel):
-    overall_score: int = Field(..., ge=0, le=100)
-    accuracy_score: int = Field(..., ge=0, le=100)
-    fluency_score: int = Field(..., ge=0, le=100)
+    # Scores are None when neither speech-to-text nor an audio model heard the learner (scored=False).
+    overall_score: Optional[int] = Field(None, ge=0, le=100)
+    accuracy_score: Optional[int] = Field(None, ge=0, le=100)
+    fluency_score: Optional[int] = Field(None, ge=0, le=100)
     recognized_transcript: str
-    is_passing: bool
+    is_passing: Optional[bool] = None
     verdict: str
     words: List[ShadowingWordFeedback]
     connected_speech_feedback: Optional[str] = None
@@ -978,6 +994,9 @@ class ShadowingEvaluateResponse(BaseModel):
     model: str
     is_guidance_fallback: Optional[bool] = False
     analysis_mode: Optional[str] = "text_stt"
+    scored: bool = True
+
+
 
 
 # --- Admin console ---

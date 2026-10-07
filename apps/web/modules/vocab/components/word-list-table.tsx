@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { EmptyState } from "@/components/states";
 import { api, errorMessage } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 import { speak } from "@/lib/audio";
 import { ipa } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,7 @@ export function WordListTable({ words, onDeleted, onStudyCategory }: WordListTab
   const [category, setCategory] = useState("all");
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [pronouncingWord, setPronouncingWord] = useState<FlashcardItem | null>(null);
+  const isAdmin = useAuthStore((state) => state.user?.role === "admin"); // the deck is shared: only admins delete
 
   const categories = useMemo(() => ["all", ...Array.from(new Set(words.map((w) => w.category).filter(Boolean))).sort()], [words]);
   const term = search.trim().toLowerCase();
@@ -39,7 +41,7 @@ export function WordListTable({ words, onDeleted, onStudyCategory }: WordListTab
   });
 
   const remove = async (item: FlashcardItem) => {
-    if (!window.confirm(`Xóa từ "${item.word}" khỏi Sổ tay? Lịch sử ôn của từ này cũng bị xóa.`)) return;
+    if (!window.confirm(`Xóa từ "${item.word}" khỏi bộ thẻ dùng chung? Lịch sử ôn của từ này ở MỌI học viên cũng bị xóa.`)) return;
     setDeletingId(item.id);
     try {
       await api(`/flashcards/${item.id}`, { method: "DELETE" });
@@ -155,16 +157,18 @@ export function WordListTable({ words, onDeleted, onStudyCategory }: WordListTab
                 >
                   <Mic className="h-4 w-4" />
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={deletingId === item.id}
-                  onClick={() => void remove(item)}
-                  className="h-8 cursor-pointer px-2.5 hover:text-red-500"
-                  aria-label={`Xóa ${item.word}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {isAdmin && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={deletingId === item.id}
+                    onClick={() => void remove(item)}
+                    className="h-8 cursor-pointer px-2.5 hover:text-red-500"
+                    aria-label={`Xóa ${item.word}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           ))

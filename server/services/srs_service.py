@@ -3,6 +3,9 @@ from datetime import timedelta
 from server.utils.timeutil import utcnow
 
 
+MASTERED_INTERVAL_DAYS = 21
+
+
 def calculate_sm2_review(
     current_repetition: int,
     current_ease: float,
@@ -24,11 +27,13 @@ def calculate_sm2_review(
         new_ease = max(1.3, current_ease - 0.2)
         return 0, round(new_ease, 2), 1, "learning", now + timedelta(days=1)
 
-    # 2. Rating >= 2 (remembered)
+    # 2. Rating >= 2 (remembered): Hard < Good < Easy at every step, as the buttons promise
     if current_repetition == 0:
-        new_interval = 1 if rating <= 2 else 2
+        new_interval = {2: 1, 3: 2, 4: 4}[rating]
     elif current_repetition == 1:
-        new_interval = 3 if rating <= 2 else 6
+        new_interval = {2: 3, 3: 6, 4: 8}[rating]
+    elif rating == 2:
+        new_interval = max(current_interval + 1, round(current_interval * 1.2))
     else:
         bonus = 1.3 if rating == 4 else 1.0
         new_interval = max(current_interval + 1, round(current_interval * current_ease * bonus))
@@ -39,5 +44,5 @@ def calculate_sm2_review(
     ease_delta = 0.1 - (4 - rating) * (0.08 + (4 - rating) * 0.02)
     new_ease = max(1.3, min(3.0, current_ease + ease_delta))
 
-    new_state = "mastered" if new_repetition >= 4 or new_interval >= 21 else "review"
+    new_state = "mastered" if new_interval >= MASTERED_INTERVAL_DAYS else "review"  # long-term memory, not a streak of taps
     return new_repetition, round(new_ease, 2), new_interval, new_state, now + timedelta(days=new_interval)

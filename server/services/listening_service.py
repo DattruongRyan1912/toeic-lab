@@ -11,24 +11,36 @@ from server.models import TestQuestion
 from server.services import activity, practice_service
 
 _CLEAN_RE = re.compile(r"[^\w\s']")
+_APOSTROPHES = str.maketrans({"\u2019": "'", "\u2018": "'", "`": "'"})  # iOS/macOS keyboards type curly quotes
+_CHOICE_LABEL_RE = re.compile(r"\(\s*[A-Da-d]\s*\)")  # "(A)" labels in Part 1/2 transcripts are not spoken words
+_WORD_SPLIT_RE = re.compile(r"[\s\-\u2013\u2014/]+")  # "work-order" and "work order" are the same words
+
+# Contraction -> spoken full forms. Both sides are reduced to the contraction so "It's" == "It is".
 _CONTRACTIONS = {
-    "can't": "cannot",
-    "won't": "will not",
-    "don't": "do not",
-    "doesn't": "does not",
-    "didn't": "did not",
-    "it's": "it is",
-    "that's": "that is",
-    "there's": "there is",
-    "i'm": "i am",
-    "you're": "you are",
-    "they're": "they are",
-    "we're": "we are",
-    "i've": "i have",
-    "you've": "you have",
-    "we've": "we have",
-    "they've": "they have",
+    "can't": ("can not",), "won't": ("will not",), "don't": ("do not",), "doesn't": ("does not",), "didn't": ("did not",),
+    "isn't": ("is not",), "aren't": ("are not",), "wasn't": ("was not",), "weren't": ("were not",),
+    "haven't": ("have not",), "hasn't": ("has not",), "hadn't": ("had not",),
+    "wouldn't": ("would not",), "shouldn't": ("should not",), "couldn't": ("could not",),
+    "it's": ("it is", "it has"), "he's": ("he is", "he has"), "she's": ("she is", "she has"), "that's": ("that is",),
+    "there's": ("there is",), "what's": ("what is",), "who's": ("who is",), "where's": ("where is",), "here's": ("here is",),
+    "let's": ("let us",), "i'm": ("i am",),
+    **{f"{p}'re": (f"{p} are",) for p in ("you", "we", "they")},
+    **{f"{p}'ve": (f"{p} have",) for p in ("i", "you", "we", "they")},
+    **{f"{p}'ll": (f"{p} will",) for p in ("i", "you", "he", "she", "it", "we", "they")},
+    **{f"{p}'d": (f"{p} would", f"{p} had") for p in ("i", "you", "he", "she", "we", "they")},
 }
+_EXPANSIONS = {tuple(full.split()): short for short, fulls in _CONTRACTIONS.items() for full in fulls}
+_NUMBER_WORDS = {
+    word: str(value)
+    for value, word in enumerate(
+        "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
+        "sixteen seventeen eighteen nineteen twenty".split()
+    )
+}
+_NUMBER_WORDS.update({"thirty": "30", "forty": "40", "fifty": "50", "sixty": "60", "seventy": "70", "eighty": "80", "ninety": "90"})
+_ORDINALS = dict(zip("first second third fourth fifth sixth seventh eighth ninth tenth".split(),
+                     "1st 2nd 3rd 4th 5th 6th 7th 8th 9th 10th".split()))
+_ALIASES = {"cannot": "can't", **_NUMBER_WORDS, **_ORDINALS}
 
 # Key phonetics keywords for TOEIC connected speech
 _FLAP_T = {"water", "meeting", "better", "waiting", "city", "computer", "shuttle", "quarter", "party", "hospital"}
@@ -36,8 +48,33 @@ _ELISION = {"last night", "next day", "most common", "first time", "hold on", "l
 
 
 def normalize_token(token: str) -> str:
-    cleaned = _CLEAN_RE.sub("", token.lower()).strip()
-    return _CONTRACTIONS.get(cleaned, cleaned)
+    cleaned = _CLEAN_RE.sub("", token.translate(_APOSTROPHES).lower()).strip("'")
+    return _ALIASES.get(cleaned, cleaned)
+
+
+def word_units(text: str) -> list:
+    """(display, canonical) units: curly quotes, choice labels, hyphens, numbers and contractions normalised."""
+    text = _CHOICE_LABEL_RE.sub(" ", text.translate(_APOSTROPHES))
+    units = [(word, normalize_token(word)) for word in _WORD_SPLIT_RE.split(text) if word]
+    units = [unit for unit in units if unit[1]]
+    merged, i = [], 0
+    while i < len(units):
+        pair = (units[i][1], units[i + 1][1]) if i + 1 < len(units) else None
+        if pair in _EXPANSIONS:
+            merged.append((f"{units[i][0]} {units[i + 1][0]}", _EXPANSIONS[pair]))
+            i += 2
+        else:
+            merged.append(units[i])
+            i += 1
+    return merged
+
+
+def dictation_target(question) -> str:
+    """What the learner hears in the clip: Part 2 audio is the question followed by the three responses."""
+    if question.part == "Part 2":
+        responses = " ".join(f"({key}) {text}" for key, text in (("A", question.choice_a), ("B", question.choice_b), ("C", question.choice_c)) if text)
+        return f"{question.sentence} {responses}".strip()
+    return question.sentence or ""
 
 
 def detect_phonetic_cues(text: str) -> List[str]:
@@ -71,71 +108,46 @@ def detect_phonetic_cues(text: str) -> List[str]:
 
 def diff_transcription(learner_text: str, target_transcript: str) -> dict:
     """Compare learner transcription against the reference target.
-    
-    Returns token-by-token diff with accuracy score and phonetic analysis.
+
+    Accuracy is an F1 score over words: missing words and extra words both cost points, so typing more than
+    was said (or padding the answer) cannot reach 100%.
     """
     clean_target = target_transcript.strip()
     clean_learner = learner_text.strip()
-    
-    target_tokens = [w for w in clean_target.split() if w]
-    learner_tokens = [w for w in clean_learner.split() if w]
-    
-    norm_target = [normalize_token(w) for w in target_tokens]
-    norm_learner = [normalize_token(w) for w in learner_tokens]
-    
-    matcher = difflib.SequenceMatcher(None, norm_target, norm_learner)
+    target = word_units(clean_target)
+    learner = word_units(clean_learner)
+    # ETS clips start with "Number seven." -- not part of the transcript, so it is not counted as extra.
+    if len(learner) >= 2 and learner[0][1] == "number" and learner[1][1].isdigit() and (not target or target[0][1] != "number"):
+        learner = learner[2:]
+
+    matcher = difflib.SequenceMatcher(None, [u[1] for u in target], [u[1] for u in learner], autojunk=False)
     diff_tokens = []
     correct_count = 0
-    
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "equal":
-            for idx in range(i1, i2):
-                diff_tokens.append({
-                    "word": target_tokens[idx],
-                    "status": "correct",
-                    "learner_word": learner_tokens[j1 + (idx - i1)],
-                })
+            for offset in range(i2 - i1):
+                diff_tokens.append({"word": target[i1 + offset][0], "status": "correct", "learner_word": learner[j1 + offset][0]})
                 correct_count += 1
         elif tag == "replace":
-            for idx in range(i1, i2):
-                corr = target_tokens[idx]
-                given = learner_tokens[j1 + (idx - i1)] if (j1 + (idx - i1)) < j2 else ""
-                diff_tokens.append({
-                    "word": corr,
-                    "status": "misspelled" if given else "missing",
-                    "learner_word": given,
-                })
-            # Any remaining learner tokens in replacement
-            if (j2 - j1) > (i2 - i1):
-                for l_idx in range(j1 + (i2 - i1), j2):
-                    diff_tokens.append({
-                        "word": "",
-                        "status": "extra",
-                        "learner_word": learner_tokens[l_idx],
-                    })
+            for offset in range(i2 - i1):
+                given = learner[j1 + offset][0] if j1 + offset < j2 else ""
+                diff_tokens.append({"word": target[i1 + offset][0], "status": "misspelled" if given else "missing", "learner_word": given})
+            for idx in range(j1 + (i2 - i1), j2):
+                diff_tokens.append({"word": "", "status": "extra", "learner_word": learner[idx][0]})
         elif tag == "delete":
             for idx in range(i1, i2):
-                diff_tokens.append({
-                    "word": target_tokens[idx],
-                    "status": "missing",
-                    "learner_word": "",
-                })
+                diff_tokens.append({"word": target[idx][0], "status": "missing", "learner_word": ""})
         elif tag == "insert":
             for idx in range(j1, j2):
-                diff_tokens.append({
-                    "word": "",
-                    "status": "extra",
-                    "learner_word": learner_tokens[idx],
-                })
-                
-    total_target = len(target_tokens)
-    accuracy = round((correct_count / max(1, total_target)) * 100, 1)
-    
+                diff_tokens.append({"word": "", "status": "extra", "learner_word": learner[idx][0]})
+
+    denominator = len(target) + len(learner)
+    accuracy = round(2 * correct_count / denominator * 100, 1) if denominator else 0.0
     return {
         "accuracy": accuracy,
         "is_perfect": accuracy >= 95.0,
         "correct_words": correct_count,
-        "total_words": total_target,
+        "total_words": len(target),
         "tokens": diff_tokens,
         "target_transcript": clean_target,
         "learner_text": clean_learner,
@@ -183,7 +195,7 @@ def list_exercises(
             "part": q.part,
             "question_no": q.question_no,
             "sentence": q.sentence,
-            "target_transcript": q.sentence,
+            "target_transcript": dictation_target(q),
             "explanation": q.explanation,
             "distractor_analysis": q.distractor_analysis,
             "paraphrase_pair": q.paraphrase_pair,
@@ -205,10 +217,13 @@ def list_exercises(
     return items
 
 
-def track_listening_activity(db: Session, user_id: int, seconds: int) -> dict:
-    """Record listening practice time and update activity minutes."""
+def track_listening_activity(db: Session, user_id: Optional[int], seconds: int) -> dict:
+    """Record listening practice time and update activity minutes (guests: user_id None, nothing stored)."""
     safe_seconds = max(1, min(int(seconds), 7200))
+    if user_id is None:
+        return {"status": "ignored", "seconds": safe_seconds, "session_id": None}
     entry = activity.track(db, user_id, "listening", safe_seconds)
+    db.commit()
     return {
         "status": "tracked",
         "seconds": safe_seconds,

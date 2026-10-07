@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { api, errorMessage } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 
 interface State<T> {
   key: string | null;
@@ -17,6 +18,8 @@ interface State<T> {
 export function useApi<T>(path: string | null) {
   const [state, setState] = useState<State<T>>({ key: null, data: undefined, error: null, done: false });
   const [nonce, setNonce] = useState(0);
+  // Learner data belongs to the signed-in account: refetch after login/logout instead of keeping the guest's.
+  const account = useAuthStore((state) => state.user?.id ?? null);
 
   useEffect(() => {
     if (path === null) return;
@@ -32,7 +35,7 @@ export function useApi<T>(path: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [path, nonce]);
+  }, [path, nonce, account]);
 
   const reload = useCallback(() => setNonce((n) => n + 1), []);
   const mutate = useCallback((updater: (prev: T | undefined) => T | undefined) => {

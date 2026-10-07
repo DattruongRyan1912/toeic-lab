@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
+from server.config import DEFAULT_USER_ID
+from server.deps import current_user_id, optional_learner_id
 from server.schemas import PracticeQuestion, PracticeSubmitRequest, QuizSubmitResult
 from server.services import practice_service
 from server.routers.test_router import serialize_question
@@ -13,12 +14,13 @@ router = APIRouter(prefix="/api/practice", tags=["Practice (personalized)"])
 
 
 @router.post("/submit", response_model=QuizSubmitResult)
-def submit_practice(payload: PracticeSubmitRequest, user_id: int = Depends(current_user_id), db: Session = Depends(get_db)):
+def submit_practice(payload: PracticeSubmitRequest, user_id: Optional[int] = Depends(optional_learner_id), db: Session = Depends(get_db)):
+    """Guests get the graded result, but nothing is stored (submission_id is null)."""
     answers = [practice_service.Answer(a.question_id, a.choice, a.time_ms) for a in payload.answers]
     try:
         return practice_service.submit(
-            db, user_id, answers, mode=payload.mode, part=payload.part, lesson_number=payload.lesson_number,
-            time_spent_seconds=payload.time_spent_seconds, log_errors=payload.log_errors,
+            db, user_id or DEFAULT_USER_ID, answers, mode=payload.mode, part=payload.part, lesson_number=payload.lesson_number,
+            time_spent_seconds=payload.time_spent_seconds, log_errors=payload.log_errors, persist=user_id is not None,
         )
     except practice_service.PracticeError as exc:
         db.rollback()

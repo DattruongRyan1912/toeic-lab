@@ -104,9 +104,15 @@ def section_for_part(part: Optional[str]) -> Optional[str]:
     return None
 
 
+MIN_SECTION_SAMPLE = 20  # fewer answers than this say too little about a 100-question section
+
+
 def estimate_section_scaled(section: str, correct: int, total: int) -> Optional[int]:
-    """Extrapolate a partial practice set (e.g. 30 Part 5 questions) to a 0-100 raw section score."""
-    if total <= 0:
+    """Extrapolate a partial practice set (e.g. 30 Part 5 questions) to a 0-100 raw section score.
+
+    None when the set is too small: 6/6 on Part 1 or 15/15 on a drill must not read as a 495.
+    """
+    if total < MIN_SECTION_SAMPLE:
         return None
     raw = round(correct / total * MAX_RAW)
     return listening_scaled(raw) if section == "listening" else reading_scaled(raw)
