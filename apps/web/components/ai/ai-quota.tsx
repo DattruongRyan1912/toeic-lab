@@ -1,12 +1,28 @@
 "use client";
 
+import { useEffect } from "react";
 import { useApi } from "@/lib/use-api";
 import { cn } from "@/lib/utils";
 import type { AIQuota } from "@/types";
 
 /** "AI hôm nay: 3/40 lượt" for the signed-in learner (admins / unlimited accounts: no limit). */
 export function AIQuotaNote({ className }: { className?: string }) {
-  const { data } = useApi<AIQuota>("/ai/quota");
+  const { data, reload } = useApi<AIQuota>("/ai/quota");
+
+  useEffect(() => {
+    const handleUpdate = () => reload();
+    window.addEventListener("ai-quota-updated", handleUpdate);
+    window.addEventListener("focus", handleUpdate);
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") reload();
+    }, 30_000);
+    return () => {
+      window.removeEventListener("ai-quota-updated", handleUpdate);
+      window.removeEventListener("focus", handleUpdate);
+      clearInterval(timer);
+    };
+  }, [reload]);
+
   if (!data || data.plan === "guest") return null;
   const low = data.remaining !== null && data.daily_quota !== null && data.remaining <= Math.max(1, Math.round(data.daily_quota * 0.1));
   return (

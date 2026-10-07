@@ -136,8 +136,19 @@ def get_provider_priority_chain() -> list[ProviderInfo]:
                 preferred,
             )
         chain_names = order
+    available = [providers[name] for name in chain_names if name in providers]
+    if not available:
+        return []
 
-    return [providers[name] for name in chain_names if name in providers]
+    def _is_provider_cooling(name: str) -> bool:
+        if name == "gemini":
+            keys = get_gemini_api_keys(advance=False)
+            return bool(keys and all(ai_usage.cooling_seconds(ai_usage.alias_of("gemini", k) or "") > 0 for k in keys))
+        return ai_usage.cooling_seconds(name) > 0
+
+    ready = [p for p in available if not _is_provider_cooling(p.name)]
+    cooling = [p for p in available if _is_provider_cooling(p.name)]
+    return ready + cooling
 
 
 def resolve_provider() -> Optional[ProviderInfo]:

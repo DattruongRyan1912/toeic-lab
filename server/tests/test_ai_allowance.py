@@ -129,3 +129,47 @@ def test_old_usage_logs_are_purged(client, gemini, db, monkeypatch):
     translate(client)
     timeutil.set_now(timeutil.utcnow() + timedelta(days=config.AI_USAGE_RETENTION_DAYS + 1))
     assert maintenance.run(db)["old_ai_usage_logs"] == 1
+
+
+def test_zero_guest_quota_blocks_immediately(client, gemini, monkeypatch, production_mode):
+    monkeypatch.setattr(config, "AI_GUEST_DAILY_QUOTA", 0)
+    blocked = translate(client)
+    assert blocked.status_code == 429
+    assert "chỉ dành cho tài khoản đã đăng nhập" in blocked.json()["detail"]
+
+
+def test_guest_quota_not_consumed_on_provider_failure(client, gemini, monkeypatch, production_mode):
+    monkeypatch.setattr(config, "AI_GUEST_DAILY_QUOTA", 1)
+    gemini["fail"].update({"key-one", "key-two"})
+    failed = translate(client)
+    assert (
+        failed.status_code in (500, 502, 503)
+        or "error" in failed.text.lower()
+        or failed.json().get("translation") == "Bản dịch tự động tạm thời chưa khả dụng."
+    )
+    # Now provider recovers: the guest still has their 1 quota!
+    gemini["fail"].clear()
+    success = translate(client)
+    assert success.status_code == 200
+    # Now that it succeeded once, the 2nd attempt is blocked
+    assert translate(client).status_code == 429
+
+
+def test_cooling_provider_moves_to_end_of_chain(monkeypatch):
+    from server.services import ai_usage
+
+    monkeypatch.setattr(config, "GEMINI_API_KEY", "")
+    monkeypatch.setattr(config, "GEMINI_API_KEYS", [])
+    monkeypatch.setattr(config, "DEEPSEEK_API_KEY", "deepseek-test-key")
+    monkeypatch.setattr(config, "OPENAI_API_KEY", "openai-test-key")
+    monkeypatch.setattr(config, "AI_PROVIDER", "auto")
+
+    # Normally deepseek is ahead of openai
+    chain = ai_agent_service.get_provider_priority_chain()
+    assert [p.name for p in chain] == ["deepseek", "openai"]
+
+    # When deepseek is in cooldown, openai moves to front
+    ai_usage.cool_down("deepseek")
+    chain_cooling = ai_agent_service.get_provider_priority_chain()
+    assert [p.name for p in chain_cooling] == ["openai", "deepseek"]
+

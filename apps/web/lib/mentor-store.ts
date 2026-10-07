@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { api, errorMessage, getAuthToken } from "@/lib/api";
+import { api, errorMessage, getAuthToken, notifyAiQuotaUpdated } from "@/lib/api";
 import { refreshLearner } from "@/lib/learner-store";
 import type { AIAction, AIActionLog, AIChatResponse, AIHistoryMessage } from "@/types";
 
@@ -101,6 +101,7 @@ export const useMentorStore = create<MentorState>((set, get) => ({
         suggestions: data.suggested_questions,
       }));
       if (data.actions_taken.some((action) => action.status === "success" && action.writes !== false)) void refreshLearner();
+      notifyAiQuotaUpdated();
     } catch (error) {
       set((state) => ({
         messages: [

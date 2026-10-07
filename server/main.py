@@ -73,10 +73,12 @@ async def lifespan(app: FastAPI):
         insights.get_or_create_user(db, config.DEFAULT_USER_ID)
         maintenance.run(db)
     stop = asyncio.Event()
-    task = asyncio.create_task(reminder_service.reminder_loop(stop)) if reminder_service.dispatch_enabled() else None
+    tasks = [asyncio.create_task(maintenance.maintenance_loop(stop))]
+    if reminder_service.dispatch_enabled():
+        tasks.append(asyncio.create_task(reminder_service.reminder_loop(stop)))
     yield
     stop.set()
-    if task is not None:
+    for task in tasks:
         with suppress(asyncio.TimeoutError, asyncio.CancelledError):
             await asyncio.wait_for(task, timeout=5)
 

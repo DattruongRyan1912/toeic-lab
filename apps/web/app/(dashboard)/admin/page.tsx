@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
-import { api, errorMessage } from "@/lib/api";
+import { api, errorMessage, notifyAiQuotaUpdated } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { formatDate, percent } from "@/lib/format";
 import { useApi } from "@/lib/use-api";
@@ -37,8 +37,9 @@ function AIAllowanceEditor({ user, onSaved }: { user: AdminUserDetail; onSaved: 
     return <p className="text-xs text-slate-500">Admin luôn dùng AI không giới hạn.</p>;
   }
   const save = async () => {
-    const value = Number(quota);
-    if (mode === "custom" && (!Number.isInteger(value) || value < 0)) {
+    const trimmed = quota.trim();
+    const value = Number(trimmed);
+    if (mode === "custom" && (!trimmed || !Number.isInteger(value) || value < 0)) {
       toast.add({ title: "Hạn mức không hợp lệ", description: "Nhập số lượt nguyên ≥ 0", type: "error" });
       return;
     }
@@ -50,6 +51,7 @@ function AIAllowanceEditor({ user, onSaved }: { user: AdminUserDetail; onSaved: 
       });
       toast.add({ title: "Đã cập nhật hạn mức AI", description: `@${user.username}`, type: "success" });
       onSaved();
+      notifyAiQuotaUpdated();
     } catch (err) {
       toast.add({ title: "Không lưu được hạn mức", description: errorMessage(err), type: "error" });
     } finally {

@@ -2,13 +2,14 @@ import json
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 
 from server import config
 from server.database import get_db
 from server.deps import current_user_id, is_test_mode, optional_learner_id, require_learner_user_id
 from server.models import AIMessage, User
+from server.utils import rate_limit
 from server.schemas import (
     AIActionRead,
     AIChatRequest,
@@ -39,9 +40,15 @@ def ai_status():
 
 
 @router.get("/quota", response_model=AIQuota)
-def ai_quota(learner_id: Optional[int] = Depends(optional_learner_id), db: Session = Depends(get_db)):
+def ai_quota(
+    request: Request,
+    learner_id: Optional[int] = Depends(optional_learner_id),
+    db: Session = Depends(get_db),
+):
     """The caller's AI allowance today (admins and unlimited accounts: no limit)."""
-    return ai_usage.allowance(db, db.get(User, learner_id) if learner_id is not None else None)
+    user = db.get(User, learner_id) if learner_id is not None else None
+    ip = rate_limit.client_ip(request) if user is None else None
+    return ai_usage.allowance(db, user, ip=ip)
 
 
 @router.get("/tools", response_model=List[AIToolInfo])

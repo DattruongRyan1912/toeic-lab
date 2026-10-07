@@ -40,6 +40,7 @@ class UsageContext:
     request_id: str
     user_id: Optional[int]
     endpoint: str
+    client_ip: Optional[str] = None
 
 
 _context: contextvars.ContextVar = contextvars.ContextVar("ai_usage_context", default=None)
@@ -70,6 +71,8 @@ def alias_of(provider: str, key: str) -> Optional[str]:
 _state_lock = threading.Lock()
 _cooling: dict = {}  # alias -> monotonic time until which the key rests
 _disabled_cache: tuple = (0.0, frozenset())
+_inflight_reservations: Counter = Counter()  # caller_key -> active in-flight count
+_guest_success_counts: dict = {}  # (ip, local_date_str) -> ok count
 
 
 def disabled_aliases() -> frozenset:
@@ -106,6 +109,8 @@ def cooling_seconds(alias: str) -> int:
 def reset() -> None:
     with _state_lock:
         _cooling.clear()
+        _inflight_reservations.clear()
+        _guest_success_counts.clear()
     forget_cached_states()
 
 
@@ -151,6 +156,15 @@ def record(
                 total_tokens=total, latency_ms=latency_ms, error=(error or None) and error[:200], created_at=timeutil.utcnow(),
             ))
             db.commit()
+        if status == "ok" and ctx.user_id is None and ctx.client_ip:
+            today_str = timeutil.local_today().isoformat()
+            with _state_lock:
+                key = (ctx.client_ip, today_str)
+                _guest_success_counts[key] = _guest_success_counts.get(key, 0) + 1
+                if len(_guest_success_counts) > 10_000:
+                    expired = [k for k in _guest_success_counts if k[1] != today_str]
+                    for k in expired:
+                        del _guest_success_counts[k]
     except Exception:  # pragma: no cover - logging only
         logger.warning("Could not record AI usage", exc_info=True)
 
@@ -183,9 +197,16 @@ def plan_of(user: Optional[User]) -> tuple:
     return "default", config.AI_DAILY_QUOTA
 
 
-def allowance(db: Session, user: Optional[User]) -> dict:
+def allowance(db: Session, user: Optional[User], ip: Optional[str] = None) -> dict:
     plan, quota = plan_of(user)
-    used = requests_today(db, user.id) if user is not None else None
+    if user is not None:
+        used = requests_today(db, user.id)
+    elif ip:
+        today_str = timeutil.local_today().isoformat()
+        with _state_lock:
+            used = _guest_success_counts.get((ip, today_str), 0)
+    else:
+        used = None
     return {
         "plan": plan,
         "unlimited": quota is None,
@@ -210,32 +231,65 @@ def _caller(request: Request, db: Session) -> Optional[User]:
 
 
 def guard(endpoint: str):
-    """Route dependency for AI features: checks the caller's allowance and tags provider calls for the log."""
+    """Route dependency for AI features: checks the caller's allowance, reserves a slot, and tags provider calls for the log."""
 
-    async def dependency(request: Request) -> None:
+    async def dependency(request: Request):
         with SessionLocal() as db:
             user = _caller(request, db)
             plan, quota = plan_of(user)
+            ip = rate_limit.client_ip(request)
+            caller_key = f"user:{user.id}" if user is not None else f"guest:{ip}"
+
             if plan == "guest":
-                ip = rate_limit.client_ip(request)
-                rate_limit.hit("ai", f"ip:{ip}", config.RATE_LIMIT_AI)
-                try:
-                    rate_limit.hit("ai-guest-day", ip, f"{max(1, quota)}/86400")
-                except HTTPException as exc:
+                if quota is None or quota <= 0:
                     raise HTTPException(
-                        status_code=429, headers=exc.headers,
-                        detail=f"Khách chỉ dùng được {quota} lượt AI mỗi ngày. Đăng nhập để có thêm lượt.",
-                    ) from exc
+                        status_code=429,
+                        detail="Tính năng AI hiện chỉ dành cho tài khoản đã đăng nhập. Vui lòng đăng nhập để tiếp tục.",
+                        headers={"Retry-After": str(_seconds_to_midnight())},
+                    )
+                rate_limit.hit("ai", f"ip:{ip}", config.RATE_LIMIT_AI)
+                today_str = timeutil.local_today().isoformat()
+                with _state_lock:
+                    used = _guest_success_counts.get((ip, today_str), 0)
+                    in_flight = _inflight_reservations.get(caller_key, 0)
+                    if used + in_flight >= quota:
+                        raise HTTPException(
+                            status_code=429,
+                            detail=f"Khách chỉ dùng được {quota} lượt AI mỗi ngày. Đăng nhập để có thêm lượt.",
+                            headers={"Retry-After": str(_seconds_to_midnight())},
+                        )
+                    _inflight_reservations[caller_key] += 1
             elif quota is not None:
                 if plan == "default":
                     rate_limit.hit("ai", f"user:{user.id}", config.RATE_LIMIT_AI)
-                if requests_today(db, user.id) >= quota:
-                    raise HTTPException(
-                        status_code=429,
-                        detail=f"Bạn đã dùng hết {quota} lượt AI hôm nay. Hạn mức làm mới lúc 0h; cần thêm hãy liên hệ quản trị viên.",
-                        headers={"Retry-After": str(_seconds_to_midnight())},
-                    )
-            _context.set(UsageContext(uuid.uuid4().hex, user.id if user is not None else None, endpoint))
+                with _state_lock:
+                    used = requests_today(db, user.id)
+                    in_flight = _inflight_reservations.get(caller_key, 0)
+                    if used + in_flight >= quota:
+                        raise HTTPException(
+                            status_code=429,
+                            detail=f"Bạn đã dùng hết {quota} lượt AI hôm nay. Hạn mức làm mới lúc 0h; cần thêm hãy liên hệ quản trị viên.",
+                            headers={"Retry-After": str(_seconds_to_midnight())},
+                        )
+                    _inflight_reservations[caller_key] += 1
+
+        _context.set(
+            UsageContext(
+                uuid.uuid4().hex,
+                user.id if user is not None else None,
+                endpoint,
+                client_ip=ip if plan == "guest" else None,
+            )
+        )
+        try:
+            yield
+        finally:
+            if quota is not None:
+                with _state_lock:
+                    if _inflight_reservations[caller_key] > 0:
+                        _inflight_reservations[caller_key] -= 1
+                        if _inflight_reservations[caller_key] == 0:
+                            del _inflight_reservations[caller_key]
 
     return dependency
 
