@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rà soát khu vực học của học viên — TOEIC Lab</title>
+<style>
+  :root { --bg:#0f172a; --card:#111c33; --line:#1f2b46; --text:#e2e8f0; --muted:#94a3b8; --high:#ef4444; --med:#f59e0b; --low:#64748b; --accent:#60a5fa; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:1180px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:26px; margin:0 0 6px; }
+  h2 { font-size:18px; margin:36px 0 12px; }
+  p.lead { color:var(--muted); margin:0 0 20px; }
+  code { font:12px ui-monospace, Menlo, monospace; background:#0b1222; border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:#cbd5e1; word-break:break-all; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .tile b { display:block; font-size:26px; }
+  .tile span { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  .themes { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px; }
+  .theme { background:var(--card); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:10px; padding:12px 14px; }
+  .theme h3 { margin:0 0 4px; font-size:14px; }
+  .theme p { margin:0; color:var(--muted); font-size:13px; }
+  .waves { counter-reset:w; display:grid; gap:12px; }
+  .wave { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .wave h3 { margin:0 0 6px; font-size:15px; }
+  .wave ul { margin:0; padding-left:18px; }
+  .filters { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 16px; }
+  .filters button { background:var(--card); color:var(--text); border:1px solid var(--line); border-radius:999px; padding:6px 12px; cursor:pointer; font-size:12px; }
+  .filters button.on { border-color:var(--accent); color:var(--accent); }
+  .finding { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:10px; }
+  .finding header { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px; }
+  .finding h4 { margin:0; font-size:14px; flex:1 1 320px; }
+  .sev, .area { font-size:11px; font-weight:700; border-radius:4px; padding:2px 7px; white-space:nowrap; }
+  .sev.high { background:rgba(239,68,68,.15); color:#fca5a5; }
+  .sev.med { background:rgba(245,158,11,.15); color:#fcd34d; }
+  .sev.low { background:rgba(100,116,139,.2); color:#cbd5e1; }
+  .area { background:rgba(96,165,250,.12); color:#93c5fd; }
+  .finding dl { display:grid; grid-template-columns:110px 1fr; gap:4px 12px; margin:0; font-size:13px; }
+  .finding dt { color:var(--muted); }
+  .finding dd { margin:0; }
+  @media (max-width:640px) { .finding dl { grid-template-columns:1fr; } .finding dt { margin-top:6px; } }
+  footer { color:var(--muted); font-size:12px; margin-top:32px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rà soát khu vực học của học viên</h1>
+  <p class="lead">TOEIC Lab · 07/10/2026 · Phạm vi: Từ vựng &amp; SRS, Đề thi &amp; Sổ lỗi, Luyện nghe &amp; Bài giảng, Dashboard &amp; Kế hoạch. Chỉ đọc mã nguồn và mô phỏng trên bản sao DB trong <code>/tmp</code>; không sửa repo hay DB thật. Các mục đánh dấu “Tái hiện” đã được chạy lại thực tế.</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <h2>Các vấn đề xuyên suốt</h2>
+  <div class="themes">
+    <div class="theme"><h3>Khách dùng chung 1 tài khoản có thể ghi</h3><p>Mọi khách chưa đăng nhập đều là user 1 và ghi được vào kế hoạch, lộ trình, SRS, bài nộp, sổ lỗi, ghi chú bài học. Streak, dự đoán điểm, lỗ hổng là trộn của người lạ.</p></div>
+    <div class="theme"><h3>Số đo “đẹp” hơn thực tế</h3><p>Mastery tính cả câu làm lại; dự đoán điểm ngoại suy Part 3/4/6/7 không có dữ liệu; Shadowing chấm cứng 78 điểm khi không nghe được; bộ 15 câu được quy ra điểm Reading 495.</p></div>
+    <div class="theme"><h3>Luyện nghe thực chất là luyện đọc</h3><p>Đề thi Part 1/2 dùng giọng TTS và in sẵn transcript, không dùng audio ETS gốc đã có sẵn <code>audio_url</code>.</p></div>
+    <div class="theme"><h3>Vi phạm quy tắc “không AI tự sinh”</h3><p>Kế hoạch và coach đề xuất “Nhờ AI tạo thêm câu luyện”; AI tool tạo flashcard hàng loạt vào kho chung; câu AI tham gia tính mastery/dự đoán của mọi học viên.</p></div>
+    <div class="theme"><h3>Lên lịch cho nội dung không tồn tại</h3><p>Kế hoạch giao “Shadowing Part 3”, lộ trình có Part 7, Triple Passages, Full Test 120 phút, 300 từ vựng — trong khi kho chỉ có Part 1/2/5.</p></div>
+  </div>
+
+  <h2>Đề xuất thứ tự sửa</h2>
+  <div class="waves">
+    <div class="wave"><h3>Đợt 1 — Sửa dữ liệu sai &amp; mất dữ liệu (nhỏ, giá trị cao)</h3><ul>
+      <li>Commit thời gian luyện nghe; chống tạo kế hoạch trùng; replan giữ việc đã làm.</li>
+      <li>Đồng hồ chỉ chạy ở chế độ thi; câu bỏ trống không ghi đè chẩn đoán trong sổ lỗi.</li>
+      <li>Chế độ “Luyện toàn bộ” không cập nhật SM-2; AI tool xoá/sửa thẻ chung cần quyền admin.</li>
+      <li>Không lưu bản dịch lỗi; sửa race <code>ensure_srs_records</code>; bỏ <code>lesson_number</code> của Part 1/2 (sao lưu DB trước).</li>
+      <li>Khách chỉ đọc (hoặc mỗi khách một guest id riêng) — cần bạn chọn hướng.</li>
+    </ul></div>
+    <div class="wave"><h3>Đợt 2 — Đo lường trung thực</h3><ul>
+      <li>Mastery dựa trên lần làm đầu tiên/câu; dự đoán điểm theo độ phủ nội dung; điểm quy đổi gắn đúng section và chỉ khi đủ mẫu.</li>
+      <li>Shadowing không chấm khi không có transcript/audio-AI; Dictation phạt từ thừa, chuẩn hoá dấu nháy cong, số, gạch nối.</li>
+      <li>SRS: “đến hạn” theo ngày địa phương, bước học lại sau “Again”, chỉnh khoảng Hard/Easy, thẻ tự thêm được học trước.</li>
+      <li>Streak bỏ qua ngày nghỉ theo lịch; nhóm lỗ hổng theo bài học thay vì tag tự do.</li>
+    </ul></div>
+    <div class="wave"><h3>Đợt 3 — Phòng nghe thật &amp; trải nghiệm</h3><ul>
+      <li>Quiz Part 1/2 phát audio ETS, ẩn transcript tới khi kiểm tra; Studio có bước chọn A/B/C trước khi chép chính tả.</li>
+      <li>Kế hoạch/lộ trình dựa trên nội dung thực có; các mốc, phase lấy từ API; xử lý ngày thi đã qua.</li>
+      <li>Tách trang Listening 1200 dòng, dùng heartbeat chung, sửa ghi âm; ẩn đáp án drill trong bài giảng.</li>
+    </ul></div>
+  </div>
+
+  <h2>Danh sách phát hiện</h2>
+  <div class="filters" id="filters"></div>
+  <div id="list"></div>
+
+  <footer>Tạo bởi Claude Code từ 4 lượt rà soát song song (vocab/SRS, đề thi/sổ lỗi, luyện nghe/bài giảng, dashboard/kế hoạch). Số dòng tham chiếu theo mã nguồn tại thời điểm rà soát.</footer>
+</main>
+<script>
+const F = [
+  // ---------------- Dữ liệu sai / mất dữ liệu
+  ["high","Luyện nghe","Thời gian luyện nghe không bao giờ được lưu","server/routers/listening_router.py:50-80 · listening_service.py:208-216 · activity.py:5 (“Callers commit”)","Không có db.commit(); phút Dictation/Shadowing không vào phút học, streak, kế hoạch. Tái hiện: session_id = None, không có dòng StudySession.","Commit trong 3 handler listening và thêm assert StudySession trong test."],
+  ["high","Dashboard","Kế hoạch 7 ngày bị tạo trùng ở lần tải đầu tiên trong ngày","planner.py:399-437 (ensure_plan không khoá) · learner-bootstrap.tsx:10 + page.tsx:85 gọi song song","Tái hiện 6/6: hôm nay có 11 việc, 120 phút so với mục tiêu 60; trang Roadmaps (3 request) ra 15 việc.","Claim nguyên tử: UPDATE users SET plan_generated_on=today WHERE … IS NOT today, chỉ sinh khi rowcount=1; thêm unique index."],
+  ["high","Dashboard","“Lập lại kế hoạch” xoá việc đã hoàn thành hôm nay","planner.py:404-409 xoá mọi item ‘pending’; trạng thái done chỉ được suy ra khi đọc (536-537)","Tái hiện: xong 15/15 câu Bài 02, replan thay bằng Bài 03 0/15; tỉ lệ hoàn thành 7 ngày tụt, dễ rơi vào chế độ ‘behind’.","Lưu status=done khi phát hiện hoàn thành; khi replan giữ item có tiến độ và chỉ lập phần ngân sách còn lại."],
+  ["high","Đề thi","Đồng hồ tự nộp bài cả ở chế độ học/ôn; câu bỏ trống ghi đè sổ lỗi","quiz-session.tsx:242,276,301-314 · practice_service.py:87-138 · error_log_service.py:163-170","30 giây/câu, đọc phân tích thì hết giờ ở ~câu 15; ~15 câu chưa mở thành lỗi TIME; lỗi đã ‘mastered’ bị đưa về stage 0 và mất chẩn đoán GRAMMAR (tái hiện).","Chỉ đếm ngược ở chế độ thi; ngoài thi chỉ nộp câu đã mở; câu trống không ghi đè log có sẵn."],
+  ["high","Từ vựng","Chế độ ‘Luyện toàn bộ/Ôn tăng cường’ cập nhật SM-2 đầy đủ","flashcard-player.tsx:95 · flashcard_router.py:217-245 · insights.py:188-202","Ôn dồn 4 lần trong 1 tối (Good) → ‘mastered’, khoảng 38 ngày; vượt quota thẻ mới tới 50 thẻ; làm phồng srs_retention khiến coach đề nghị tăng thẻ mới.","Gửi mode khi review; ôn sớm/cram chỉ ghi log, không tăng repetition/interval."],
+  ["high","Từ vựng","AI tool xoá/sửa thẻ dùng chung không cần quyền admin","agent_tools.py:620-652 qua /api/ai/actions/execute (REST delete đã admin-only)","Tái hiện: learner bị 403 ở REST nhưng tool trả 200 và xoá thẻ cùng lịch sử ôn của mọi học viên.","Kiểm tra role admin trong tool; với learner dùng trạng thái ẩn/tạm dừng trên UserCardSRS."],
+  ["high","Chung","Khách chưa đăng nhập ghi chung vào user 1","deps.py current_user_id → DEFAULT_USER_ID; plan_router, roadmap_router, practice/test submit, flashcard review/create, knowledge notes/progress, /learner/activity","Người lạ ăn hết 15 thẻ mới/ngày của nhau, đổi ngày bắt đầu lộ trình, replan, xoá ghi chú bài học; streak/dự đoán/sổ lỗi khách là dữ liệu trộn.","Khách chỉ đọc (require_learner_user_id cho mọi thao tác ghi) hoặc cấp guest id riêng qua cookie ký; ẩn gợi ý dạng tool với khách."],
+  ["high","Chung","Kế hoạch/coach/AI tool sinh nội dung bằng AI — trái AGENTS.md mục 3","planner.py:322-335 (ai_generate) · coach.py:88-96 · agent_tools.py:888-935 (create_practice_questions) · agent_tools.py:594 (create_flashcards_bulk) · skills.py:197","Câu AI nằm trong kho chung, đáp án chưa kiểm chứng tham gia mastery/dự đoán của mọi người; thẻ AI chiếm quota thẻ mới của mọi người.","Bỏ các item/tool này; khi hết câu thì gợi ý ôn lỗi, đọc lại bài, SRS. Tối thiểu: giới hạn theo người tạo và loại khỏi mastery."],
+  ["med","Từ vựng","Ai cũng thêm thẻ vào kho chung, thẻ vào hàng đợi của mọi học viên","flashcard_router.py:117-125 (current_user_id) · vocab_service.create_card · insights.ensure_srs_records:126-139","POST /api/flashcards không token → 201. Thẻ rác/của người khác chiếm quota thẻ mới.","Bắt buộc đăng nhập; thêm owner_user_id nullable (null = kho chuẩn) và chỉ cấp SRS cho kho chuẩn + thẻ của chính mình."],
+  ["med","Từ vựng","Bản dịch lỗi được lưu vĩnh viễn","flashcard_router.py:70, 191-200","Một lần AI lỗi để lại chuỗi ‘Bản dịch tự động tạm thời chưa khả dụng.’ trên thẻ cho mọi người, nút dịch biến mất.","Trả 503 và không lưu khi dịch thất bại."],
+  ["med","Từ vựng","Race trong ensure_srs_records gây lỗi 500","insights.py:126-139 (check-then-insert trong GET) · vocab/page.tsx:48-63 gọi song song","Tái hiện 10/10 với 2 luồng × ~700 thẻ: UNIQUE constraint failed → trang Vocab báo lỗi.","insert … on_conflict_do_nothing() hoặc bắt IntegrityError; tránh ghi trong GET."],
+  ["med","Đề thi","Câu Part 1/2 bị gắn với bài ngữ pháp 01/02","ingest_authentic_listening_test01.py:37,143 · DB: Part 1→lesson 1 (6), Part 2→lesson 2 (25) · curriculum.py:88-91","Sai câu Part 2 được bảo ‘Ôn Bài 02 Liên từ vs Giới từ’; mastery Bài 02 trộn 25 câu nghe; smart set đưa câu Part 2 vào chuyên đề ngữ pháp.","Đặt lesson_number = NULL cho Part 1-4 (sao lưu DB trước); chặn lesson 1-12 chỉ áp cho Part 5/6."],
+  ["med","Đề thi","Ghi lỗi tay cho câu đã có log tạo ra mục ôn bị kẹt","error_log_router.py:52 (dedupe=False) · practice_service.py:71-76 · insights.py:487-490","Tái hiện: log cũ ‘đến hạn’ mãi từ ngày 2 tới 10; badge đếm dư 1. Nút trạng thái quay vòng ‘Đã nắm chắc’ → ‘Chưa khắc phục’ không xác nhận.","Khi có question_id thì gộp vào log sẵn có (hoặc 409 kèm link); đếm theo câu duy nhất."],
+  // ---------------- Đo lường sai lệch
+  ["high","Luyện nghe","Shadowing cho điểm đạt mà không nghe/không kiểm tra","voice_coach_service.py:611-632 (78/80/76 cố định) · 438-480 (prompt bảo AI chấm 78-82) · listening/page.tsx:827,861,954,973","Bản ghi im lặng vẫn 78 điểm, ‘AI nghe được…’ hiển thị câu mẫu; nút ‘Dùng câu chuẩn 100%’ cho 100 điểm. Phát âm từ vựng cũng chấm cứng 75-82.","Không có transcript/AI đọc audio → trả ‘chưa chấm’ (null), chỉ hiển thị cue và so sánh bản ghi; bỏ nút điền câu chuẩn."],
+  ["high","Đề thi","Part 1/2 trong đề thi dùng TTS và in sẵn transcript","quiz-session.tsx:397-483 (speak + in câu hỏi, lựa chọn) · 31 câu có audio_url, file mp3 có trong public/audio/ets2024_01/","Học viên không bao giờ nghe audio ETS thật và có thể làm bằng cách đọc; độ chính xác Listening, mastery và điểm dự đoán dựa trên việc đọc.","Phát q.audio_url (TTS chỉ là dự phòng), chỉ hiện A/B/C(D); hiện transcript sau khi kiểm tra; chế độ thi chỉ phát 1 lần."],
+  ["high","Luyện nghe","Mục tiêu Dictation không khớp audio, từ thừa không bị trừ","listening_service.py:131-136 (đúng/số từ mục tiêu) · Part 2 chỉ lấy câu hỏi dù clip 15-17s có cả 3 đáp án","Gõ cả clip Part 2 vẫn 100%; ‘how old is this building building blah blah’ cũng 100%. Bẫy Part 2 nằm ở 3 câu trả lời nhưng không được chấm.","Part 2: mục tiêu = câu hỏi + (A)(B)(C) từ choice_a..c; bỏ nhãn lựa chọn khi chuẩn hoá; chấm theo F1 hoặc đúng/max(target, learner)."],
+  ["med","Dashboard","Dự đoán điểm ngoại suy Part không có dữ liệu; độ tin cậy không thể tăng","skills.py:262-298 · page.tsx:224-230 · planner.py:695-699 (milestone_evidence ≥ 0.25)","Làm đúng hết 241 câu → 865 (560-990), độ tin cậy kẹt ~0.28 và vẫn ‘cần thêm 23 câu’. Mốc ‘Full Test 2 & 3 > 770’ bị coi là đạt dù chưa làm full test.","Tính độ tin cậy theo các Part có nội dung, ghi rõ ‘đo được: Part 1, 2, 5’; mốc Test chỉ đạt khi có bài nộp chế độ thi."],
+  ["med","Dashboard","Mastery bị thổi phồng bởi các lần làm lại","skills.py:143-175 (mọi attempt cùng trọng số) · nút ‘Làm lại’ quiz-session.tsx:123 · chu kỳ 1-3-7","Tái hiện: lần đầu 10/15 (67%) + ôn 1-3-7 → mastery 0.83 ‘strong’; 18/30 Part 5 + 2 lần làm lại 30/30 → Reading 255 → 360. Planner hạ ưu tiên bài đó.","Tính mastery từ lần làm đầu/câu (hoặc lần làm lại sau ≥1 ngày), loại mode=review."],
+  ["med","Đề thi","Bộ câu ngắn được quy ra điểm cả section; điểm nghe ghi là ‘Reading’","scoring.py:107-112 · practice_service.py:145-161 · quiz-session.tsx:107-109","6/6 Part 1 hiện ‘Reading ước lượng 495’; drill 15 câu 15/15 → 495; trang admin thấy tổng ~990 cho bộ 15 câu.","Ghi đúng section và hiển thị khoảng; chỉ lưu điểm quy đổi khi bộ câu phủ đủ phần của section."],
+  ["med","Đề thi","‘Lỗ hổng kiến thức’ nhóm theo tag tự do nên không bao giờ cộng dồn","insights.py:340-374 · 235 tag khác nhau trên 241 câu","Mọi lỗ hổng đều ‘1 lỗi’; danh sách thực chất là 5 tag gần nhất; AI mentor dùng chung danh sách này.","Nhóm theo lesson_number (dự phòng mã RCA), giữ tag làm ví dụ."],
+  ["med","Đề thi","Chuyển study → exam cho phép sửa đáp án sau khi xem key","quiz-session.tsx:271,329-331,360-362 · planner.py:484-489","Câu sửa được chấm đúng, đẩy lịch ôn và mastery; phiên học được lưu là ‘exam’ và nhận điểm hoàn thành mốc thi thử.","Khoá câu đã kiểm tra; ghi mode=study nếu có câu đã kiểm tra hoặc khoá toggle sau lần kiểm tra đầu."],
+  ["med","Từ vựng","‘Đến hạn’ theo thời điểm chính xác, kế hoạch theo ngày địa phương","srs_service.py:25,43 · insights.py:148,207 (next_review_at <= now) · planner.py:159-169","Tái hiện: ‘Again’ lúc 21:00, 8:00 sáng hôm sau kế hoạch nói ‘Ôn 10 thẻ’ còn hàng đợi báo 0 và ‘Xong ✓’; interval 1 ngày thành 2 ngày.","Đến hạn nếu next_review_at < local_day_start_utc(today+1) ở srs_counts, due_queue, category_stats."],
+  ["med","Từ vựng","‘Again’ không có bước học lại trong phiên","srs_service.py:23-25 · flashcard-player.tsx:96-98","Từ vừa quên chỉ gặp lại sau ≥24h (thường 48h) — từ yếu nhất lại ít được lặp nhất.","Client đưa thẻ Again lại sau vài thẻ (không cập nhật lịch lần 2) hoặc thêm bước học 10 phút."],
+  ["med","Từ vựng","Nút đánh giá không khớp nhãn","srs_service.py:28-42","Thẻ lâu năm: Hard = Good = 50 ngày; thẻ mới: Good = Easy = 2 ngày; 4 lần Hard liên tiếp vẫn thành ‘mastered’.","Hard = interval × 1.2; Easy lần đầu ≈ 4 ngày; ‘mastered’ chỉ khi interval ≥ 21 ngày."],
+  ["med","Từ vựng","Từ học viên tự thêm được học sau cùng","insights.py:204,213 (order by card_id) · vocab_service.py:57","Từ tự thêm từ lỗi sai phải chờ ~46 ngày trên production (~698 thẻ, 15/ngày).","Tạo dòng SRS của người tạo ở trạng thái learning, next_review_at = now."],
+  ["med","Dashboard","Ngày nghỉ theo lịch làm mất streak","insights.py:280-287 bỏ qua study_days · planner.py:43 (mặc định nghỉ Chủ nhật)","Tái hiện: học T2-T7, nghỉ CN → sáng T2 streak = 0, ngay cạnh câu ‘Nghỉ ngơi cũng là một phần của kế hoạch’.","Khi đếm lùi bỏ qua các ngày không nằm trong study_days."],
+  ["med","Dashboard","Mục tiêu >70 phút/ngày bị lập thiếu nhưng báo cáo chấm theo mục tiêu đầy đủ","planner.py:249-370 (giới hạn cứng) · weekly_report.py:55,174-175","Mục tiêu 120/180/300 phút đều chỉ lập ~71 phút; làm 100% kế hoạch vẫn bị báo ‘đạt dưới 50% … giảm phút/ngày’.","Co giãn các khối theo ngân sách, hoặc so với số phút đã lập và hiển thị mức trần."],
+  ["med","Luyện nghe","Chuẩn hoá Dictation chấm sai câu đúng","listening_service.py:13 (_CLEAN_RE), _CONTRACTIONS","Bàn phím iOS/macOS gõ nháy cong: She’s vs She's = 83.3%; ‘It is’ vs ‘It's’ sai; 10 vs ten, work-order vs work order = 33%.","Đổi ’‘ thành ', tách từ viết tắt thành nhiều token ở cả 2 phía, số → chữ, tách gạch nối."],
+  ["med","Luyện nghe","Đo thời gian Studio sai kể cả khi đã lưu","listening/page.tsx:159-171,304 · listening_router.py:80 (+15s cố định) · schemas:910 (le=7200)","Tính cả thời gian treo máy; quá 2 giờ thì lỗi 422 hiện bằng alert; thời gian chỉ nghe không được tính; timer kế hoạch đếm trùng nếu mở 2 tab.","Dùng useStudyHeartbeat như trang Lessons, bỏ time_spent_seconds, +15s và số giây ghi âm."],
+  ["med","Luyện nghe","Lỗi ghi âm trong Studio","listening/page.tsx:85-98,183-192,332-345 · mic-test-dialog.tsx · schemas:961 (audio_base64 không giới hạn)","Nghe lại phát bản ghi cũ; chuyển câu khi đang ghi thì mic và SpeechRecognition vẫn chạy; khách gửi được body không giới hạn tới endpoint AI.","Dùng lib/audio-recorder.ts (đã có cleanup, phát hiện im lặng), giới hạn ~60s, thêm max_length."],
+  ["med","Bài giảng","Trang bài giảng lộ đáp án drill","lessons/page.tsx:100-121 · lessons/bai_04_cau_bi_dong.md:56-62","6/15 câu drill được xem trước kèm đáp án (40% drill bị lộ); bài tập trong markdown in đáp án ngay dưới câu.","Bỏ phần xem trước hoặc chỉ mở sau khi làm drill; đáp án trong markdown để dạng ẩn/hiện."],
+  // ---------------- Trải nghiệm & nhất quán
+  ["med","Dashboard","Kế hoạch và lộ trình giao nội dung không tồn tại","planner.py:349-355 (Shadowing Part 3) · auth_router.py:20-39 (Part 7, Triple Passages, Full Test, 300 từ) · insights.py:439-464 · coach.py:72-78","Không có dữ liệu Part 3/4/6/7; 60 thẻ local hết sau 4 ngày nhưng coach vẫn gợi ý tăng thẻ mới.","Kiểm tra số câu theo Part và số thẻ mới còn lại trước khi lên lịch; mốc lộ trình dựng từ nội dung thực có."],
+  ["med","Dashboard","Không xử lý khi ngày thi đã qua","planner.py:415-416 · page.tsx:154-157 · weekly-plan.tsx:212","Kế hoạch rỗng vĩnh viễn, hiển thị ‘Còn -2 ngày thi’; ngày thi vẫn bị giao 47 phút.","Ngày thi đã qua → nhắc đặt ngày mới hoặc nhập điểm thật; ngày thi là ngày nghỉ."],
+  ["low","Dashboard","Nhãn lộ trình hardcode, lệch khi co giãn","roadmaps/page.tsx:22-26,245-268 · auth_router.py:64-67 · ngưỡng mốc 620/700/770/800","Tiêu đề vẫn ‘24 tuần’ sau khi co còn 10 tuần; ‘Mini-Test Phase 1’ nằm dưới thẻ ‘Tuần 1-3’ trong khi Phase 2 đang sáng; ngưỡng mốc bỏ qua điểm mục tiêu.","Trả phase (tên, mục tiêu, khoảng tuần) từ API, co giãn ranh giới phase giống task, đổi tên lộ trình khi co giãn."],
+  ["low","Từ vựng","UI không khớp API / vi phạm một nguồn dữ liệu","word-list-table.tsx:160-166 · vocab/page.tsx:48,53,183 · topic-matrix.tsx:115 · add-word-dialog.tsx:156","Nút xoá hiện cho mọi người nhưng chỉ admin xoá được; số 621 hardcode; ‘Ôn tất cả (N)’ nhưng chỉ phục vụ thẻ đến hạn; hàng đợi cắt 50; 25 chủ đề cho 60 thẻ; tải toàn bộ thẻ mỗi lần vào trang.","Ẩn nút xoá với non-admin; đọc số từ API; chuẩn hoá danh mục; phân trang thư viện."],
+  ["low","Luyện nghe","Bộ lọc Part và text kế hoạch nhắc Part không có dữ liệu","listening/page.tsx:1140 ([all, Part 1, Part 2, Part 3]) · planner.py:351-352","Part 3 luôn rỗng, Part 4 không có; lọc client trên limit=100 nên thêm đề sau sẽ không chạm tới.","API trả danh sách Part có dữ liệu kèm số câu; lọc phía server."],
+  ["low","Luyện nghe","Nhãn giọng đọc bịa, tốc độ TTS áp hai lần","listening_service.py:167-178 (accent = question_no % 4) · listening/page.tsx:100-123,368-372","Clip ETS thật được gắn ‘🇬🇧 Anh (RP)’ ngẫu nhiên; TTS dự phòng chạy 0.64x thay vì 0.8x; cue nối âm theo chính tả.","Ẩn giọng cho audio chính thức; TTS giữ +0% và chỉ dùng playbackRate."],
+  ["low","Bài giảng","Bài giảng ↔ sổ lỗi chỉ liên kết một chiều; quy tắc hoàn thành lỏng","lessons/page.tsx:50 · knowledge_router.py:123-126","Ô ‘Lỗi chưa khắc phục’ mở sổ lỗi không lọc theo bài; danh sách không hiện trạng thái học xong; bỏ tích rồi tích lại đổi ngày hoàn thành.","Hỗ trợ ?lesson= ở sổ lỗi, badge ‘học xong’, giữ ngày hoàn thành đầu tiên."],
+  ["low","Đề thi","Ma sát luồng làm bài","page.tsx:68,94-97,120-124 · quiz-session.tsx:278 · use-api.ts:42 · error-log/page.tsx:311","Smart/review set lưu nhầm ‘Part 5’; ‘Làm lại’ dùng lại danh sách cũ; không lưu tạm, thoát không xác nhận; chỉ nộp được ở câu cuối; không báo ETS2024_01 chỉ có 61/200 câu.","Reload danh sách sau nộp, cảnh báo khi rời trang, bảng tổng quan câu chưa làm, hiện độ phủ đề."],
+  ["low","Đề thi","Đáp án được gửi xuống client trong chế độ thi, qua endpoint công khai","test_router.py:24-43,109-124 · practice endpoints","Đáp án hiện trong tab Network; toàn bộ key và giải thích ETS có thể bị cào.","Serializer ẩn đáp án cho exam/review; trả giải thích trong kết quả nộp bài."],
+  ["low","Đề thi","Bộ phân loại RCA và độ khó suy luận sai","curriculum.py:34-36,88-91 · practice_service.py:256-260","15 câu collocation (bài 12) bị mã GRAMMAR; ‘Bẫy Đảo Ngữ…’ thành TRAP; drill đánh số 1-15 bị tính độ khó theo thang 101-130 → không có câu ‘medium’.","Không khớp luật thì lấy mã RCA từ lesson; độ khó theo vị trí trong chính bộ đề hoặc tỉ lệ sai."],
+];
+const AREAS = ["Tất cả", ...new Set(F.map(f => f[1]))];
+const SEVS = [["all","Mọi mức"],["high","Cao"],["med","Trung bình"],["low","Thấp"]];
+const SEV_LABEL = { high:"Cao", med:"Trung bình", low:"Thấp" };
+let area = "Tất cả", sev = "all";
+const esc = s => s.replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+function render() {
+  const rows = F.filter(f => (area === "Tất cả" || f[1] === area) && (sev === "all" || f[0] === sev));
+  document.getElementById("list").innerHTML = rows.map(([s,a,t,e,i,x]) => `
+    <article class="finding"><header><span class="sev ${s}">${SEV_LABEL[s]}</span><span class="area">${a}</span><h4>${esc(t)}</h4></header>
+    <dl><dt>Bằng chứng</dt><dd><code>${esc(e)}</code></dd><dt>Tác động</dt><dd>${esc(i)}</dd><dt>Cách sửa</dt><dd>${esc(x)}</dd></dl></article>`).join("");
+  document.getElementById("filters").innerHTML =
+    SEVS.map(([k,l]) => `<button class="${sev===k?"on":""}" data-sev="${k}">${l}</button>`).join("") +
+    AREAS.map(a => `<button class="${area===a?"on":""}" data-area="${a}">${a}</button>`).join("");
+}
+document.getElementById("filters").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.sev) sev = b.dataset.sev; else area = b.dataset.area;
+  render();
+});
+const count = s => F.filter(f => f[0] === s).length;
+document.getElementById("tiles").innerHTML = [["Tổng phát hiện", F.length],["Mức cao", count("high")],["Trung bình", count("med")],["Thấp", count("low")]]
+  .map(([l,v]) => `<div class="tile"><span>${l}</span><b>${v}</b></div>`).join("");
+render();
+</script>
+</body>
+</html>
