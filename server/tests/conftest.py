@@ -24,6 +24,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from server import models  # noqa: E402
 from server.database import Base, SessionLocal, engine, init_db  # noqa: E402
 from server.main import app  # noqa: E402
+from server.services import ai_usage  # noqa: E402
 from server.utils import rate_limit, timeutil  # noqa: E402
 from server.utils.timeutil import utcnow  # noqa: E402
 
@@ -33,6 +34,7 @@ def fresh_database():
     Base.metadata.drop_all(bind=engine)
     init_db()
     rate_limit.reset()
+    ai_usage.reset()  # key cool-downs and the disabled-key cache are process state
     yield
     timeutil.set_now(None)  # tests that time-travel must not leak a frozen clock
 

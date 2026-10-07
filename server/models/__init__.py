@@ -6,6 +6,7 @@ from server.models.error_log import ErrorLog, AILearningGap
 from server.models.test_bank import AI_PRACTICE_TEST_ID, MockTest, TestQuestion, UserTestSubmission
 from server.models.reminder import StudyReminder
 from server.models.ai_message import AIMessage
+from server.models.ai_usage import AIKeyState, AIUsageLog
 from server.models.learning import (
     AIActionLog,
     LearnerMemory,
@@ -33,6 +34,8 @@ __all__ = [
     "UserTestSubmission",
     "StudyReminder",
     "AIMessage",
+    "AIKeyState",
+    "AIUsageLog",
     "AIActionLog",
     "LearnerMemory",
     "LessonNote",

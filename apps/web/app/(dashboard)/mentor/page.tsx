@@ -10,6 +10,7 @@ import { ActionLog } from "@/components/ai/action-log";
 import { SuggestionList } from "@/components/coach/suggestion-list";
 import { ChatComposer, ChatThread, SuggestionChips } from "@/components/mentor/chat";
 import { LoadingState } from "@/components/states";
+import { AIQuotaNote } from "@/components/ai/ai-quota";
 import { VoiceStudio } from "@/modules/mentor/components/voice-studio";
 import { useAuthStore } from "@/lib/auth-store";
 import { PROVIDER_LABELS, useLearnerStore } from "@/lib/learner-store";
@@ -183,6 +184,7 @@ function MentorContent() {
           <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
             Huấn luyện viên cá nhân: Hỏi đáp ngữ pháp, tra cứu phân tích câu sai hoặc đàm thoại giọng nói 1-1 trực tiếp.
           </p>
+          {isAuth && <AIQuotaNote className="mt-0.5 block" />}
         </div>
 
         {/* View Mode Toggle & Clear Button */}

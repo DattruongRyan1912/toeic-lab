@@ -29,7 +29,7 @@ def is_test_mode() -> bool:
     return os.environ.get("TOEIC_SKIP_DOTENV") == "1" or os.environ.get("TESTING") == "1"
 
 
-def _active_user_id(token: str, db: Session) -> int:
+def active_user_id(token: str, db: Session) -> int:
     """Verify the JWT and that its account still exists and is not locked."""
     try:
         user_id = int(decode_access_token(token)["sub"])
@@ -56,7 +56,7 @@ def current_user_id(
     """
     token = get_token_from_request(authorization, access_token)
     if token:
-        return _active_user_id(token, db)
+        return active_user_id(token, db)
     if user_id_query is not None and is_test_mode():
         return user_id_query
     return DEFAULT_USER_ID
@@ -75,7 +75,7 @@ def optional_learner_id(
     """
     token = get_token_from_request(authorization, access_token)
     if token:
-        return _active_user_id(token, db)
+        return active_user_id(token, db)
     if is_test_mode():
         return user_id_query if user_id_query is not None else DEFAULT_USER_ID
     return None
@@ -90,7 +90,7 @@ def require_authenticated_user(
     token = get_token_from_request(authorization, access_token)
     if not token:
         raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để tiếp tục")
-    return db.get(User, _active_user_id(token, db))
+    return db.get(User, active_user_id(token, db))
 
 
 def require_admin(user: User = Depends(require_authenticated_user)) -> User:
@@ -112,7 +112,7 @@ def require_learner_user_id(
     """
     token = get_token_from_request(authorization, access_token)
     if token:
-        return _active_user_id(token, db)
+        return active_user_id(token, db)
     if is_test_mode():
         return user_id_query if user_id_query is not None else DEFAULT_USER_ID
     raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để sử dụng tính năng này")

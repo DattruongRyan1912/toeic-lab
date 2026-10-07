@@ -6,7 +6,7 @@ import logging
 from sqlalchemy.orm import Session
 
 from server.models import ErrorLog, Flashcard, QuestionAttempt, Roadmap, SprintTask, TestQuestion
-from server.services import curriculum, error_log_service, practice_service
+from server.services import ai_usage, curriculum, error_log_service, practice_service
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +72,7 @@ def run(db: Session) -> dict:
     result = {
         "listening_lessons": detach_listening_from_lessons(db),
         "failed_translations": clear_failed_translations(db),
+        "old_ai_usage_logs": ai_usage.purge_old_logs(db),
         "attempts": practice_service.backfill_attempts(db),
         "roadmaps": backfill_roadmaps(db),
         "error_logs": backfill_error_logs(db),

@@ -22,6 +22,9 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=True)
     role = Column(String(20), default="learner", nullable=True)
     avatar_url = Column(String(500), nullable=True)
+    # AI allowance set by an admin: unlimited, or a custom daily number of AI requests (None = default plan)
+    ai_unlimited = Column(Boolean, nullable=True)
+    ai_daily_quota = Column(Integer, nullable=True)
 
     # --- Personalization profile (all nullable: added by the additive migration) ---
     exam_date = Column(Date, nullable=True)

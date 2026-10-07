@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/toast";
 import { ErrorState, LoadingState } from "@/components/states";
 import { MicTestDialog } from "@/components/mic-test-dialog";
+import { AIQuotaNote } from "@/components/ai/ai-quota";
 import { AiAgentCard } from "@/components/settings/ai-agent-card";
 import { MemoriesCard } from "@/components/settings/memories-card";
 import { PersonalizationCard } from "@/components/settings/personalization-card";
@@ -298,6 +299,9 @@ function AiStatusCard({ health }: { health: HealthStatus | undefined }) {
             </p>
             <p>Đọc ảnh đề thi (vision): {aiStatus.vision ? "Có" : "Không"}</p>
             <p>Provider đã cấu hình: {aiStatus.configured_providers.length ? aiStatus.configured_providers.join(", ") : "chưa có"}</p>
+            <p>
+              <AIQuotaNote />
+            </p>
           </div>
         ) : (
           <LoadingState label="Đang kiểm tra AI..." />
