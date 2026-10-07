@@ -25,27 +25,39 @@ def get_token_from_request(
     return None
 
 
+def is_test_mode() -> bool:
+    return os.environ.get("TOEIC_SKIP_DOTENV") == "1" or os.environ.get("TESTING") == "1"
+
+
+def _active_user_id(token: str, db: Session) -> int:
+    """Verify the JWT and that its account still exists and is not locked."""
+    try:
+        user_id = int(decode_access_token(token)["sub"])
+    except Exception:
+        raise HTTPException(status_code=401, detail="Phiên đăng nhập không hợp lệ hoặc đã hết hạn")
+    row = db.query(User.id, User.is_active).filter(User.id == user_id).first()
+    if row is None:
+        raise HTTPException(status_code=401, detail="Tài khoản không tồn tại")
+    if row.is_active is False:
+        raise HTTPException(status_code=403, detail="Tài khoản đã bị khoá, vui lòng liên hệ quản trị viên")
+    return user_id
+
+
 def current_user_id(
     authorization: Optional[str] = Header(None),
     access_token: Optional[str] = Cookie(None),
-    user_id_query: Optional[int] = Query(None, alias="user_id", ge=1),
+    user_id_query: Optional[int] = Query(None, alias="user_id", ge=1, include_in_schema=False),
+    db: Session = Depends(get_db),
 ) -> int:
-    """Extract authenticated user ID from JWT token.
+    """Authenticated user ID, or the shared guest learner (DEFAULT_USER_ID) when no token is sent.
 
-    If no token is provided, gracefully falls back to explicit user_id query param
-    or DEFAULT_USER_ID (1) to preserve backward compatibility for tests and CLI scripts.
+    The `?user_id=` override only works in test/CLI mode: in production it would let anyone read
+    or change another learner's data.
     """
     token = get_token_from_request(authorization, access_token)
     if token:
-        try:
-            payload = decode_access_token(token)
-            sub = payload.get("sub")
-            if sub is not None:
-                return int(sub)
-        except Exception:
-            raise HTTPException(status_code=401, detail="Phiên đăng nhập không hợp lệ hoặc đã hết hạn")
-
-    if user_id_query is not None:
+        return _active_user_id(token, db)
+    if user_id_query is not None and is_test_mode():
         return user_id_query
     return DEFAULT_USER_ID
 
@@ -59,44 +71,29 @@ def require_authenticated_user(
     token = get_token_from_request(authorization, access_token)
     if not token:
         raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để tiếp tục")
-    try:
-        payload = decode_access_token(token)
-        user_id = int(payload["sub"])
-    except Exception:
-        raise HTTPException(status_code=401, detail="Phiên đăng nhập không hợp lệ hoặc đã hết hạn")
+    return db.get(User, _active_user_id(token, db))
 
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="Tài khoản không tồn tại")
+
+def require_admin(user: User = Depends(require_authenticated_user)) -> User:
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Chỉ quản trị viên mới được truy cập")
     return user
 
 
 def require_learner_user_id(
     authorization: Optional[str] = Header(None),
     access_token: Optional[str] = Cookie(None),
-    user_id_query: Optional[int] = Query(None, alias="user_id", ge=1),
+    user_id_query: Optional[int] = Query(None, alias="user_id", ge=1, include_in_schema=False),
+    db: Session = Depends(get_db),
 ) -> int:
-    """Extract authenticated user ID from JWT token.
+    """Authenticated user ID; requests without a token are rejected.
 
-    In production/real requests, strictly requires a valid authentication token.
-    In testing/CLI mode (TOEIC_SKIP_DOTENV == '1' or TESTING == '1'), gracefully
-    falls back to user_id_query or DEFAULT_USER_ID to preserve test compatibility.
+    In test/CLI mode (TOEIC_SKIP_DOTENV == '1' or TESTING == '1') it falls back to
+    `?user_id=` or DEFAULT_USER_ID to keep the test-suite simple.
     """
     token = get_token_from_request(authorization, access_token)
     if token:
-        try:
-            payload = decode_access_token(token)
-            sub = payload.get("sub")
-            if sub is not None:
-                return int(sub)
-        except Exception:
-            raise HTTPException(status_code=401, detail="Phiên đăng nhập không hợp lệ hoặc đã hết hạn")
-
-    if user_id_query is not None:
-        return user_id_query
-
-    if os.environ.get("TOEIC_SKIP_DOTENV") == "1" or os.environ.get("TESTING") == "1":
-        return DEFAULT_USER_ID
-
+        return _active_user_id(token, db)
+    if is_test_mode():
+        return user_id_query if user_id_query is not None else DEFAULT_USER_ID
     raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để sử dụng tính năng này")
-

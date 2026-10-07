@@ -847,5 +847,57 @@ export interface ShadowingEvaluateResponse {
   analysis_mode?: "audio_multimodal" | "text_stt" | "guidance" | string;
 }
 
+// --- Admin console (server/schemas: AdminUser*) ---
+export type AdminRole = "learner" | "admin";
 
+export interface AdminUserSummary {
+  total_users: number;
+  active_7d: number;
+  admins: number;
+  locked: number;
+}
 
+export interface AdminUserRow {
+  id: number;
+  username: string;
+  email: string | null;
+  display_name: string;
+  role: string;
+  is_active: boolean;
+  has_password: boolean;
+  target_score: number;
+  onboarded: boolean;
+  created_at: string | null;
+  last_active_at: string | null;
+  study_minutes_total: number;
+  study_minutes_7d: number;
+  attempts: number;
+  accuracy: number | null;
+}
+
+export interface AdminUserList {
+  summary: AdminUserSummary;
+  total: number;
+  items: AdminUserRow[];
+}
+
+export interface AdminSubmission {
+  id: number;
+  test_id: string;
+  part: string | null;
+  mode: string | null;
+  correct_count: number | null;
+  total_questions: number | null;
+  total_scaled_score: number | null;
+  submitted_at: string | null;
+}
+
+export interface AdminUserDetail extends AdminUserRow {
+  headline: string | null;
+  exam_date: string | null;
+  daily_goal_minutes: number | null;
+  submissions: number;
+  srs_reviews: number;
+  open_errors: number;
+  recent_submissions: AdminSubmission[];
+}

@@ -9,6 +9,7 @@ os.environ["TOEIC_SKIP_DOTENV"] = "1"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TMP_DIR / 'test.db'}"
 os.environ["CORS_ORIGINS"] = "http://localhost:3005"
 os.environ["AI_PROVIDER"] = "auto"
+os.environ["SECRET_KEY"] = "test-only-secret"
 os.environ["SRS_NEW_CARDS_PER_DAY"] = "3"
 for _key in ("GEMINI_API_KEY", "DEEPSEEK_API_KEY", "OPENAI_API_KEY", "TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID"):
     os.environ[_key] = ""
@@ -23,7 +24,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 from server import models  # noqa: E402
 from server.database import Base, SessionLocal, engine, init_db  # noqa: E402
 from server.main import app  # noqa: E402
-from server.utils import timeutil  # noqa: E402
+from server.utils import rate_limit, timeutil  # noqa: E402
 from server.utils.timeutil import utcnow  # noqa: E402
 
 
@@ -31,6 +32,7 @@ from server.utils.timeutil import utcnow  # noqa: E402
 def fresh_database():
     Base.metadata.drop_all(bind=engine)
     init_db()
+    rate_limit.reset()
     yield
     timeutil.set_now(None)  # tests that time-travel must not leak a frozen clock
 
@@ -97,3 +99,21 @@ def seeded(db):
     db.add(models.ParaphrasePair(word_in_text="postpone", word_in_answer="delay", meaning="hoãn"))
     db.commit()
     return {q.question_no: q.id for q in db.query(models.TestQuestion).all()}
+
+
+def make_user(client, username: str, role: str = "learner") -> dict:
+    """Register a real account (optionally promoted) and return its Authorization header + id."""
+    res = client.post("/api/auth/register", json={"username": username, "email": f"{username}@toeiclab.dev", "password": "Password123!"})
+    assert res.status_code == 201, res.text
+    client.cookies.clear()  # register sets an auth cookie; tests pass the header explicitly instead
+    user_id = res.json()["user"]["id"]
+    if role != "learner":
+        with SessionLocal() as session:
+            session.get(models.User, user_id).role = role
+            session.commit()
+    return {"id": user_id, "headers": {"Authorization": f"Bearer {res.json()['access_token']}"}}
+
+
+@pytest.fixture()
+def admin(client):
+    return make_user(client, "site_admin", role="admin")

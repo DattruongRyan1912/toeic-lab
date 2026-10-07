@@ -97,7 +97,7 @@ def test_due_queue_respects_schedule_and_daily_new_quota(client, seeded, db):
     assert client.post("/api/flashcards/999/review", json={"rating": 3}).status_code == 404
 
 
-def test_flashcard_create_dedupe_delete_and_ai_fill_offline(client, seeded):
+def test_flashcard_create_dedupe_delete_and_ai_fill_offline(client, seeded, admin):
     assert client.post("/api/flashcards", json={"word": "Allocate", "meaning": "x", "example_sentence": "y"}).status_code == 409
     created = client.post(
         "/api/flashcards",
@@ -122,7 +122,8 @@ def test_flashcard_create_dedupe_delete_and_ai_fill_offline(client, seeded):
     assert trans_card.status_code == 200
     assert trans_card.json()["example_translation"] is not None
 
-    assert client.delete(f"/api/flashcards/{card_id}").status_code == 200
+    assert client.delete(f"/api/flashcards/{card_id}").status_code == 401  # shared bank: admins only
+    assert client.delete(f"/api/flashcards/{card_id}", headers=admin["headers"]).status_code == 200
     assert client.get("/api/flashcards/summary").json()["new_cards"] == 5
 
 

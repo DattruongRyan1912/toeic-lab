@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Migrate existing learner data from default user 1 to a new authenticated account."""
+import argparse
+import getpass
 import sys
 from pathlib import Path
 
@@ -14,10 +16,10 @@ from server.utils.security import hash_password
 
 
 def migrate_to_personal_account(
-    target_username: str = "ryantruong",
-    target_email: str = "dattruong19122003@gmail.com",
-    raw_password: str = "Ryan@2026",
-    display_name: str = "Ryan Truong",
+    target_username: str,
+    target_email: str,
+    raw_password: str,
+    display_name: str = "",
 ):
     db = SessionLocal()
     try:
@@ -40,7 +42,7 @@ def migrate_to_personal_account(
                 username=target_username,
                 email=target_email,
                 hashed_password=hash_password(raw_password),
-                display_name=display_name or user1.display_name or "Ryan Truong",
+                display_name=display_name or user1.display_name or target_username,
                 headline=user1.headline or "Backend Engineer",
                 target_score=user1.target_score or 800,
                 daily_goal_minutes=user1.daily_goal_minutes or 60,
@@ -137,11 +139,18 @@ def migrate_to_personal_account(
         print("\n=== MIGRATION COMPLETED SUCCESSFULLY ===")
         print(f"Personal Account: {target_username}")
         print(f"Email: {target_email}")
-        print(f"Password: {raw_password}")
         print(f"User ID: {new_user_id}")
     finally:
         db.close()
 
 
 if __name__ == "__main__":
-    migrate_to_personal_account()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--username", required=True)
+    parser.add_argument("--email", required=True)
+    parser.add_argument("--display-name", default="")
+    args = parser.parse_args()
+    password = getpass.getpass("Password for the personal account: ")
+    if len(password) < 8:
+        sys.exit("Password must be at least 8 characters.")
+    migrate_to_personal_account(args.username, args.email, password, args.display_name)

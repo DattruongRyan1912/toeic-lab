@@ -6,8 +6,8 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from server.database import get_db
-from server.deps import current_user_id
-from server.models import Flashcard, SRSReviewLog, UserCardSRS
+from server.deps import current_user_id, require_admin
+from server.models import Flashcard, SRSReviewLog, User, UserCardSRS
 from server.schemas import (
     AIFillVocabRequest,
     AIFillVocabResponse,
@@ -21,6 +21,7 @@ from server.schemas import (
 )
 from server.services import activity, ai_agent_service, insights, vocab_service
 from server.services.srs_service import calculate_sm2_review
+from server.utils import rate_limit
 from server.utils.timeutil import utcnow
 
 router = APIRouter(prefix="/api/flashcards", tags=["Flashcards & SRS"])
@@ -125,7 +126,8 @@ def create_flashcard(payload: FlashcardCreate, user_id: int = Depends(current_us
 
 
 @router.delete("/{card_id}")
-def delete_flashcard(card_id: int, db: Session = Depends(get_db)):
+def delete_flashcard(card_id: int, _admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    """Cards are shared by every learner, so only admins may delete them."""
     card = db.get(Flashcard, card_id)
     if card is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy từ vựng!")
@@ -134,7 +136,7 @@ def delete_flashcard(card_id: int, db: Session = Depends(get_db)):
     return {"status": "success", "message": f"Đã xóa từ '{word}' khỏi Sổ tay!"}
 
 
-@router.post("/ai-fill", response_model=AIFillVocabResponse)
+@router.post("/ai-fill", response_model=AIFillVocabResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_db)):
     word = payload.word.strip()
     existing = vocab_service.find_card(db, word)
@@ -171,7 +173,7 @@ async def ai_fill_vocab(payload: AIFillVocabRequest, db: Session = Depends(get_d
     )
 
 
-@router.post("/translate-sentence", response_model=TranslateSentenceResponse)
+@router.post("/translate-sentence", response_model=TranslateSentenceResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def translate_sentence_endpoint(payload: TranslateSentenceRequest):
     sentence = payload.sentence.strip()
     if not sentence:
@@ -180,7 +182,7 @@ async def translate_sentence_endpoint(payload: TranslateSentenceRequest):
     return TranslateSentenceResponse(sentence=sentence, translation=trans)
 
 
-@router.post("/{card_id}/translate-example", response_model=FlashcardRead)
+@router.post("/{card_id}/translate-example", response_model=FlashcardRead, dependencies=[Depends(rate_limit.limit_ai)])
 async def translate_flashcard_example(card_id: int, db: Session = Depends(get_db)):
     card = db.get(Flashcard, card_id)
     if card is None:

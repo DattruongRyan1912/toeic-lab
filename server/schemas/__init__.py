@@ -980,3 +980,59 @@ class ShadowingEvaluateResponse(BaseModel):
     analysis_mode: Optional[str] = "text_stt"
 
 
+# --- Admin console ---
+class AdminUserSummary(BaseModel):
+    total_users: int
+    active_7d: int
+    admins: int
+    locked: int
+
+
+class AdminUserRow(BaseModel):
+    id: int
+    username: str
+    email: Optional[str] = None
+    display_name: str
+    role: str
+    is_active: bool
+    has_password: bool
+    target_score: int
+    onboarded: bool
+    created_at: Optional[datetime] = None
+    last_active_at: Optional[datetime] = None
+    study_minutes_total: int
+    study_minutes_7d: int
+    attempts: int
+    accuracy: Optional[float] = None
+
+
+class AdminUserList(BaseModel):
+    summary: AdminUserSummary
+    total: int
+    items: List[AdminUserRow]
+
+
+class AdminSubmission(BaseModel):
+    id: int
+    test_id: str
+    part: Optional[str] = None
+    mode: Optional[str] = None
+    correct_count: Optional[int] = None
+    total_questions: Optional[int] = None
+    total_scaled_score: Optional[int] = None
+    submitted_at: Optional[datetime] = None
+
+
+class AdminUserDetail(AdminUserRow):
+    headline: Optional[str] = None
+    exam_date: Optional[date] = None
+    daily_goal_minutes: Optional[int] = None
+    submissions: int
+    srs_reviews: int
+    open_errors: int
+    recent_submissions: List[AdminSubmission]
+
+
+class AdminUserUpdate(BaseModel):
+    role: Optional[Literal["learner", "admin"]] = None
+    is_active: Optional[bool] = None

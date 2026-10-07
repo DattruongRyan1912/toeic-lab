@@ -14,6 +14,7 @@ from server.schemas import (
     ShadowingEvaluateResponse,
 )
 from server.services import listening_service
+from server.utils import rate_limit
 
 router = APIRouter(prefix="/api/listening", tags=["Listening (Dictation & Shadowing)"])
 
@@ -61,7 +62,7 @@ def track_listening(
     return listening_service.track_listening_activity(db, user_id, payload.seconds)
 
 
-@router.post("/evaluate-shadowing", response_model=ShadowingEvaluateResponse)
+@router.post("/evaluate-shadowing", response_model=ShadowingEvaluateResponse, dependencies=[Depends(rate_limit.limit_ai)])
 async def evaluate_shadowing(
     payload: ShadowingEvaluateRequest,
     user_id: int = Depends(current_user_id),
