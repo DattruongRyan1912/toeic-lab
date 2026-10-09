@@ -291,7 +291,7 @@ export function FlashcardPlayer({
                 </div>
               )}
               {word.example_sentence && (() => {
-                const exampleTrans = translations[word.id] || word.example_translation;
+                const exampleTrans = cleanSentence(translations[word.id] || word.example_translation, "…"); // no cloze/HTML markup
                 return (
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-xs font-semibold text-slate-500">

@@ -202,7 +202,7 @@ async def translate_flashcard_example(
     if not card.example_sentence or card.example_sentence.strip() in ("", "Example sentence pending."):
         raise HTTPException(status_code=400, detail="Thẻ này chưa có câu ví dụ để dịch.")
 
-    trans = await translate_sentence_to_vi(card.example_sentence, keyword=card.word)
+    trans = await translate_sentence_to_vi(vocab_service.plain_sentence(card.example_sentence, card.word), keyword=card.word)
     if trans is None:  # never store a failure message on a card shared by every learner
         raise HTTPException(status_code=503, detail="AI chưa dịch được câu này, vui lòng thử lại sau.")
     if learner_id is None:  # guests are read-only: answer without writing to the shared card
