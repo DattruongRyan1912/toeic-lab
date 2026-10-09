@@ -37,6 +37,12 @@ def test_two_week_learner_journey(client, seeded, db):
     extra = add_lesson2_questions(db)
     lesson2 = [seeded[111], *extra]
     start, monday = next_monday_9am()
+    # The seed marks a milestone done at the real "now"; move it well before the journey so the streak only
+    # counts journey days (otherwise a run on a Saturday adds that day across the Sunday rest day).
+    db.query(models.SprintTask).filter(models.SprintTask.completed_at.isnot(None)).update(
+        {models.SprintTask.completed_at: start - timedelta(days=30)}, synchronize_session=False
+    )
+    db.commit()
     timeutil.set_now(start)
     client.patch("/api/roadmaps", json={"start_date": monday.isoformat()})
     onboarding = client.post("/api/learner/onboarding", json={

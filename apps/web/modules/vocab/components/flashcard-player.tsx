@@ -215,7 +215,12 @@ export function FlashcardPlayer({
         onKeyDown={(event) => event.key === "Enter" && setFlipped((f) => !f)}
         className="h-[430px] sm:h-[400px] w-full cursor-pointer rounded-2xl select-none [perspective:1000px]"
       >
-        <div className={cn("relative h-full w-full rounded-2xl shadow-xl transition-transform duration-500 [transform-style:preserve-3d]", flipped && "[transform:rotateY(180deg)]")}>
+        {/* Keyed per position: the next card mounts already face-up instead of animating the flip back, which
+            showed the new card's meaning on the turning back face for half a second. */}
+        <div
+          key={index}
+          className={cn("relative h-full w-full rounded-2xl shadow-xl transition-transform duration-500 [transform-style:preserve-3d]", flipped && "[transform:rotateY(180deg)]")}
+        >
           <div className="absolute inset-0 flex h-full w-full flex-col justify-between rounded-2xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 sm:p-8 [backface-visibility:hidden] dark:border-slate-700 dark:from-slate-800 dark:to-slate-900">
             <div className="flex items-start justify-between">
               <span className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold tracking-wider text-blue-700 uppercase dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400">
