@@ -90,7 +90,7 @@ async def main():
         return
 
     provider = ai_agent_service.resolve_provider()
-    print(f"🤖 Đang sử dụng AI Provider: {provider}")
+    print(f"🤖 Đang sử dụng AI Provider: {provider.name if provider else 'offline'} ({provider.model if provider else '-'})")
 
     success_count = 0
     for i in range(0, total_untranslated, BATCH_SIZE):
