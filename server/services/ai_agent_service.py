@@ -67,9 +67,9 @@ VOCAB_SYSTEM_PROMPT = "Bạn là chuyên gia từ vựng TOEIC. Chỉ trả về
 class ProviderInfo:
     name: str
     model: str
-    api_key: str
-    base_url: str
-    vision: bool
+    api_key: str = field(repr=False)  # never printed or logged with the provider
+    base_url: str = ""
+    vision: bool = False
 
 
 _gemini_key_lock = threading.Lock()

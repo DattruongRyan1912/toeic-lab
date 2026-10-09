@@ -355,3 +355,8 @@ def test_gemini_multi_key_rotation_and_quota_failover(client, monkeypatch):
 
 
 
+
+
+def test_provider_repr_never_contains_the_api_key():
+    info = ai_agent_service.ProviderInfo("gemini", "gemini-x", "secret-key-123", "https://example", True)
+    assert "secret-key-123" not in repr(info) and "secret-key-123" not in str(info)
