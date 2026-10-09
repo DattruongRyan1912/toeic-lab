@@ -11,7 +11,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { speak } from "@/lib/audio";
 import { ipa } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { renderHighlightedSentence } from "@/lib/vocab-utils";
+import { cleanSentence, renderHighlightedSentence } from "@/lib/vocab-utils";
 import type { FlashcardItem } from "@/types";
 import { PronounceDialog } from "./pronounce-dialog";
 
@@ -134,10 +134,10 @@ export function WordListTable({ words, onDeleted, onStudyCategory }: WordListTab
                     <p className="font-medium text-slate-700 italic dark:text-slate-300">
                       &ldquo;{renderHighlightedSentence(item.example_sentence, item.word)}&rdquo;
                     </p>
-                    {item.example_translation && (
+                    {cleanSentence(item.example_translation, "…") && (
                       <p className="mt-1 border-t border-slate-200/60 pt-1 text-slate-500 dark:border-slate-700/50 dark:text-slate-400">
                         <span className="font-semibold text-blue-600 dark:text-blue-400 mr-1">Dịch:</span>
-                        {item.example_translation}
+                        {cleanSentence(item.example_translation, "…")}
                       </p>
                     )}
                   </div>

@@ -70,10 +70,25 @@ def clear_failed_translations(db: Session) -> int:
     )
 
 
+def clear_cloze_translations(db: Session) -> int:
+    """Translations made from the old cloze sentences still contain the blank markup: drop them so they are
+    translated again from the clean sentence (scripts/enrich_vocab_translations.py or the in-app "Dịch")."""
+    return (
+        db.query(Flashcard)
+        .filter(
+            Flashcard.example_translation.like("%class='blank'%")
+            | Flashcard.example_translation.like('%class="blank"%')
+            | Flashcard.example_translation.like("%\\_\\_\\_\\_%", escape="\\")
+        )
+        .update({Flashcard.example_translation: None}, synchronize_session=False)
+    )
+
+
 def run(db: Session) -> dict:
     result = {
         "listening_lessons": detach_listening_from_lessons(db),
         "failed_translations": clear_failed_translations(db),
+        "cloze_translations": clear_cloze_translations(db),
         "old_ai_usage_logs": ai_usage.purge_old_logs(db),
         "attempts": practice_service.backfill_attempts(db),
         "roadmaps": backfill_roadmaps(db),

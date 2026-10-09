@@ -1,6 +1,7 @@
 """Flashcard writes shared by the REST router and the AI mentor tool."""
 from __future__ import annotations
 
+import re
 from typing import Optional
 
 from sqlalchemy import func
@@ -17,6 +18,21 @@ def _clean(value, max_len: Optional[int] = None) -> Optional[str]:
     if not text:
         return None
     return text[:max_len] if max_len else text
+
+
+_BLANK_SPAN_RE = re.compile(r"<span\s+class=['\"]blank['\"]>\s*_+\s*</span>", re.I)
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def plain_sentence(text: Optional[str], word: Optional[str] = None) -> str:
+    """Example text without cloze markup: a blank span becomes the word (or an ellipsis), other tags go away.
+
+    Older seed data stored cloze versions; translating those produced Vietnamese with the blank markup left in.
+    """
+    if not text:
+        return ""
+    cleaned = _BLANK_SPAN_RE.sub(word or "…", text)
+    return re.sub(r"\s+", " ", _TAG_RE.sub("", cleaned)).strip()
 
 
 def normalize_ipa(value) -> Optional[str]:

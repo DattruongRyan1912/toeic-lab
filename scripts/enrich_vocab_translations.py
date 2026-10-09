@@ -15,7 +15,7 @@ load_dotenv(ROOT_DIR / ".env")
 
 from server.database import SessionLocal, init_db
 from server.models import Flashcard
-from server.services import ai_agent_service
+from server.services import ai_agent_service, vocab_service
 
 BATCH_SIZE = 25
 
@@ -96,7 +96,7 @@ async def main():
     for i in range(0, total_untranslated, BATCH_SIZE):
         chunk = untranslated[i : i + BATCH_SIZE]
         batch_items = [
-            {"id": card.id, "word": card.word, "sentence": card.example_sentence}
+            {"id": card.id, "word": card.word, "sentence": vocab_service.plain_sentence(card.example_sentence, card.word)}
             for card in chunk
             if card.example_sentence and card.example_sentence != "Example sentence pending."
         ]

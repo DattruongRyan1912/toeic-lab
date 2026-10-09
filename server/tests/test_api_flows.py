@@ -287,3 +287,26 @@ def test_reminder_crud_and_due_window(client, seeded):
     reminder.last_triggered_at = at(21, 5).astimezone(timezone.utc).replace(tzinfo=None)
     assert not reminder_service.is_due(reminder, at(21, 10))  # already sent today
     assert reminder_service.dispatch_enabled() is False  # no Telegram config in tests
+
+
+def test_cloze_translations_are_cleared_and_retranslated_from_clean_text(client, seeded, db, monkeypatch):
+    from server.routers import flashcard_router
+    from server.services import maintenance
+
+    card = db.get(models.Flashcard, 1)
+    card.example_sentence = "We <span class='blank'>______</span> the meeting."
+    card.example_translation = "Chúng tôi <span class='blank'>______</span> cuộc họp."
+    db.commit()
+    assert maintenance.run(db)["cloze_translations"] == 1
+    db.expire_all()
+    assert db.get(models.Flashcard, 1).example_translation is None
+
+    sent = []
+
+    async def fake_translate(sentence, keyword=None):
+        sent.append(sentence)
+        return "Chúng tôi hoãn cuộc họp."
+
+    monkeypatch.setattr(flashcard_router, "translate_sentence_to_vi", fake_translate)
+    assert client.post("/api/flashcards/1/translate-example").json()["example_translation"] == "Chúng tôi hoãn cuộc họp."
+    assert sent == ["We postpone the meeting."]  # the AI never sees the cloze markup
