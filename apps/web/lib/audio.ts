@@ -4,6 +4,67 @@ import { getTtsSettings, type TtsSettings } from "@/lib/settings";
 
 let currentAudio: HTMLAudioElement | null = null;
 
+// --- Prefetch: the first Edge TTS request for a sentence is synthesised on the server (~3-4 s); fetching the
+// next cards' audio ahead of time makes the "listen" button play instantly. Keyed by the exact TTS URL, so a
+// voice/rate change simply misses and re-fetches.
+const MAX_PREFETCHED = 40;
+const MAX_PARALLEL = 2;
+const prefetched = new Map<string, Promise<string | null>>(); // TTS URL -> blob URL (null if it failed)
+const waiting: (() => void)[] = [];
+let running = 0;
+
+function ttsUrl(text: string, settings: TtsSettings): string {
+  const params = new URLSearchParams({ text: text.slice(0, 1000), voice: settings.voice, rate: settings.rate });
+  return `/api/tts?${params.toString()}`;
+}
+
+function limited<T>(task: () => Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const start = () => {
+      running += 1;
+      task()
+        .then(resolve, reject)
+        .finally(() => {
+          running -= 1;
+          waiting.shift()?.();
+        });
+    };
+    if (running < MAX_PARALLEL) start();
+    else waiting.push(start);
+  });
+}
+
+function evictOldest(): void {
+  while (prefetched.size > MAX_PREFETCHED) {
+    const [url, blobUrl] = prefetched.entries().next().value as [string, Promise<string | null>];
+    prefetched.delete(url);
+    void blobUrl.then((value) => value && URL.revokeObjectURL(value));
+  }
+}
+
+/** Warm the audio of texts the learner is about to hear (Edge voice only; the browser voice needs no download). */
+export function prefetchSpeech(texts: string[]): void {
+  if (typeof window === "undefined") return;
+  const settings = getTtsSettings();
+  if (settings.engine !== "edge") return;
+  for (const text of texts) {
+    const clean = text.trim();
+    if (!clean) continue;
+    const url = ttsUrl(clean, settings);
+    if (prefetched.has(url)) continue;
+    prefetched.set(
+      url,
+      limited(() =>
+        fetch(url)
+          .then((response) => (response.ok ? response.blob() : null))
+          .then((blob) => (blob && blob.size > 0 ? URL.createObjectURL(blob) : null))
+          .catch(() => null),
+      ),
+    );
+    evictOldest();
+  }
+}
+
 export function stopSpeaking(): void {
   if (currentAudio) {
     currentAudio.pause();
@@ -12,9 +73,11 @@ export function stopSpeaking(): void {
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
 }
 
-function playEdge(text: string, settings: TtsSettings): Promise<void> {
-  const params = new URLSearchParams({ text, voice: settings.voice, rate: settings.rate });
-  const audio = new Audio(`/api/tts?${params.toString()}`);
+async function playEdge(text: string, settings: TtsSettings): Promise<void> {
+  const url = ttsUrl(text, settings);
+  const ready = prefetched.get(url);
+  const audio = new Audio((ready && (await ready)) || url); // prefetched blob, or still in flight -> wait for it
+  stopSpeaking(); // another sound may have started while waiting
   currentAudio = audio;
   return new Promise((resolve, reject) => {
     audio.onended = () => resolve();
@@ -47,7 +110,7 @@ export async function speak(text: string, overrides: Partial<TtsSettings> = {}):
   stopSpeaking();
   if (settings.engine === "edge") {
     try {
-      await playEdge(clean.slice(0, 1000), settings);
+      await playEdge(clean, settings);
       return;
     } catch {
       // backend or network unavailable -> browser voice

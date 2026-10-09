@@ -6,7 +6,7 @@ import { ArrowRight, BookOpen, CheckCircle, Languages, Loader2, Mic, RotateCcw, 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { api, errorMessage } from "@/lib/api";
-import { speak } from "@/lib/audio";
+import { prefetchSpeech, speak } from "@/lib/audio";
 import { ipa } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { cleanSentence, renderHighlightedSentence } from "@/lib/vocab-utils";
@@ -65,6 +65,14 @@ export function FlashcardPlayer({
   useEffect(() => {
     shownAt.current = Date.now();
   }, [index]);
+
+  // Download the word + example audio of this card and the next two, so "listen" plays without waiting
+  // for the first-time synthesis. Same texts as the play buttons below, so they hit the prefetched audio.
+  useEffect(() => {
+    prefetchSpeech(
+      queue.slice(index, index + 3).flatMap((item) => [item.flashcard.word, cleanSentence(item.flashcard.example_sentence, item.flashcard.word)]),
+    );
+  }, [index, queue]);
 
   const play = useCallback(async (text: string) => {
     setPlaying(true);
